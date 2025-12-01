@@ -2,6 +2,7 @@
   <dictionary name="project">
     <words>
       <w>lucide</w>
+      <w>supabase</w>
       <w>turbopack</w>
     </words>
   </dictionary>
