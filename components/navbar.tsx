@@ -1,67 +1,70 @@
 "use client";
 
-
 import {SignInButton, SignUpButton, UserButton, useUser} from "@clerk/nextjs";
-import {usePathname} from "next/navigation";
+import {ArrowLeft, ArrowRight, Filter, MoreHorizontal, Trello,} from "lucide-react";
+import {Button} from "./ui/button";
 import Link from "next/link";
-import {Button} from "@/components/ui/button";
-import {ArrowLeft, ArrowRight, Badge, Filter, MoreHorizontal, Trello} from "lucide-react";
+import {usePathname} from "next/navigation";
+import {Badge} from "./ui/badge";
 
 interface Props {
     boardTitle?: string;
     onEditBoard?: () => void;
+
+    onFilterClick?: () => void;
+    filterCount?: number;
 }
 
-export default function Navbar({boardTitle, onEditBoard}: Props) {
-    const {isLoaded, isSignedIn, user} = useUser();
-    const pathname = usePathname()
-    const isDashboardPage = pathname === "/dashboard";
-    const isBoardPage = pathname.startsWith("/boards");
+export default function Navbar({
+                                   boardTitle,
+                                   onEditBoard,
+                                   onFilterClick,
+                                   filterCount = 0,
+                               }: Props) {
+    const {isSignedIn, user} = useUser();
+    const pathname = usePathname();
 
+    const isDashboardPage = pathname === "/dashboard";
+    const isBoardPage = pathname.startsWith("/boards/");
 
     if (isDashboardPage) {
-        return <div>
-            <header
-                className="border-b bg-gradient-r-l from-black to-stone-950  backdrop-blur-sm sticky top-0 z-50">
+        return (
+            <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                        <span
-                            className="text-xl text-white border rounded-lg p-1 -ml-11 lg:-ml-28">
-                            Rh
-                        </span>
-                        <p className="text-white">
-                            Rhodie
-                        </p>
+                        <Trello className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600"/>
+                        <span className="text-xl sm:text-2xl font-bold text-gray-900">
+              Trello Clone
+            </span>
                     </div>
+
                     <div className="flex items-center space-x-2 sm:space-x-4">
                         <UserButton/>
                     </div>
                 </div>
             </header>
-        </div>
-
+        );
     }
+
     if (isBoardPage) {
-        let filterCount;
-        let onFilterClick;
         return (
-            <header className="bg-black border-b sticky top-0 z-50">
+            <header className="bg-white border-b sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-3 sm:py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
                             <Link
                                 href="/dashboard"
-                                className="flex items-center space-x-1 sm:space-x-2 text-white hover:text-slate-400 flex-shrink-0"
+                                className="flex items-center space-x-1 sm:space-x-2 text-slate-600 hover:text-black flex-shrink-0"
                             >
                                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5"/>
-                                <span className="hidden sm:inline ">Back to dashboard</span>
-                                <span className="sm:hidden">Dashboard</span>
+                                <span className="hidden sm:inline">Back to dashboard</span>
+                                <span className="sm:hidden">DashBoard</span>
                             </Link>
                             <div className="h-4 sm:h-6 w-px bg-gray-300 hidden sm:block"/>
                             <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-                                <Trello className="text-slate-400"/>
+                                <Trello className="text-blue-200"/>
                                 <div className="items-center space-x-1 sm:space-x-2 min-w-0">
-                  <span className="text-lg text-slate-400 truncate">
+                  <span className="text-lg font-bold text-slate-900 truncate">
                     {boardTitle}
                   </span>
                                     {onEditBoard && (
@@ -81,10 +84,10 @@ export default function Navbar({boardTitle, onEditBoard}: Props) {
                         <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
                             {onFilterClick && (
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
-                                    className={`text-xs sm:text-sm ${
-                                        filterCount > 0 ? "bg-blue-100 border-blue-200" : ""
+                                    className={`text-xs sm:text-sm bg-orange-50 ${
+                                        filterCount > 0 ? "bg-blue-200 border-blue-200" : ""
                                     }`}
                                     onClick={onFilterClick}
                                 >
@@ -106,37 +109,30 @@ export default function Navbar({boardTitle, onEditBoard}: Props) {
             </header>
         );
     }
+
     return (
-        <header className="border-b bg-gradient-r-l from-black to-neutral-800 backdrop-blur-sm sticky top-0 z-50">
+        <header className="border-b bg-black backdrop-blur-sm sticky top-0 z-50">
             <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                        <span
-                            className="text-xl text-white border rounded-lg p-1 -ml-11 lg:-ml-28">
-                            Rh
-                        </span>
-                    <p className="text-white">
-                        Rhodie
-                    </p>
+                    <span
+                        className="font-extrabold text-orange-100 rounded p-1 border-white border-b border-r -ml-11 lg:-ml-28  ">Rh </span>
+                    <span className="text-xl sm:text-1xl font-bold text-white">
+            Rhodie
+          </span>
                 </div>
+
                 <div className="flex items-center space-x-2 sm:space-x-4">
-                    {isLoaded && isSignedIn ? (
+                    {isSignedIn ? (
                         <div
-                            className={"flex flex-col sm:flex-row items-end sm:items-center space-y-1 sm:space-y-0 sm:space-x-4"}>
-                            <span className="text-xs sm:text-sm text-gray-500 hidden sm:block ">
-                                {`Welcome Home ${
-                                    user?.firstName ??
-                                    user?.primaryEmailAddress?.emailAddress ??
-                                    "friend"
-                                }`}
-                            </span>
-                            <Link href={"./dashboard"}>
-                                <Button
-                                    size={"sm"}
-                                    className={"text-xs sm:text-sm"}>
-                                    Enter DashBoard <ArrowRight/>
+                            className="flex flex-col sm:flex-row items-end sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
+              <span className="text-xs sm:text-sm text-gray-400 hidden sm:block">
+                Welcome, {user.firstName ?? user.emailAddresses[0].emailAddress}
+              </span>
+                            <Link href="/dashboard">
+                                <Button size="sm" className="text-xs sm:text-sm">
+                                    Go to Dashboard <ArrowRight/>
                                 </Button>
                             </Link>
-
                         </div>
                     ) : (
                         <div>
@@ -145,17 +141,12 @@ export default function Navbar({boardTitle, onEditBoard}: Props) {
                                     variant="ghost"
                                     size="sm"
                                     className="text-xs sm:text-sm"
-                                >Sign In
+                                >
+                                    Sign In
                                 </Button>
                             </SignInButton>
                             <SignUpButton>
-                                <Button variant="default"
-                                        size={"sm"}
-                                        className="
-                                        bg-orange-200
-                                        text-black
-                                        text-xs
-                                        sm:text-sm">
+                                <Button size="sm" className="text-xs sm:text-sm">
                                     Sign Up
                                 </Button>
                             </SignUpButton>
@@ -164,5 +155,5 @@ export default function Navbar({boardTitle, onEditBoard}: Props) {
                 </div>
             </div>
         </header>
-    )
+    );
 }

@@ -167,7 +167,7 @@ export function useBoard(boardId: string) {
                 }
 
                 if (taskToMove) {
-
+                    // Add task to new column
                     const targetColumn = newColumns.find((col) => col.id === newColumnId);
                     if (targetColumn) {
                         targetColumn.tasks.splice(newOrder, 0, taskToMove);
@@ -232,4 +232,3 @@ export function useBoard(boardId: string) {
         updateColumn,
     };
 }
-

@@ -21,13 +21,13 @@ export default function Navbar2() {
                 <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <span
-                            className="text-xl text-black border-r-2 border-b-2 border-black rounded-lg p-1 -ml-11 lg:-ml-28">
+                            className="text-1xl font-extrabold text-black border-r-2 border-b-2 border-black rounded-lg p-1 -ml-11 lg:-ml-28">
                             Rh
                         </span>
-                        <p className="text-black">
+                        <p className="text-black text-1xl font-bold">
                             Rhodie
                         </p>
-                       
+
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-4">
                         <UserButton/>
