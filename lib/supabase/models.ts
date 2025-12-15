@@ -1,3 +1,5 @@
+import {React} from "next/dist/server/route-modules/app-page/vendored/rsc/entrypoints";
+
 export interface Board {
     id: string;
     title: string;
@@ -29,4 +31,10 @@ export interface Task {
     created_at: string;
     updated_at: string;
 
+}
+
+export class ColumnWithTasks {
+    id: string | number | undefined;
+    title: never | undefined;
+    tasks: React.ReactNode | undefined;
 }

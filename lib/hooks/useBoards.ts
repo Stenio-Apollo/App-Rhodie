@@ -109,13 +109,13 @@ export function useBoard(boardId: string) {
     }
 
     async function createRealTask(
-        columnId: string,
+        columnId: string | number | undefined,
         taskData: {
             title: string;
             description?: string;
             assignee?: string;
             dueDate?: string;
-            priority?: "low" | "medium" | "high";
+            priority?: "low" | "medium" | "high"
         }
     ) {
         try {

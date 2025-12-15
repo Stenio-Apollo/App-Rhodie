@@ -16,19 +16,20 @@ import {Calendar, MoreHorizontal, Plus, User} from "lucide-react";
 import {useParams} from "next/navigation";
 import {useState} from "react";
 import {
+    closestCorners,
     DndContext,
     DragEndEvent,
     DragOverEvent,
     DragOverlay,
     DragStartEvent,
     PointerSensor,
-    rectIntersection,
     useDroppable,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
 import {SortableContext, useSortable, verticalListSortingStrategy,} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
+
 
 function DroppableColumn({
                              column,
@@ -38,7 +39,7 @@ function DroppableColumn({
                          }: {
     column: ColumnWithTasks;
     children: React.ReactNode;
-    onCreateTask: (taskData: any) => Promise<void>;
+    onCreateTask: (taskData: never) => Promise<void>;
     onEditColumn: (column: ColumnWithTasks) => void;
 }) {
     const {setNodeRef, isOver} = useDroppable({id: column.id});
@@ -63,7 +64,7 @@ function DroppableColumn({
                                 {column.title}
                             </h3>
                             <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                {column.tasks.length}
+                                {column.tasks?.length}
                             </Badge>
                         </div>
                         <Button
@@ -402,6 +403,8 @@ export default function BoardPage() {
         }
     }
 
+
+    // DRAGOVER
     function handleDragStart(event: DragStartEvent) {
         const taskId = event.active.id as string;
         const task = columns
@@ -413,89 +416,65 @@ export default function BoardPage() {
         }
     }
 
+
     function handleDragOver(event: DragOverEvent) {
-        const {active, over} = event;
-        if (!over) return;
+        const {active, over} = event
+        if (!over) return
 
-        const activeId = active.id as string;
-        const overId = over.id as string;
+        const activeId = active.id as string
+        const overId = over.id as string
 
-        const sourceColumn = columns.find((col) =>
-            col.tasks.some((task) => task.id === activeId)
-        );
+        const sourceColumn = columns.find(col =>
+            col.tasks.some(task => task.id === activeId)
+        )
 
-        const targetColumn = columns.find((col) =>
-            col.tasks.some((task) => task.id === overId)
-        );
+        const targetColumn =
+            columns.find(col => col.id === overId) || // 👈 EMPTY COLUMN
+            columns.find(col => col.tasks.some(task => task.id === overId))
 
-        if (!sourceColumn || !targetColumn) return;
+        if (!sourceColumn || !targetColumn) return
 
-        if (sourceColumn.id === targetColumn.id) {
-            const activeIndex = sourceColumn.tasks.findIndex(
-                (task) => task.id === activeId
-            );
+        if (sourceColumn.id !== targetColumn.id) {
+            setColumns((prev) => {
+                const newColumns = structuredClone(prev)
 
-            const overIndex = targetColumn.tasks.findIndex(
-                (task) => task.id === overId
-            );
+                const source = newColumns.find(c => c.id === sourceColumn.id)!
+                const target = newColumns.find(c => c.id === targetColumn.id)!
 
-            if (activeIndex !== overIndex) {
-                setColumns((prev: ColumnWithTasks[]) => {
-                    const newColumns = [...prev];
-                    const column = newColumns.find((col) => col.id === sourceColumn.id);
-                    if (column) {
-                        const tasks = [...column.tasks];
-                        const [removed] = tasks.splice(activeIndex, 1);
-                        tasks.splice(overIndex, 0, removed);
-                        column.tasks = tasks;
-                    }
-                    return newColumns;
-                });
-            }
+                const taskIndex = source.tasks.findIndex(t => t.id === activeId)
+                const [movedTask] = source.tasks.splice(taskIndex, 1)
+
+                target.tasks.push(movedTask)
+
+                return newColumns
+            })
         }
     }
 
     async function handleDragEnd(event: DragEndEvent) {
-        const {active, over} = event;
-        if (!over) return;
+        const {active, over} = event
+        setActiveTask(null)
 
-        const taskId = active.id as string;
-        const overId = over.id as string;
+        if (!over) return
 
-        const targetColumn = columns.find((col) => col.id === overId);
-        if (targetColumn) {
-            const sourceColumn = columns.find((col) =>
-                col.tasks.some((task) => task.id === taskId)
-            );
+        const taskId = active.id as string
+        const overId = over.id as string
 
-            if (sourceColumn && sourceColumn.id !== targetColumn.id) {
-                await moveTask(taskId, targetColumn.id, targetColumn.tasks.length);
-            }
-        } else {
-            // Check to see if were dropping on another task
-            const sourceColumn = columns.find((col) =>
-                col.tasks.some((task) => task.id === taskId)
-            );
+        const sourceColumn = columns.find(col =>
+            col.tasks.some(task => task.id === taskId)
+        )
 
-            const targetColumn = columns.find((col) =>
-                col.tasks.some((task) => task.id === overId)
-            );
+        const targetColumn =
+            columns.find(col => col.id === overId) ||
+            columns.find(col => col.tasks.some(task => task.id === overId))
 
-            if (sourceColumn && targetColumn) {
-                const oldIndex = sourceColumn.tasks.findIndex(
-                    (task) => task.id === taskId
-                );
+        if (!sourceColumn || !targetColumn) return
 
-                const newIndex = targetColumn.tasks.findIndex(
-                    (task) => task.id === overId
-                );
-
-                if (oldIndex !== newIndex) {
-                    await moveTask(taskId, targetColumn.id, newIndex);
-                }
-            }
+        if (sourceColumn.id !== targetColumn.id) {
+            await moveTask(taskId, targetColumn.id, targetColumn.tasks.length)
         }
     }
+
 
     async function handleCreateColumn(e: React.FormEvent) {
         e.preventDefault();
@@ -785,7 +764,7 @@ export default function BoardPage() {
 
                     <DndContext
                         sensors={sensors}
-                        collisionDetection={rectIntersection}
+                        collisionDetection={closestCorners}
                         onDragStart={handleDragStart}
                         onDragOver={handleDragOver}
                         onDragEnd={handleDragEnd}
@@ -797,20 +776,22 @@ export default function BoardPage() {
             lg:[&::-webkit-scrollbar-thumb]:bg-gray-300 lg:[&::-webkit-scrollbar-thumb]:rounded-full
             space-y-4 lg:space-y-0"
                         >
-                            {filteredColumns.map((column, key) => (
+                            {filteredColumns.map((column) => (
                                 <DroppableColumn
-                                    key={key}
+                                    key={column.id}
                                     column={column}
                                     onCreateTask={handleCreateTask}
                                     onEditColumn={handleEditColumn}
                                 >
                                     <SortableContext
+                                        id={column.id} // 🔥 THIS IS CRITICAL
                                         items={column.tasks.map((task) => task.id)}
                                         strategy={verticalListSortingStrategy}
+
                                     >
                                         <div className="space-y-3">
-                                            {column.tasks.map((task, key) => (
-                                                <SortableTask task={task} key={key}/>
+                                            {column.tasks.map((task) => (
+                                                <SortableTask task={task} key={task.id}/>
                                             ))}
                                         </div>
                                     </SortableContext>
