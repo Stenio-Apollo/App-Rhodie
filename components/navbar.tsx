@@ -115,7 +115,7 @@ export default function Navbar({
             <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                     <span
-                        className="font-extrabold text-orange-100 rounded p-1 border-white border-b border-r -ml-11 lg:-ml-28  ">Rh </span>
+                        className="font-extrabold text-white rounded p-1 border-white border-b border-r -ml-11 lg:-ml-28  ">Rh </span>
                     <span className="text-xl sm:text-1xl font-bold text-white">
             Rhodie
           </span>
@@ -140,7 +140,7 @@ export default function Navbar({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="text-xs sm:text-sm"
+                                    className="text-xs sm:text-sm bg-orange-100"
                                 >
                                     Sign In
                                 </Button>
