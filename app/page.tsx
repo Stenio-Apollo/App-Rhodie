@@ -6,6 +6,7 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/comp
 import {ArrowRight, CheckSquare, Shield, Users, Zap,} from "lucide-react";
 import Navbar from "@/components/navbar";
 import Scene from "@/components/Scene";
+import Particles from "@/components/particles";
 
 export default function HomePage() {
     const {isSignedIn, user} = useUser();
@@ -45,6 +46,24 @@ export default function HomePage() {
             <main className={"relative h-screen"}>
                 <Scene/>
             </main>
+            <div>
+                <Particles/>
+            </div>
+
+            {!isSignedIn && (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <SignUpButton>
+                        <Button size="lg" className="text-lg px-8 hover:text-orange-200 hover:-translate-y-1">
+                            Start for free
+                            <ArrowRight className="ml-2 h-5 w-5"/>
+                        </Button>
+                    </SignUpButton>
+                    <Button variant="outline" size="lg"
+                            className="hover:bg-gradient-to-br from-orange-50 via-orange-100 to-orange-200 hover:-translate-y-1 text-lg px-8">
+                        Watch demo
+                    </Button>
+                </div>
+            )}
             {/* Features Section */}
             <section className="container mx-auto px-4 py-20">
                 <div className="text-center mb-16">

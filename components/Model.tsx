@@ -39,7 +39,7 @@ export default function Model() {
     const {viewport} = useThree()
 
     return (
-        <group scale={viewport.width / 15}>
+        <group scale={viewport.width / 16.5}>
             {/* Text behind the torus */}
             <Text
                 position={[0, 1, -2]} // Z negative = behind torus
