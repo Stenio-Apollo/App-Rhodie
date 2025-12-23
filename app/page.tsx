@@ -5,9 +5,11 @@ import {Button} from "@/components/ui/button";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card";
 import {ArrowRight, CheckSquare, Shield, Users, Zap,} from "lucide-react";
 import Navbar from "@/components/navbar";
+import Scene from "@/components/Scene";
 
 export default function HomePage() {
     const {isSignedIn, user} = useUser();
+
 
     const features = [
         {
@@ -34,47 +36,15 @@ export default function HomePage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-r
-    from-orange-50
-    via-orange-100
-    to-orange-100">
+    from-black
+    via-slate-900
+    to-black">
             <Navbar/>
 
             {/* Hero Section */}
-            <section className="container mx-auto px-4 py-20 text-center">
-                <div className="max-w-4xl mx-auto">
-                    <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-                        Structure your day with {" "}
-                        <span className="text-rose-300">Rhodie.</span>
-                    </h1>
-                    <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                        Rhodie is the next generation of task management and productivity. It has built in features and
-                        and functionality that allows for easy collaborations and project updates. It is a great way to
-                        allow team members to input tasks
-                        they are working on and update the status of said tasks. With our powerful event tools, you can
-                        also add events to your boards and have them show up on your calendar.
-                        whether you are working on a project with a team or just want to map out your day, Rhodie's got
-                        you covered. Lets get this show on the Rhodie
-
-                    </p>
-
-                    {!isSignedIn && (
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <SignUpButton>
-                                <Button size="lg"
-                                        className="text-lg px-8 hover:-translate-y-1 hover:text-orange-100">
-                                    Start for free
-                                    <ArrowRight className="ml-2 h-5 w-5"/>
-                                </Button>
-                            </SignUpButton>
-                            <Button variant="outline" size="lg"
-                                    className="text-lg px-8 hover:bg-rose-50 hover:text-black hover:-translate-y-1">
-                                Watch demo
-                            </Button>
-                        </div>
-                    )}
-                </div>
-            </section>
-
+            <main className={"relative h-screen"}>
+                <Scene/>
+            </main>
             {/* Features Section */}
             <section className="container mx-auto px-4 py-20">
                 <div className="text-center mb-16">
