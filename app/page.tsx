@@ -60,7 +60,7 @@ export default function HomePage() {
                     {features.map((feature, index) => (
                         <Card
                             key={index}
-                            className="border-0 shadow-lg hover:shadow-xl transition-shadow hover:translate-1"
+                            className="card-glow border-0 shadow-lg hover:shadow-xl transition-shadow hover:translate-1"
                         >
                             <CardHeader className="text-center">
                                 <div
