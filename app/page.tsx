@@ -48,11 +48,11 @@ export default function HomePage() {
             {/* Features Section */}
             <section className="container mx-auto px-4 py-20">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-300 mb-4">
                         Everything you need to stay organized
                     </h2>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Hover below to reveal the powerful features we provide for seamless collabs.
+                    <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+                        All the powerful features we provide for seamless collabs.
                     </p>
                 </div>
 
@@ -60,7 +60,7 @@ export default function HomePage() {
                     {features.map((feature, index) => (
                         <Card
                             key={index}
-                            className=" blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow hover:translate-1 hover:blur-none"
+                            className="border-0 shadow-lg hover:shadow-xl transition-shadow hover:translate-1"
                         >
                             <CardHeader className="text-center">
                                 <div
@@ -80,7 +80,7 @@ export default function HomePage() {
             </section>
 
             {/* CTA Section */}
-            <section className="bg-gradient-to-b from-orange-200 via-black to-black py-20">
+            <section className="bg-gradient-to-b from-slate-900 via-black to-black py-20">
                 <div className="container mx-auto px-4 text-center">
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                         Ready to get your project on the Rhode?

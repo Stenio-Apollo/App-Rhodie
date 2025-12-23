@@ -15,15 +15,18 @@ export default function Model() {
     const torus = useRef<THREE.Mesh>(null!)
     const {nodes} = useGLTF("/medias/torus.glb") as GLTFResult
 
-    // Leva controls for transparent glass material
-    const materialProps = useControls({
-        thickness: {value: 0.25, min: 0, max: 3, step: 0.05},
-        roughness: {value: 0, min: 0, max: 1, step: 0.1},
-        transmission: {value: 1, min: 0, max: 1, step: 0.1},
-        ior: {value: 1.0, min: 0, max: 3, step: 0.1},
-        chromaticAberration: {value: 0.39, min: 0, max: 1},
-        backside: {value: true},
-    })
+    // Leva controls for transparent glass material (hidden panel)
+    const materialProps = useControls(
+        {
+            thickness: {value: 0.25, min: 0, max: 3, step: 0.05},
+            roughness: {value: 0, min: 0, max: 1, step: 0.1},
+            transmission: {value: 1, min: 0, max: 1, step: 0.1},
+            ior: {value: 1.0, min: 0, max: 3, step: 0.1},
+            chromaticAberration: {value: 0.39, min: 0, max: 1},
+            backside: {value: true},
+        },
+        {hidden: true, collapsed: true} // <- hides the Leva panel
+    )
 
     // Rotate torus each frame
     useFrame((_, delta) => {
