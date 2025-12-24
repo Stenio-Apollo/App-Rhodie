@@ -49,7 +49,7 @@ export default function HomePage() {
                     className={"gap-4 p-4 border-1 rounded-md  text-white absolute top-1/2 left-9 transform translate-y-9 w-60 break-words overflow-hidden sm:w-64 sm:translate-y-45 lg:w-64 md:w-50 "}>
                     Rhodie is a collaborative task management platform that integrates modern industry standard tools to
                     help
-                    you seamlessly navigate your busy day to day.
+                    you seamlessly navigate your busy day to day
                 </p>
             </main>
             <div>
