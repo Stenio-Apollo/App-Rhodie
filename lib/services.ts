@@ -148,16 +148,61 @@ export const taskService = {
         newColumnId: string,
         newOrder: number
     ) {
-        const {data, error} = await supabase
+        // 1) Fetch the moving task to determine the source column
+        const {data: task, error: taskErr} = await supabase
             .from("tasks")
-            .update({
-                column_id: newColumnId,
-                sort_order: newOrder,
-            })
-            .eq("id", taskId);
+            .select("id,column_id,sort_order")
+            .eq("id", taskId)
+            .single();
+        if (taskErr) throw taskErr;
 
-        if (error) throw error;
-        return data;
+        const oldColumnId = task.column_id as string;
+
+        // 2) Fetch current tasks in source and destination columns
+        const [{data: destTasks, error: destErr}, {data: srcTasks, error: srcErr}] = await Promise.all([
+            supabase
+                .from("tasks")
+                .select("id, sort_order")
+                .eq("column_id", newColumnId)
+                .order("sort_order", {ascending: true}),
+            supabase
+                .from("tasks")
+                .select("id, sort_order")
+                .eq("column_id", oldColumnId)
+                .order("sort_order", {ascending: true}),
+        ]);
+        if (destErr) throw destErr;
+        if (srcErr) throw srcErr;
+
+        // 3) Build the new ordering
+        const filteredDest = (destTasks || []).map(t => t.id).filter(id => id !== taskId);
+        const clampedOrder = Math.max(0, Math.min(newOrder, filteredDest.length));
+        filteredDest.splice(clampedOrder, 0, taskId);
+
+        const srcIds: string[] = (srcTasks || []).map(t => t.id).filter(id => id !== taskId);
+
+        // 4) Generate upserts: update sort_order for all affected tasks; update column_id only for the moved task
+        const updates: { id: string; sort_order: number; column_id?: string }[] = [];
+
+        filteredDest.forEach((id, idx) => {
+            if (id === taskId) {
+                updates.push({ id, sort_order: idx, column_id: newColumnId });
+            } else {
+                updates.push({ id, sort_order: idx });
+            }
+        });
+
+        srcIds.forEach((id, idx) => {
+            updates.push({ id, sort_order: idx });
+        });
+
+        // 5) Persist
+        const {error: upsertErr} = await supabase
+            .from("tasks")
+            .upsert(updates, { onConflict: "id" });
+        if (upsertErr) throw upsertErr;
+
+        return { success: true } as any;
     },
 };
 

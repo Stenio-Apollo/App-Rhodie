@@ -162,19 +162,13 @@ function DroppableColumn({
 }
 
 function SortableTask({task}: { task: Task }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({id: task.id});
+    const {attributes, listeners, setNodeRef, transform, transition, isDragging} =
+        useSortable({id: task.id});
 
     const styles = {
         transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
+        transition: transition || "transform 250ms ease", // ← smooth transition
+        opacity: isDragging ? 0.3 : 1,
     };
 
     function getPriorityColor(priority: "low" | "medium" | "high"): string {
@@ -195,14 +189,9 @@ function SortableTask({task}: { task: Task }) {
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-3 sm:p-4">
                     <div className="space-y-2 sm:space-y-3">
-                        {/* Task Header */}
-                        <div className="flex items-start justify-between">
-                            <h4 className="font-medium text-gray-900 text-sm leading-tight flex-1 min-w-0 pr-2">
-                                {task.title}
-                            </h4>
-                        </div>
-
-                        {/* Task Description */}
+                        <h4 className="font-medium text-gray-900 text-sm leading-tight flex-1 min-w-0 pr-2">
+                            {task.title}
+                        </h4>
                         <p className="text-xs text-gray-600 line-clamp-2">
                             {task.description || "No description."}
                         </p>
@@ -425,57 +414,56 @@ export default function BoardPage() {
         const {active, over} = event
         if (!over) return
 
-        const activeId = active.id as string
-        const overId = over.id as string
+        const activeId = active.id.toString();
+        const overId = over.id.toString();
 
-        const sourceColumn = columns.find(col =>
-            col.tasks.some(task => task.id === activeId)
-        )
+        const sourceColumn = columns.find((col) =>
+            col.tasks.some((task) => task.id.toString() === activeId)
+        );
 
         const targetColumn =
-            columns.find(col => col.id === overId) || // 👈 EMPTY COLUMN
-            columns.find(col => col.tasks.some(task => task.id === overId))
+            columns.find((col) => col.id.toString() === overId) ||
+            columns.find((col) => col.tasks.some((task) => task.id.toString() === overId));
 
-        if (!sourceColumn || !targetColumn) return
+        if (!sourceColumn || !targetColumn) return;
 
         if (sourceColumn.id !== targetColumn.id) {
             setColumns((prev) => {
-                const newColumns = structuredClone(prev)
+                const newColumns = structuredClone(prev);
+                const source = newColumns.find((c) => c.id === sourceColumn.id)!;
+                const target = newColumns.find((c) => c.id === targetColumn.id)!;
 
-                const source = newColumns.find(c => c.id === sourceColumn.id)!
-                const target = newColumns.find(c => c.id === targetColumn.id)!
+                const taskIndex = source.tasks.findIndex((t) => t.id.toString() === activeId);
+                const [movedTask] = source.tasks.splice(taskIndex, 1);
 
-                const taskIndex = source.tasks.findIndex(t => t.id === activeId)
-                const [movedTask] = source.tasks.splice(taskIndex, 1)
+                target.tasks.push(movedTask);
 
-                target.tasks.push(movedTask)
-
-                return newColumns
+                return newColumns;
             })
         }
     }
 
+    // 5️⃣ Drag-end logic fix
     async function handleDragEnd(event: DragEndEvent) {
-        const {active, over} = event
-        setActiveTask(null)
+        const {active, over} = event;
+        setActiveTask(null);
+        if (!over) return;
 
-        if (!over) return
+        const taskId = active.id.toString();
+        const overId = over.id.toString();
 
-        const taskId = active.id as string
-        const overId = over.id as string
-
-        const sourceColumn = columns.find(col =>
-            col.tasks.some(task => task.id === taskId)
-        )
+        const sourceColumn = columns.find((col) =>
+            col.tasks.some((task) => task.id.toString() === taskId)
+        );
 
         const targetColumn =
-            columns.find(col => col.id === overId) ||
-            columns.find(col => col.tasks.some(task => task.id === overId))
+            columns.find((col) => col.id.toString() === overId) ||
+            columns.find((col) => col.tasks.some((task) => task.id.toString() === overId));
 
-        if (!sourceColumn || !targetColumn) return
+        if (!sourceColumn || !targetColumn) return;
 
         if (sourceColumn.id !== targetColumn.id) {
-            await moveTask(taskId, targetColumn.id, targetColumn.tasks.length)
+            await moveTask(taskId, targetColumn.id, targetColumn.tasks.length);
         }
     }
 
@@ -788,8 +776,8 @@ export default function BoardPage() {
                                     onEditColumn={handleEditColumn}
                                 >
                                     <SortableContext
-                                        id={column.id} // 🔥 THIS IS CRITICAL
-                                        items={column.tasks.map((task) => task.id)}
+                                        id={column.id.toString()} //
+                                        items={column.tasks.map((task) => task.id.toString())}
                                         strategy={verticalListSortingStrategy}
 
                                     >
@@ -813,7 +801,7 @@ export default function BoardPage() {
                                 </Button>
                             </div>
 
-                            <DragOverlay>
+                            <DragOverlay dropAnimation={{duration: 250, easing: "ease"}}>
                                 {activeTask ? <TaskOverlay task={activeTask}/> : null}
                             </DragOverlay>
                         </div>

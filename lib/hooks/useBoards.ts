@@ -133,7 +133,7 @@ export function useBoard(boardId: string) {
         }
     }
 
-    // ✅ Persistent moveTask with Supabase update
+    // ✅ Persistent moveTask with Supabase update and immutable local state changes
     async function moveTask(taskId: string, newColumnId: string, newOrder: number) {
         if (!supabase) return;
 
@@ -143,29 +143,41 @@ export function useBoard(boardId: string) {
 
             // 2️⃣ Update local state
             setColumns((prev) => {
-                const newColumns = [...prev];
-                let taskToMove: Task | null = null;
+                // Find source and destination indices
+                const sourceIdx = prev.findIndex((c) => c.tasks.some((t) => t.id === taskId));
+                const destIdx = prev.findIndex((c) => c.id === newColumnId);
+                if (sourceIdx === -1 || destIdx === -1) return prev;
 
-                // Remove task from old column
-                for (const col of newColumns) {
-                    const taskIndex = col.tasks.findIndex((t) => t.id === taskId);
-                    if (taskIndex !== -1) {
-                        taskToMove = col.tasks[taskIndex];
-                        col.tasks.splice(taskIndex, 1);
-                        break;
+                const sourceCol = prev[sourceIdx];
+                const destCol = prev[destIdx];
+
+                // Extract the task
+                const srcTasks = [...sourceCol.tasks];
+                const movingIndex = srcTasks.findIndex((t) => t.id === taskId);
+                if (movingIndex === -1) return prev;
+                const [movingTask] = srcTasks.splice(movingIndex, 1);
+
+                // Insert into destination
+                const destTasks = [...destCol.tasks];
+                const insertIndex = Math.max(0, Math.min(newOrder, destTasks.length));
+                destTasks.splice(insertIndex, 0, {...movingTask, column_id: newColumnId});
+
+                // Recompute sort_order locally for visual consistency
+                const reindexedSrc = srcTasks.map((t, idx) => ({...t, sort_order: idx}));
+                const reindexedDest = destTasks.map((t, idx) => ({...t, sort_order: idx}));
+
+                // Build new columns array immutably
+                const next = prev.map((col, idx) => {
+                    if (idx === sourceIdx) {
+                        return {...col, tasks: reindexedSrc};
                     }
-                }
-
-                if (taskToMove) {
-                    // Assign task to new column
-                    const targetColumn = newColumns.find((col) => col.id === newColumnId);
-                    if (targetColumn) {
-                        taskToMove.column_id = newColumnId; // update column_id locally
-                        targetColumn.tasks.splice(newOrder, 0, taskToMove);
+                    if (idx === destIdx) {
+                        return {...col, tasks: reindexedDest};
                     }
-                }
+                    return col;
+                });
 
-                return newColumns;
+                return next;
             });
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to move task.");
