@@ -16,22 +16,32 @@ export default function SupabaseProvider({children}: { children: React.ReactNode
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
+    // Always initialize a Supabase client immediately so the app doesn't block for signed-out users
+    useEffect(() => {
+        const client = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        setSupabase(client);
+        setIsLoaded(true);
+    }, []);
+
+    // When a Clerk session becomes available, re-create the client to include the access token for RLS-protected data
     useEffect(() => {
         if (!session) return;
 
-        const client = createClient(
+        const authedClient = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
-                accessToken: () => session.getToken(), // ensures authenticated requests
+                // Clerk -> Supabase: provide a bearer token for authenticated requests (if backend is configured to accept it)
+                accessToken: () => session.getToken(),
             }
         );
-
-        setSupabase(client);
-        setIsLoaded(true);
+        setSupabase(authedClient);
     }, [session]);
 
-    // Render children only when supabase client is ready
+    // Render children once a client exists
     if (!isLoaded || !supabase) return <div>Loading Supabase...</div>;
 
     return <Context.Provider value={{supabase, isLoaded}}>{children}</Context.Provider>;
