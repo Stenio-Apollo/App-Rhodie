@@ -449,11 +449,11 @@ export default function BoardPage() {
         setActiveTask(null);
         if (!over) return;
 
-        const taskId = active.id.toString();
+        const activeId = active.id.toString();
         const overId = over.id.toString();
 
         const sourceColumn = columns.find((col) =>
-            col.tasks.some((task) => task.id.toString() === taskId)
+            col.tasks.some((task) => task.id.toString() === activeId)
         );
 
         const targetColumn =
@@ -463,7 +463,20 @@ export default function BoardPage() {
         if (!sourceColumn || !targetColumn) return;
 
         if (sourceColumn.id !== targetColumn.id) {
-            await moveTask(taskId, targetColumn.id, targetColumn.tasks.length);
+            const taskIndex = sourceColumn.tasks.findIndex(t => t.id.toString() === activeId);
+
+            // Persist change to backend
+            await moveTask(activeId, targetColumn.id, targetColumn.tasks.length);
+
+            // Optionally, update local state to match backend
+            setColumns(prev => {
+                const newColumns = structuredClone(prev);
+                const source = newColumns.find(c => c.id === sourceColumn.id)!;
+                const target = newColumns.find(c => c.id === targetColumn.id)!;
+                const [movedTask] = source.tasks.splice(taskIndex, 1);
+                target.tasks.push(movedTask);
+                return newColumns;
+            });
         }
     }
 
