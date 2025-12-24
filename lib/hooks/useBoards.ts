@@ -2,11 +2,14 @@
 
 import {useEffect, useState} from "react";
 import {useUser} from "@clerk/nextjs";
-import {boardDataService, boardService, columnService, taskService} from "../services";
-import {Board, ColumnWithTasks, Task} from "../supabase/models";
+import {boardDataService, boardService, columnService, taskService,} from "../services";
+import {Board, ColumnWithTasks} from "../supabase/models";
 import {useSupabase} from "../supabase/SupabaseProvider";
 
-// Hook to fetch all boards for the dashboard
+/* ===========================
+   DASHBOARD BOARDS HOOK
+=========================== */
+
 export function useBoards() {
     const {user} = useUser();
     const {supabase} = useSupabase();
@@ -26,35 +29,38 @@ export function useBoards() {
 
         try {
             setLoading(true);
-            setError(null);
             const data = await boardService.getBoards(supabase, user.id);
             setBoards(data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to load boards.");
+            setError(err instanceof Error ? err.message : "Failed to load boards");
         } finally {
             setLoading(false);
         }
     }
 
-    async function createBoard(boardData: { title: string; description?: string; color?: string }) {
-        if (!user) throw new Error("User not authenticated");
-        if (!supabase) throw new Error("Supabase client not available");
+    async function createBoard(boardData: {
+        title: string;
+        description?: string;
+        color?: string;
+    }) {
+        if (!user || !supabase) return;
 
-        try {
-            const newBoard = await boardDataService.createBoardWithDefaultColumns(supabase, {
+        const newBoard =
+            await boardDataService.createBoardWithDefaultColumns(supabase, {
                 ...boardData,
                 userId: user.id,
             });
-            setBoards((prev) => [newBoard, ...prev]);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to create board.");
-        }
+
+        setBoards((prev) => [newBoard, ...prev]);
     }
 
     return {boards, loading, error, createBoard};
 }
 
-// Hook to fetch a single board with its columns and tasks
+/* ===========================
+   SINGLE BOARD HOOK
+=========================== */
+
 export function useBoard(boardId: string) {
     const {user} = useUser();
     const {supabase} = useSupabase();
@@ -64,6 +70,8 @@ export function useBoard(boardId: string) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    /* ---------- LOAD BOARD ---------- */
+
     useEffect(() => {
         if (boardId && supabase) {
             loadBoard();
@@ -71,32 +79,33 @@ export function useBoard(boardId: string) {
     }, [boardId, supabase]);
 
     async function loadBoard() {
-        if (!boardId || !supabase) return;
+        if (!supabase) return;
 
         try {
             setLoading(true);
-            setError(null);
-            const data = await boardDataService.getBoardWithColumns(supabase, boardId);
+            const data = await boardDataService.getBoardWithColumns(
+                supabase,
+                boardId
+            );
             setBoard(data.board);
             setColumns(data.columnsWithTasks);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to load board.");
+            setError(err instanceof Error ? err.message : "Failed to load board");
         } finally {
             setLoading(false);
         }
     }
 
-    async function updateBoard(id: string, updates: Partial<Board>) {
-        if (!board || !supabase) return;
+    /* ---------- BOARD ---------- */
 
-        try {
-            const updatedBoard = await boardService.updateBoard(supabase, board.id, updates);
-            setBoard(updatedBoard);
-            return updatedBoard;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update the board.");
-        }
+    async function updateBoard(id: string, updates: Partial<Board>) {
+        if (!supabase) return;
+        const updated = await boardService.updateBoard(supabase, id, updates);
+        setBoard(updated);
+        return updated;
     }
+
+    /* ---------- TASKS ---------- */
 
     async function createRealTask(
         columnId: string,
@@ -110,110 +119,129 @@ export function useBoard(boardId: string) {
     ) {
         if (!supabase) return;
 
-        try {
-            const newTask = await taskService.createTask(supabase, {
-                title: taskData.title,
-                description: taskData.description || null,
-                assignee: taskData.assignee || null,
-                due_date: taskData.dueDate || null,
-                column_id: columnId,
-                sort_order: columns.find((col) => col.id === columnId)?.tasks.length || 0,
-                priority: taskData.priority || "medium",
-            });
+        const newTask = await taskService.createTask(supabase, {
+            title: taskData.title,
+            description: taskData.description ?? null,
+            assignee: taskData.assignee ?? null,
+            due_date: taskData.dueDate ?? null,
+            column_id: columnId,
+            sort_order:
+                columns.find((c) => c.id === columnId)?.tasks.length ?? 0,
+            priority: taskData.priority ?? "medium",
+        });
 
-            setColumns((prev) =>
-                prev.map((col) =>
-                    col.id === columnId ? {...col, tasks: [...col.tasks, newTask]} : col
-                )
-            );
+        setColumns((prev) =>
+            prev.map((col) =>
+                col.id === columnId
+                    ? {...col, tasks: [...col.tasks, newTask]}
+                    : col
+            )
+        );
 
-            return newTask;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to create the task.");
-        }
+        return newTask;
     }
 
-    // ✅ Persistent moveTask with Supabase update and immutable local state changes
-    async function moveTask(taskId: string, newColumnId: string, newOrder: number) {
+    /* ---------- ✅ PERSISTENT MOVE TASK ---------- */
+
+    async function moveTask(
+        taskId: string,
+        newColumnId: string,
+        newOrder: number
+    ) {
         if (!supabase) return;
 
-        try {
-            // 1️⃣ Update the task in Supabase
-            await taskService.moveTask(supabase, taskId, newColumnId, newOrder);
+        // 1️⃣ Persist to DB (this is what survives refresh)
+        await taskService.moveTask(
+            supabase,
+            taskId,
+            newColumnId,
+            newOrder
+        );
 
-            // 2️⃣ Update local state
-            setColumns((prev) => {
-                // Find source and destination indices
-                const sourceIdx = prev.findIndex((c) => c.tasks.some((t) => t.id === taskId));
-                const destIdx = prev.findIndex((c) => c.id === newColumnId);
-                if (sourceIdx === -1 || destIdx === -1) return prev;
+        // 2️⃣ Update UI state
+        setColumns((prev) => {
+            const sourceIdx = prev.findIndex((c) =>
+                c.tasks.some((t) => t.id === taskId)
+            );
+            const destIdx = prev.findIndex((c) => c.id === newColumnId);
 
-                const sourceCol = prev[sourceIdx];
-                const destCol = prev[destIdx];
+            if (sourceIdx === -1 || destIdx === -1) return prev;
 
-                // Extract the task
-                const srcTasks = [...sourceCol.tasks];
-                const movingIndex = srcTasks.findIndex((t) => t.id === taskId);
-                if (movingIndex === -1) return prev;
-                const [movingTask] = srcTasks.splice(movingIndex, 1);
+            const sourceCol = prev[sourceIdx];
+            const destCol = prev[destIdx];
 
-                // Insert into destination
-                const destTasks = [...destCol.tasks];
-                const insertIndex = Math.max(0, Math.min(newOrder, destTasks.length));
-                destTasks.splice(insertIndex, 0, {...movingTask, column_id: newColumnId});
+            const sourceTasks = [...sourceCol.tasks];
+            const taskIndex = sourceTasks.findIndex(
+                (t) => t.id === taskId
+            );
+            if (taskIndex === -1) return prev;
 
-                // Recompute sort_order locally for visual consistency
-                const reindexedSrc = srcTasks.map((t, idx) => ({...t, sort_order: idx}));
-                const reindexedDest = destTasks.map((t, idx) => ({...t, sort_order: idx}));
+            const [movedTask] = sourceTasks.splice(taskIndex, 1);
 
-                // Build new columns array immutably
-                const next = prev.map((col, idx) => {
-                    if (idx === sourceIdx) {
-                        return {...col, tasks: reindexedSrc};
-                    }
-                    if (idx === destIdx) {
-                        return {...col, tasks: reindexedDest};
-                    }
-                    return col;
-                });
-
-                return next;
+            const destTasks = [...destCol.tasks];
+            destTasks.splice(newOrder, 0, {
+                ...movedTask,
+                column_id: newColumnId,
             });
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to move task.");
-        }
+
+            return prev.map((col, idx) => {
+                if (idx === sourceIdx) {
+                    return {
+                        ...col,
+                        tasks: sourceTasks.map((t, i) => ({
+                            ...t,
+                            sort_order: i,
+                        })),
+                    };
+                }
+
+                if (idx === destIdx) {
+                    return {
+                        ...col,
+                        tasks: destTasks.map((t, i) => ({
+                            ...t,
+                            sort_order: i,
+                        })),
+                    };
+                }
+
+                return col;
+            });
+        });
     }
 
+    /* ---------- COLUMNS ---------- */
+
     async function createColumn(title: string) {
-        if (!board || !user || !supabase) throw new Error("Board not loaded");
+        if (!board || !user || !supabase) return;
 
-        try {
-            const newColumn = await columnService.createColumn(supabase, {
-                title,
-                board_id: board.id,
-                sort_order: columns.length,
-                user_id: user.id,
-            });
+        const newColumn = await columnService.createColumn(supabase, {
+            title,
+            board_id: board.id,
+            sort_order: columns.length,
+            user_id: user.id,
+        });
 
-            setColumns((prev) => [...prev, {...newColumn, tasks: []}]);
-            return newColumn;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to create column.");
-        }
+        setColumns((prev) => [...prev, {...newColumn, tasks: []}]);
+        return newColumn;
     }
 
     async function updateColumn(columnId: string, title: string) {
         if (!supabase) return;
 
-        try {
-            const updatedColumn = await columnService.updateColumnTitle(supabase, columnId, title);
-            setColumns((prev) =>
-                prev.map((col) => (col.id === columnId ? {...col, ...updatedColumn} : col))
-            );
-            return updatedColumn;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update column.");
-        }
+        const updated = await columnService.updateColumnTitle(
+            supabase,
+            columnId,
+            title
+        );
+
+        setColumns((prev) =>
+            prev.map((c) =>
+                c.id === columnId ? {...c, ...updated} : c
+            )
+        );
+
+        return updated;
     }
 
     return {
@@ -223,9 +251,9 @@ export function useBoard(boardId: string) {
         error,
         updateBoard,
         createRealTask,
-        setColumns,
         moveTask,
         createColumn,
         updateColumn,
+        setColumns,
     };
 }
