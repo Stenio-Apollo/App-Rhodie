@@ -67,7 +67,8 @@ function DroppableColumn({
                                 {column.title}
                             </h3>
                             <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                {column.tasks?.length}
+                                {(column.tasks as Task[] | undefined)?.length}
+
                             </Badge>
                         </div>
                         <Button
