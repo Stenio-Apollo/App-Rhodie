@@ -7,7 +7,7 @@ import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {ArrowRight} from "lucide-react";
 
-export default function Navbar2() {
+export default function Navbar3() {
     const {isLoaded, isSignedIn, user} = useUser();
     const pathname = usePathname()
     const isDashboardPage = pathname === "/dashboard";
@@ -17,19 +17,18 @@ export default function Navbar2() {
     if (isDashboardPage) {
         return <div>
             <header
-                className="border-b bg-gradient-r-l from-black to-stone-950  backdrop-blur-sm sticky top-0 z-50">
+                className="border-b bg-gradient-r-l from-orange-100 to-orange-50  backdrop-blur-sm sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <span
                             className="text-1xl font-extrabold text-black border-r-2 border-b-2 border-black rounded-lg p-1 -ml-11 lg:-ml-28">
                             Rh
                         </span>
-                        <p className="text-black text-1xl font-bold">
+                        <p className="text-black text-3xl font-bold">
                             Rhodie
                         </p>
                         <Link href="/dashboard/calendar">
-                            <Button size="sm"
-                                    className="text-xs sm:text-sm hover:bg-gradient-to-r from-orange-200 via-orange-100 to-orange-200 hover:text-black hover:translate-x-1">
+                            <Button size="sm" className="text-xs sm:text-sm">
                                 Go to Calendar <ArrowRight/>
                             </Button>
                         </Link>
@@ -48,10 +47,10 @@ export default function Navbar2() {
             <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                         <span
-                            className="text-xl text-black border rounded-lg p-1 -ml-11 lg:-ml-28">
+                            className="text-md  text-black border-1 border-black rounded-sm p-1 -ml-11 lg:-ml-28">
                             Rh
                         </span>
-                    <p className="text-black">
+                    <p className="text-black text-1xl font-bold">
                         Rhodie
                     </p>
                 </div>
@@ -60,17 +59,17 @@ export default function Navbar2() {
                         <div
                             className={"flex flex-col sm:flex-row items-end sm:items-center space-y-1 sm:space-y-0 sm:space-x-4"}>
                             <span className="text-xs sm:text-sm text-gray-500 hidden sm:block ">
-                                {`Welcome Home ${
+                                {`Welcome to your calendar ${
                                     user?.firstName ??
                                     user?.primaryEmailAddress?.emailAddress ??
                                     "friend"
                                 }`}
                             </span>
-                            <Link href={"./dashboard"}>
+                            <Link href={"/dashboard"}>
                                 <Button
                                     size={"sm"}
-                                    className={"text-xs sm:text-sm"}>
-                                    Enter DashBoard <ArrowRight/>
+                                    className={"text-xs sm:text-sm on hover:bg-gradient-to-r from-orange-200 via-orange-100 to-orange-200 hover:text-black hover:translate-x-1"}>
+                                    Return to DashBoard <ArrowRight/>
                                 </Button>
                             </Link>
 

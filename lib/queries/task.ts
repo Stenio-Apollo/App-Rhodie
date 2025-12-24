@@ -1,12 +1,19 @@
-// ✅ userId MUST be passed as a parameter
-import {supabase} from "@/lib/supabase/client";
-import {Task} from "@/types/task";
+// lib/queries/task.ts
+import {SupabaseClient} from "@supabase/supabase-js";
 
-export async function getTasks(userId: string): Promise<Task[]> {
+export async function getTasksForUser(supabase: SupabaseClient, userId: string) {
+    if (!supabase || !userId) return [];
+
     const {data, error} = await supabase
         .from("tasks")
-        .select("*")  // fetch everything
+        .select("*")
+        .eq("user_id", userId)
+        .not("due_date", "is", null);
 
-    console.log("data:", data, "error:", error)
-    return data ?? []
+    if (error) {
+        console.error("Supabase fetch error:", error);
+        return [];
+    }
+
+    return data;
 }
