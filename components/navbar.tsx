@@ -133,11 +133,7 @@ export default function Navbar({
                                     Go to Dashboard <ArrowRight/>
                                 </Button>
                             </Link>
-                            <Link href="/calendar">
-                                <Button size="sm" className="text-xs sm:text-sm">
-                                    Go to Dashboard <ArrowRight/>
-                                </Button>
-                            </Link>
+
                         </div>
                     ) : (
                         <div>

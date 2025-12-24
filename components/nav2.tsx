@@ -27,6 +27,11 @@ export default function Navbar2() {
                         <p className="text-black text-1xl font-bold">
                             Rhodie
                         </p>
+                        <Link href="/dashboard/calendar">
+                            <Button size="sm" className="text-xs sm:text-sm">
+                                Go to Calendar <ArrowRight/>
+                            </Button>
+                        </Link>
 
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-4">

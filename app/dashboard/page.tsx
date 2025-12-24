@@ -16,6 +16,7 @@ import {useRouter} from "next/navigation";
 import {useState} from "react";
 import Navbar2 from "@/components/nav2";
 
+
 export default function DashboardPage() {
     const {user} = useUser();
     const {createBoard, boards, loading, error} = useBoards();
