@@ -86,7 +86,7 @@ export function useBoard(boardId: string) {
         }
     }
 
-    async function updateBoard(updates: Partial<Board>) {
+    async function updateBoard(id: string, updates: Partial<Board>) {
         if (!board || !supabase) return;
 
         try {

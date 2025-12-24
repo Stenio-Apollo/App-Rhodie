@@ -30,19 +30,6 @@ import {
 import {SortableContext, useSortable, verticalListSortingStrategy,} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
 
-type Task = {
-    id: string;
-    title: string;
-    description?: string;
-    // add other task properties here
-};
-
-type ColumnWithTasks = {
-    id: string;
-    title: string;
-    tasks: Task[]; // <-- This tells TypeScript that tasks is always an array
-};
-
 
 function DroppableColumn({
                              column,
@@ -413,7 +400,7 @@ export default function BoardPage() {
             await createTask(taskData);
 
             const trigger = document.querySelector(
-                '[data-state="open"'
+                '[data-state="open"]'
             ) as HTMLElement;
             if (trigger) trigger.click();
         }
