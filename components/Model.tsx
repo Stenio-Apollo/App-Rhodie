@@ -38,13 +38,15 @@ export default function Model() {
     })
 
     const {viewport} = useThree()
+    const scale = viewport.width / 15;
+
 
     return (
-        <group scale={viewport.width / 16.5}>
+        <group scale={[scale, scale, scale]}>
             {/* Text behind the torus */}
             <Text
                 position={[0, 1, -2]} // Z negative = behind torus
-                fontSize={0.9}
+                fontSize={1.2}
                 color="gray"
                 anchorX="center"
                 anchorY={0.07}
