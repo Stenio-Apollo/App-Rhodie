@@ -42,7 +42,10 @@ function DroppableColumn({
     onCreateTask: (taskData: never) => Promise<void>;
     onEditColumn: (column: ColumnWithTasks) => void;
 }) {
-    const {setNodeRef, isOver} = useDroppable({id: column.id});
+    const {setNodeRef, isOver} = useDroppable({
+        id: column.id?.toString() ?? `temp-id-${Math.random()}`,
+    });
+
     return (
 
         <div
