@@ -385,7 +385,7 @@ export default function BoardPage() {
         await createRealTask(targetColumn.id, taskData);
     }
 
-    async function handleCreateTask(e: unknown) {
+    async function handleCreateTask(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const taskData = {

@@ -13,7 +13,8 @@ type GLTFResult = {
 
 export default function Model() {
     const torus = useRef<THREE.Mesh>(null!)
-    const {nodes} = useGLTF("/medias/torus.glb") as GLTFResult
+    // Cast through unknown to satisfy TS when useGLTF's return type doesn't match our narrowed shape
+    const {nodes} = useGLTF("/medias/torus.glb") as unknown as GLTFResult
 
     // Leva controls for transparent glass material (hidden panel)
     const materialProps = useControls(
@@ -46,7 +47,7 @@ export default function Model() {
                 fontSize={0.9}
                 color="gray"
                 anchorX="center"
-                anchorY=".07"
+                anchorY={0.07}
                 material-toneMapped={false} // ensures visibility through glass
                 renderOrder={-1} // render text before torus to see through transparent material
             >

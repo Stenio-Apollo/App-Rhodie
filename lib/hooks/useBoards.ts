@@ -99,7 +99,7 @@ export function useBoard(boardId: string) {
     }
 
     async function createRealTask(
-        columnId: string | number | undefined,
+        columnId: string,
         taskData: {
             title: string;
             description?: string;

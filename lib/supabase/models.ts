@@ -1,4 +1,4 @@
-import {React} from "next/dist/server/route-modules/app-page/vendored/rsc/entrypoints";
+// Central models used across the app
 
 export interface Board {
     id: string;
@@ -25,16 +25,20 @@ export interface Task {
     title: string;
     description: string | null;
     assignee: string | null;
-    due_date_: string | null;
+    // unify naming with UI usage
+    due_date: string | null;
     priority: 'low' | 'medium' | 'high';
     sort_order: number;
     created_at: string;
     updated_at: string;
-
 }
 
-export class ColumnWithTasks {
-    id: string | number | undefined;
-    title: never | undefined;
-    tasks: React.ReactNode | undefined;
+export interface ColumnWithTasks {
+    id: string;
+    board_id: string;
+    title: string;
+    sort_order: number;
+    created_at: string;
+    user_id: string;
+    tasks: Task[];
 }

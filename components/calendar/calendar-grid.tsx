@@ -5,7 +5,9 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,} from "@/components/ui/dialog";
 import {useSupabase} from "@/lib/supabase/SupabaseProvider";
-import {User} from "@clerk/nextjs/dist/types/server"; // adjust import if needed
+
+// Minimal user shape to avoid importing server-only Clerk types in a client component
+type MinimalUser = { id: string };
 
 type Task = {
     id: string;
@@ -15,7 +17,7 @@ type Task = {
 
 type Props = {
     tasks: Task[];
-    user: User | null;
+    user: MinimalUser | null;
     onTaskAdded: (task: Task) => void;
 };
 
