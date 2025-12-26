@@ -29,6 +29,8 @@ export interface Task {
     due_date: string | null;
     priority: 'low' | 'medium' | 'high';
     sort_order: number;
+    // who owns/created the task (needed for RLS and is provided by callers)
+    user_id: string;
     created_at: string;
     updated_at: string;
 }
