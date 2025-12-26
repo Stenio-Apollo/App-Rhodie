@@ -48,7 +48,8 @@ export default function Navbar({
 
     if (isBoardPage) {
         return (
-            <header className="bg-white border-b sticky top-0 z-50">
+            <header
+                className="bg-gradient-to-r from-orange-100 via-orange-50 text-orange-100 border-b sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-3 sm:py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
@@ -84,9 +85,9 @@ export default function Navbar({
                         <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
                             {onFilterClick && (
                                 <Button
-                                    variant="ghost"
+                                    variant="default"
                                     size="sm"
-                                    className={`text-xs sm:text-sm bg-orange-50 ${
+                                    className={`text-xs sm:text-sm bg-rose-300 text-black ${
                                         filterCount > 0 ? "bg-blue-200 border-blue-200" : ""
                                     }`}
                                     onClick={onFilterClick}
@@ -95,7 +96,7 @@ export default function Navbar({
                                     <span className="hidden sm:inline">Filter</span>
                                     {filterCount > 0 && (
                                         <Badge
-                                            variant="secondary"
+                                            variant="default"
                                             className="text-xs ml-1 sm:ml-2 bg-blue-100 border-blue-200"
                                         >
                                             {filterCount}
