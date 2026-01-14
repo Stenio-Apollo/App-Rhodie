@@ -20,11 +20,8 @@ export default function Navbar2() {
                 className="border-b bg-gradient-r-l from-black to-stone-950  backdrop-blur-sm sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                        <span
-                            className="text-1xl font-extrabold text-black border-r-2 border-b-2 border-black rounded-lg p-1 -ml-11 lg:-ml-28">
-                            Rh
-                        </span>
-                        <p className="text-black text-1xl font-bold">
+
+                        <p className="text-black text-2xl font-bold">
                             Rhodie
                         </p>
                         <Link href="/dashboard/calendar">

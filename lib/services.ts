@@ -14,6 +14,7 @@ export const boardService = {
         return data;
     },
 
+
     async getBoards(supabase: SupabaseClient, userId: string): Promise<Board[]> {
         const {data, error} = await supabase
             .from("boards")
@@ -40,6 +41,7 @@ export const boardService = {
 
         return data;
     },
+
 
     async updateBoard(
         supabase: SupabaseClient,
@@ -142,6 +144,18 @@ export const taskService = {
         return data;
     },
 
+    async deleteTask(supabase: SupabaseClient, taskId: string) {
+        const {error} = await supabase
+            .from("tasks")
+            .delete()
+            .eq("id", taskId);
+
+        if (error) throw error;
+
+        return {success: true};
+    },
+
+
     async moveTask(
         supabase: SupabaseClient,
         taskId: string,
@@ -186,23 +200,23 @@ export const taskService = {
 
         filteredDest.forEach((id, idx) => {
             if (id === taskId) {
-                updates.push({ id, sort_order: idx, column_id: newColumnId });
+                updates.push({id, sort_order: idx, column_id: newColumnId});
             } else {
-                updates.push({ id, sort_order: idx });
+                updates.push({id, sort_order: idx});
             }
         });
 
         srcIds.forEach((id, idx) => {
-            updates.push({ id, sort_order: idx });
+            updates.push({id, sort_order: idx});
         });
 
         // 5) Persist
         const {error: upsertErr} = await supabase
             .from("tasks")
-            .upsert(updates, { onConflict: "id" });
+            .upsert(updates, {onConflict: "id"});
         if (upsertErr) throw upsertErr;
 
-        return { success: true } as any;
+        return {success: true} as any;
     },
 };
 

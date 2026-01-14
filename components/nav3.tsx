@@ -45,14 +45,9 @@ export default function Navbar3() {
     return (
         <header className="border-b bg-gradient-r-l from-black to-neutral-800 backdrop-blur-sm sticky top-0 z-50">
             <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                        <span
-                            className="text-md  text-black border-1 border-black rounded-sm p-1 -ml-11 lg:-ml-28">
-                            Rh
-                        </span>
-                    <p className="text-black text-1xl font-bold">
-                        Rhodie
-                    </p>
+                <div className="flex items-center space-x-3">
+
+                  
                 </div>
                 <div className="flex items-center space-x-2 sm:space-x-4">
                     {isLoaded && isSignedIn ? (

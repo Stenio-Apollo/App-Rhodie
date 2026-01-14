@@ -27,7 +27,7 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import {SortableContext, useSortable, verticalListSortingStrategy,} from "@dnd-kit/sortable";
+import {arrayMove, SortableContext, useSortable, verticalListSortingStrategy} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
 
 function DroppableColumn({
@@ -44,6 +44,9 @@ function DroppableColumn({
     const {setNodeRef, isOver} = useDroppable({
         id: column.id?.toString() ?? `temp-id-${Math.random()}`,
     });
+
+    // Control the Add Task dialog open state so we can reliably close it after creation
+    const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
     return (
         <div
@@ -82,7 +85,7 @@ function DroppableColumn({
                 {/* column content */}
                 <div className="p-2">
                     {children}
-                    <Dialog>
+                    <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
                         <DialogTrigger asChild>
                             <Button
                                 variant="ghost"
@@ -109,11 +112,8 @@ function DroppableColumn({
                                         await onCreateTask(formData, column.id.toString());
                                         form.reset();
 
-                                        // Close the dialog (Radix)
-                                        const closeBtn = document.querySelector(
-                                            'button[aria-label="Close"]'
-                                        ) as HTMLButtonElement | null;
-                                        closeBtn?.click();
+                                        // Close the dialog via controlled state
+                                        setIsAddTaskOpen(false);
                                     } catch (err) {
                                         console.error(err);
                                     }
@@ -174,7 +174,7 @@ function DroppableColumn({
     );
 }
 
-function SortableTask({task}: { task: Task }) {
+function SortableTask({task, onDelete}: { task: Task; onDelete: () => void }) {
     const {attributes, listeners, setNodeRef, transform, transition, isDragging} =
         useSortable({id: task.id});
 
@@ -202,9 +202,25 @@ function SortableTask({task}: { task: Task }) {
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-3 sm:p-4">
                     <div className="space-y-2 sm:space-y-3">
-                        <h4 className="font-medium text-gray-900 text-sm leading-tight flex-1 min-w-0 pr-2">
-                            {task.title}
-                        </h4>
+                        <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-medium text-gray-900 text-sm leading-tight flex-1 min-w-0 pr-2">
+                                {task.title}
+                            </h4>
+
+                            <Button
+                                variant="default"
+                                size="sm"
+                                className="bg-orange-100 h-7 px-2 text-black hover:text-black hover:bg-rose-300"
+                                onPointerDown={(e) => e.stopPropagation()} // prevent drag start
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete();
+                                }}
+                            >
+                                Delete
+                            </Button>
+                        </div>
+
                         <p className="text-xs text-gray-600 line-clamp-2">
                             {task.description || "No description."}
                         </p>
@@ -303,7 +319,11 @@ export default function BoardPage() {
         setColumns,
         moveTask,
         updateColumn,
+        deleteTask,
     } = useBoard(id);
+
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState("");
@@ -389,7 +409,8 @@ export default function BoardPage() {
 
     async function handleCreateTask(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        const formData = new FormData(e.currentTarget);
+        const formEl = e.currentTarget as HTMLFormElement;
+        const formData = new FormData(formEl);
         const taskData = {
             title: formData.get("title") as string,
             description: (formData.get("description") as string) || undefined,
@@ -401,9 +422,9 @@ export default function BoardPage() {
 
         if (taskData.title.trim()) {
             await createTask(taskData);
-
-            const trigger = document.querySelector('[data-state="open"]') as HTMLElement;
-            if (trigger) trigger.click();
+            // reset form and close dialog via controlled state
+            formEl.reset();
+            setIsCreateOpen(false);
         }
     }
 
@@ -413,39 +434,9 @@ export default function BoardPage() {
         if (task) setActiveTask(task);
     }
 
-    function handleDragOver(event: DragOverEvent) {
-        const {active, over} = event;
-        if (!over) return;
-
-        const activeId = active.id.toString();
-        const overId = over.id.toString();
-
-        const sourceColumn = columns.find((col) =>
-            col.tasks.some((task) => task.id.toString() === activeId)
-        );
-
-        const targetColumn =
-            columns.find((col) => col.id.toString() === overId) ||
-            columns.find((col) =>
-                col.tasks.some((task) => task.id.toString() === overId)
-            );
-
-        if (!sourceColumn || !targetColumn) return;
-
-        if (sourceColumn.id !== targetColumn.id) {
-            setColumns((prev) => {
-                const newColumns = structuredClone(prev);
-                const source = newColumns.find((c) => c.id === sourceColumn.id)!;
-                const target = newColumns.find((c) => c.id === targetColumn.id)!;
-
-                const taskIndex = source.tasks.findIndex((t) => t.id.toString() === activeId);
-                const [movedTask] = source.tasks.splice(taskIndex, 1);
-
-                target.tasks.push(movedTask);
-
-                return newColumns;
-            });
-        }
+    function handleDragOver(_event: DragOverEvent) {
+        // Do not mutate state on hover to avoid flicker/duplication.
+        // We will finalize positions on dragEnd.
     }
 
     async function handleDragEnd(event: DragEndEvent) {
@@ -456,32 +447,77 @@ export default function BoardPage() {
         const activeId = active.id.toString();
         const overId = over.id.toString();
 
+        // find source column
         const sourceColumn = columns.find((col) =>
-            col.tasks.some((task) => task.id.toString() === activeId)
+            col.tasks.some((t) => t.id.toString() === activeId)
         );
+        if (!sourceColumn) return;
 
+        // target can be:
+        // - a column id (SortableContext id)
+        // - a task id (dropping over another task)
         const targetColumn =
             columns.find((col) => col.id.toString() === overId) ||
-            columns.find((col) =>
-                col.tasks.some((task) => task.id.toString() === overId)
+            columns.find((col) => col.tasks.some((t) => t.id.toString() === overId));
+
+        if (!targetColumn) return;
+
+        const fromColId = sourceColumn.id.toString();
+        const toColId = targetColumn.id.toString();
+
+        const fromIndex = sourceColumn.tasks.findIndex((t) => t.id.toString() === activeId);
+
+        // if dropping on a task, insert at that task's index; if dropping on column, append
+        const overTaskIndex = targetColumn.tasks.findIndex((t) => t.id.toString() === overId);
+        const toIndex = overTaskIndex === -1 ? targetColumn.tasks.length : overTaskIndex;
+
+        // ✅ CASE 1: same column reorder
+        if (fromColId === toColId) {
+            const toIndexAdjusted = toIndex; // arrayMove handles same-array indices correctly
+            if (fromIndex === -1 || toIndexAdjusted === -1 || fromIndex === toIndexAdjusted) return;
+
+            // update UI immediately
+            setColumns((prev) =>
+                prev.map((col) => {
+                    if (col.id.toString() !== fromColId) return col;
+                    const newTasks = arrayMove(col.tasks, fromIndex, toIndexAdjusted).map((t, idx) => ({
+                        ...t,
+                        sort_order: idx,
+                    }));
+                    return {...col, tasks: newTasks};
+                })
             );
 
-        if (!sourceColumn || !targetColumn) return;
-
-        if (sourceColumn.id !== targetColumn.id) {
-            const taskIndex = sourceColumn.tasks.findIndex((t) => t.id.toString() === activeId);
-
-            await moveTask(activeId, targetColumn.id, targetColumn.tasks.length);
-
-            setColumns((prev) => {
-                const newColumns = structuredClone(prev);
-                const source = newColumns.find((c) => c.id === sourceColumn.id)!;
-                const target = newColumns.find((c) => c.id === targetColumn.id)!;
-                const [movedTask] = source.tasks.splice(taskIndex, 1);
-                target.tasks.push(movedTask);
-                return newColumns;
-            });
+            // persist using your existing moveTask (it reindexes via upsert)
+            await moveTask(activeId, targetColumn.id, toIndexAdjusted);
+            return;
         }
+
+        // ✅ CASE 2: move across columns
+        setColumns((prev) => {
+            const next = structuredClone(prev);
+
+            const source = next.find((c) => c.id.toString() === fromColId)!;
+            const target = next.find((c) => c.id.toString() === toColId)!;
+
+            const idx = source.tasks.findIndex((t) => t.id.toString() === activeId);
+            if (idx === -1) return prev;
+
+            const [moved] = source.tasks.splice(idx, 1);
+
+            // insert into target at toIndex
+            const insertIndex = Math.max(0, Math.min(toIndex, target.tasks.length));
+            target.tasks.splice(insertIndex, 0, {...moved, column_id: target.id});
+
+            // reindex both columns
+            source.tasks = source.tasks.map((t, i) => ({...t, sort_order: i}));
+            target.tasks = target.tasks.map((t, i) => ({...t, sort_order: i}));
+
+            return next;
+        });
+
+        // persist to DB
+        await moveTask(activeId, targetColumn.id, toIndex);
     }
 
     async function handleCreateColumn(e: React.FormEvent) {
@@ -555,7 +591,7 @@ export default function BoardPage() {
                             </div>
                         </div>
 
-                        <Dialog>
+                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                             <DialogTrigger asChild>
                                 <Button className="w-full sm:w-auto">
                                     <Plus/>
@@ -644,7 +680,8 @@ export default function BoardPage() {
                                     >
                                         <div className="space-y-3">
                                             {column.tasks.map((task) => (
-                                                <SortableTask task={task} key={task.id}/>
+                                                <SortableTask task={task} key={task.id}
+                                                              onDelete={() => deleteTask(task.id)}/>
                                             ))}
                                         </div>
                                     </SortableContext>

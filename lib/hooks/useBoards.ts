@@ -142,6 +142,33 @@ export function useBoard(boardId: string) {
         }
     }
 
+    async function deleteTask(taskId: string) {
+        if (!supabase) return;
+
+        try {
+            await taskService.deleteTask(supabase, taskId);
+
+            // remove task from local state so UI updates immediately
+            setColumns((prev) =>
+                prev.map((col) => ({
+                    ...col,
+                    tasks: col.tasks.filter((t) => t.id !== taskId),
+                }))
+            );
+        } catch (err) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : typeof err === "string"
+                        ? err
+                        : JSON.stringify(err);
+
+            console.error("deleteTask failed:", err);
+            setError(message || "Failed to delete task.");
+            throw new Error(message || "Failed to delete task.");
+        }
+    }
+
     async function moveTask(taskId: string, newColumnId: string, newOrder: number) {
         if (!supabase) return;
 
@@ -222,5 +249,6 @@ export function useBoard(boardId: string) {
         moveTask,
         createColumn,
         updateColumn,
+        deleteTask,
     };
 }
