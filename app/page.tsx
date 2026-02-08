@@ -51,7 +51,7 @@ export default function HomePage() {
                             Everything you need to stay organized
                         </h2>
                         <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-                            All the powerful features we provide for seamless collabs.
+                            All the powerful features we provide for seamless collaborations
                         </p>
                     </div>
 
