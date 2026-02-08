@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import {Loader2, Trash2} from "lucide-react";
-import {Button} from "@/components/ui/button";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,24 +12,22 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {deleteTask} from "@/lib/queries/task";
+import {Button} from "@/components/ui/button";
 
 type Props = {
     taskId: string;
-    onDeleted?: () => void; // lets parent refresh/remove item from UI
+    onDelete: () => Promise<void> | void;
 };
 
-export function DeleteTaskButton({taskId, onDeleted}: Props) {
+export function DeleteTaskButton({taskId, onDelete}: Props) {
     const [loading, setLoading] = React.useState(false);
 
     async function handleDelete() {
         try {
             setLoading(true);
-            await deleteTask(taskId);
-            onDeleted?.();
+            await onDelete();
         } catch (err) {
             console.error("Delete task failed:", err);
-            // optionally show toast here
         } finally {
             setLoading(false);
         }
@@ -40,25 +36,27 @@ export function DeleteTaskButton({taskId, onDeleted}: Props) {
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                    <Trash2 className="mr-2 h-4 w-4"/>
+                <Button
+                    size="sm"
+                    variant="destructive"
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
                     Delete
                 </Button>
             </AlertDialogTrigger>
 
-            <AlertDialogContent>
+            <AlertDialogContent onPointerDown={(e) => e.stopPropagation()}>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this task?</AlertDialogTitle>
+                    <AlertDialogTitle>Delete task?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action can’t be undone.
+                        This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                        Confirm delete
+                    <AlertDialogAction disabled={loading} onClick={handleDelete}>
+                        {loading ? "Deleting..." : "Delete"}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
