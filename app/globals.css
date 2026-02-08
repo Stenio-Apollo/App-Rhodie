@@ -210,3 +210,21 @@
     position: relative;
     z-index: 10; /* make sure content stays above glow */
 }
+
+@keyframes glow-x {
+    0% {
+        transform: translateX(-40%);
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(140%);
+        opacity: 0.4;
+    }
+}
+
+.animate-glow-x {
+    animation: glow-x 6s linear infinite;
+}

@@ -112,14 +112,11 @@ export default function Navbar({
     }
 
     return (
-        <header className="border-b bg-black backdrop-blur-sm sticky top-0 z-50">
+        <header className="border-b border-slate-500 bg-transparent backdrop-blur-sm sticky top-0 z-50">
             <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                    <span
-                        className="font-extrabold text-white rounded p-1 border-white border-b border-r -ml-11 lg:-ml-28  ">Rh </span>
-                    <span className="text-xl sm:text-1xl font-bold text-white">
-            Rhodie
-          </span>
+
+
                 </div>
 
                 <div className="flex items-center space-x-2 sm:space-x-4">
@@ -142,13 +139,14 @@ export default function Navbar({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="text-xs sm:text-sm bg-orange-100"
+                                    className="text-xs sm:text-sm bg-blue-300"
                                 >
                                     Sign In
                                 </Button>
                             </SignInButton>
                             <SignUpButton>
-                                <Button size="sm" className="text-xs sm:text-sm">
+                                <Button size="sm"
+                                        className="text-xs sm:text-sm bg-transparent hover:bg-slate-900 pl-3">
                                     Sign Up
                                 </Button>
                             </SignUpButton>
