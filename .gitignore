@@ -1,3 +1,4 @@
+# dependencies
 node_modules
 .expo
 .expo-shared
@@ -5,3 +6,15 @@ dist
 web-build
 *.log
 .DS_Store
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# TypeScript
+*.tsbuildinfo
+
+# Env
+.env*
+!.env.example
