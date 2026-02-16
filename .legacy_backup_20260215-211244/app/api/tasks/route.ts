@@ -17,7 +17,12 @@ export async function POST(req: NextRequest) {
     const title: string = typeof body?.title === "string" && body.title.trim() ? body.title.trim() : "Untitled Task";
     const description: string | null = typeof body?.description === "string" ? body.description || null : null;
     const assignee: string | null = typeof body?.assignee === "string" ? body.assignee || null : null;
-    const due_date_: string | null = typeof body?.due_date_ === "string" && body.due_date_.trim() ? body.due_date_ : null;
+    const due_date: string | null =
+      typeof body?.due_date === "string" && body.due_date.trim()
+        ? body.due_date
+        : typeof body?.dueDate === "string" && body.dueDate.trim()
+          ? body.dueDate
+          : null;
     const priority: "low" | "medium" | "high" = ["low", "medium", "high"].includes(body?.priority) ? body.priority : "medium";
     const column_id: string = typeof body?.column_id === "string" ? body.column_id : "";
     const sort_order: number = Number.isFinite(body?.sort_order) ? Number(body.sort_order) : 0;
@@ -32,7 +37,7 @@ export async function POST(req: NextRequest) {
       title,
       description,
       assignee,
-      due_date_,
+      due_date,
       priority,
       column_id,
       sort_order,

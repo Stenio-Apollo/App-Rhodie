@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Task Editor",
+    "slug": "task-editor-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "task-editor",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#f6f8fb"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.steniogerlin.taskeditor"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#f6f8fb"
+      },
+      "package": "com.steniogerlin.taskeditor"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-notifications",
+      "expo-router"
+    ],
+    "newArchEnabled": true
+  }
+}

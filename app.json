@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "RhNative",
+    "slug": "rhnative",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rhnative.app"
+    },
+    "android": {
+      "package": "com.rhnative.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#f1f5f9"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
