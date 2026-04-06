@@ -50,7 +50,7 @@ export function TodayScreen({tasks}: TodayScreenProps) {
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
                         style={[
-                            tw`mb-39 text-4xl text-white/11 tracking-[5px]`,
+                            tw`mb-55 text-4xl text-white/11 tracking-[6px]`,
                             {fontFamily: fonts.display},
                         ]}
                     >
