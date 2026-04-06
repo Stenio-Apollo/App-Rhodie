@@ -4,6 +4,7 @@ import tw from "../lib/tw";
 import type {Task, TaskStatus} from "../types";
 import {TaskCard} from "./TaskCard";
 import {Badge} from "./ui/Badge";
+import {fonts} from "../theme/fonts";
 
 interface KanbanColumnProps {
     status: TaskStatus;
@@ -15,9 +16,11 @@ interface KanbanColumnProps {
 export function KanbanColumn({status, tasks, onMove, onDelete}: KanbanColumnProps) {
     return (
         <View style={tw`w-80`}>
-            <View style={tw`min-h-[340px] rounded-2xl border-r border-b border-orange-100 bg-orange-100 p-3`}>
+            <View style={tw`min-h-[340px] rounded-2xl border border-[#2c2c2c] bg-black/23 p-3`}>
                 <View style={tw`mb-3 flex-row items-center justify-between`}>
-                    <Text style={tw`text-lg font-extrabold text-black`}>{statusLabel(status)}</Text>
+                    <Text style={[tw`text-lg font-extrabold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                        {statusLabel(status)}
+                    </Text>
                     <Badge label={`${tasks.length}`}/>
                 </View>
 
