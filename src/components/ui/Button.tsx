@@ -22,7 +22,7 @@ export function Button({label, onPress, variant = "primary"}: ButtonProps) {
         <Pressable
             onPress={onPress}
             style={({pressed}) => [
-                tw`rounded-xl px-3.5 py-2.5`,
+                tw`rounded-lg px-3.5 py-2.5`,
                 bg,
                 pressed && tw`opacity-90`
             ]}

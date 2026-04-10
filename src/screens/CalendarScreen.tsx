@@ -3,10 +3,12 @@ import {ImageBackground, ScrollView, Text, View} from "react-native";
 import {Calendar, type DateData} from "react-native-calendars";
 import tw from "../lib/tw";
 import type {Task} from "../types";
+import type {Session} from "@supabase/supabase-js";
 import {fonts} from "../theme/fonts";
 
 interface CalendarScreenProps {
     tasks: Task[];
+    session: Session | null;
 }
 
 export function CalendarScreen({tasks}: CalendarScreenProps) {

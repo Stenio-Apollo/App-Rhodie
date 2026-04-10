@@ -9,7 +9,12 @@ export function statusLabel(status: TaskStatus): string {
 }
 
 export function createTaskId(): string {
-  return `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  // UUID v4-ish generator to satisfy text/uuid-compatible ids
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 export function tasksForStatus(tasks: Task[], status: TaskStatus): Task[] {

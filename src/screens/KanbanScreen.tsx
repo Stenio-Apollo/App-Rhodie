@@ -8,6 +8,7 @@ import {KanbanColumn} from "../components/KanbanColumn";
 import {Button} from "../components/ui/Button";
 import {Input} from "../components/ui/Input";
 import {fonts} from "../theme/fonts";
+import type {Session} from "@supabase/supabase-js";
 
 interface KanbanScreenProps {
     tasksState: {
@@ -27,6 +28,7 @@ interface KanbanScreenProps {
         deleteTask: (taskId: string) => void;
         move: (taskId: string, toStatus: TaskStatus, toIndex: number) => void;
     };
+    session: Session | null;
 }
 
 export function KanbanScreen({tasksState}: KanbanScreenProps) {
@@ -78,15 +80,15 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
     }
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-49`}>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-79`}>
             <View style={tw`flex-1 bg-black/1`}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-6`}>
                     <View style={tw`px-4 pt-2`}>
-                        <View style={tw`mt-3 gap-2 rounded-2xl border border-[#2c2c2c] bg-black/23 p-3`}>
+                        <View style={tw`mt-3 gap-2 rounded-2xl border border-[#2c2c2c] bg-black/50 p-3`}>
                             <Input value={title} onChangeText={setTitle} placeholder="Task title"
-                                   style={tw`text-white gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}/>
+                                   style={tw`text-white gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
                             <Input value={description} onChangeText={setDescription} placeholder="Description"
-                                   style={tw`text-white gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}/>
+                                   style={tw`text-white gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
 
                             <View style={tw`flex-row gap-2`}>
                                 <View style={tw`flex-1`}>
@@ -101,7 +103,7 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
                             </View>
 
                             {showCalendar && (
-                                <View style={tw`overflow-hidden rounded-xl border border-slate-300 bg-black/23`}>
+                                <View style={tw`overflow-hidden rounded-xl border border-slate-300 bg-black/33`}>
                                     <Calendar
                                         markedDates={markedDates}
                                         onDayPress={(day: DateData) => {

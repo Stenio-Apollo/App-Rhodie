@@ -6,9 +6,13 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "rhnative",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rhnative.app"
+      "bundleIdentifier": "com.rhnative.app",
+      "infoPlist": {
+        "NSUserNotificationUsageDescription": "We use notifications to remind you about tasks and journal prompts."
+      }
     },
     "android": {
       "package": "com.rhnative.app",
@@ -18,6 +22,13 @@
     },
     "web": {
       "bundler": "metro"
+    },
+    "plugins": [
+      "expo-notifications"
+    ],
+    "extra": {
+      "supabaseUrl": "https://ddjnezmzwvhcgpktaqpv.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkam5lem16d3ZoY2dwa3RhcXB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MTc2ODQsImV4cCI6MjA5MTI5MzY4NH0.I9FvVxcxzug9bBgDtlBdJdR4utguPZVU3aO-Vzg-08U"
     }
   }
 }

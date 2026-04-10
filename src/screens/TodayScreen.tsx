@@ -5,9 +5,13 @@ import {getDailyStoicQuote} from "../lib/quotes";
 import {useJournal} from "../state/useJournal";
 import type {Task} from "../types";
 import {fonts} from "../theme/fonts";
+import type {Session} from "@supabase/supabase-js";
+import {useProfile} from "../state/useProfile";
+import {isToday} from "../lib/date-utils";
 
 interface TodayScreenProps {
     tasks: Task[];
+    session: Session | null;
 }
 
 function isoToday(): string {
@@ -26,13 +30,15 @@ const statusLabel: Record<Task["status"], string> = {
     completed: "Done",
 };
 
-export function TodayScreen({tasks}: TodayScreenProps) {
-    const {byDate} = useJournal();
+export function TodayScreen({tasks, session}: TodayScreenProps) {
+    const {byDate} = useJournal(session);
+    const {profile} = useProfile(session);
     const today = isoToday();
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(today), [today]);
     const todaysEntries = byDate[today] ?? [];
-    const latestEntry = todaysEntries[todaysEntries.length - 1];
+    const latestGratitude = [...todaysEntries].filter(e => e.category === "gratitude").slice(-1)[0];
+    const latestPrompt = [...todaysEntries].filter(e => e.category === "prompt").slice(-1)[0];
 
     const dueToday = useMemo(
         () =>
@@ -50,7 +56,7 @@ export function TodayScreen({tasks}: TodayScreenProps) {
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
                         style={[
-                            tw`mb-55 text-4xl text-white/11 tracking-[6px]`,
+                            tw`mb-83 text-3xl text-white/7 tracking-[11px] border-2 border-white/3 p-1 rounded-lg`,
                             {fontFamily: fonts.display},
                         ]}
                     >
@@ -63,8 +69,17 @@ export function TodayScreen({tasks}: TodayScreenProps) {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/23 p-4`}>
-                        <Text style={[tw`text-xs font-semibold text-white/60`, {fontFamily: fonts.body}]}>Today
-                            • {today}</Text>
+                        <View style={tw`flex-row items-center justify-between`}>
+                            <Text style={[tw`text-xs font-semibold text-white/60`, {fontFamily: fonts.body}]}>Today
+                                • {today}</Text>
+                            {profile?.birthday && isToday(profile.birthday) ? (
+                                <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>Happy
+                                    birthday!</Text>
+                            ) : null}
+                        </View>
+                        <Text style={[tw`mt-1 text-sm text-white`, {fontFamily: fonts.heading}]}>
+                            {profile?.full_name ? `Welcome, ${profile.full_name}` : "Welcome back"}
+                        </Text>
                         <Text style={[tw`mt-2 text-lg text-white leading-snug`, {fontFamily: fonts.body}]}
                               numberOfLines={3}>
                             {todaysQuote}
@@ -72,15 +87,29 @@ export function TodayScreen({tasks}: TodayScreenProps) {
                     </View>
 
                     <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/23 p-4`}>
-                        <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Journal
-                            preview</Text>
-                        {latestEntry ? (
+                        <Text
+                            style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Gratitude</Text>
+                        {latestGratitude ? (
                             <Text style={[tw`mt-2 text-base text-white`, {fontFamily: fonts.body}]} numberOfLines={4}>
-                                {latestEntry.text}
+                                {latestGratitude.text}
                             </Text>
                         ) : (
-                            <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>No entry yet for
+                            <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>No gratitude entry
+                                yet for
                                 today.</Text>
+                        )}
+                    </View>
+
+                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/23 p-4`}>
+                        <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Prompt
+                            response</Text>
+                        {latestPrompt ? (
+                            <Text style={[tw`mt-2 text-base text-white`, {fontFamily: fonts.body}]} numberOfLines={4}>
+                                {latestPrompt.text}
+                            </Text>
+                        ) : (
+                            <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>No prompt response
+                                yet for today.</Text>
                         )}
                     </View>
 
