@@ -4,11 +4,10 @@ import {Button} from "../components/ui/Button";
 import {fonts} from "../theme/fonts";
 import tw from "../lib/tw";
 import {useSupabaseAuth} from "../state/useSupabaseAuth";
-import {useProfile} from "../state/useProfile";
+import {supabase} from "../lib/supabase";
 
 export function AuthScreen() {
     const {signInMagicLink, verifyEmailOtp} = useSupabaseAuth();
-    const {upsertProfile} = useProfile(null);
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [birthday, setBirthday] = useState("");
@@ -32,14 +31,21 @@ export function AuthScreen() {
     async function handleVerify() {
         setLoading(true);
         setError(null);
-        const err = await verifyEmailOtp(email.trim(), code.trim());
+        const {error: err, userId} = await verifyEmailOtp(email.trim(), code.trim());
         if (err) {
             setError(err.message);
             setLoading(false);
             return;
         }
-        if (name.trim()) {
-            await upsertProfile({full_name: name.trim(), birthday: birthday.trim() || null});
+        if (userId && name.trim()) {
+            const {error: profileError} = await supabase.from("profiles").upsert({
+                id: userId,
+                full_name: name.trim(),
+                birthday: birthday.trim() || null,
+            });
+            if (profileError) {
+                setError(profileError.message);
+            }
         }
         setLoading(false);
     }
@@ -47,7 +53,7 @@ export function AuthScreen() {
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={tw`flex-1 bg-black`}>
             <View style={tw`flex-1 justify-center px-6`}>
-                <Text style={[tw`text-2xl text-white text-center`, {fontFamily: fonts.heading}]}>Sign in</Text>
+                <Text style={[tw`text-2xl text-center`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Sign in</Text>
                 <Text style={[tw`mt-2 text-sm text-slate-300 text-center`, {fontFamily: fonts.body}]}>
                     Enter your name, birthday, and email to get a code, then paste the code here.
                 </Text>
@@ -57,7 +63,7 @@ export function AuthScreen() {
                     placeholderTextColor="#6b7280"
                     value={name}
                     onChangeText={setName}
-                    style={[tw`mt-4 rounded-xl border border-slate-700 bg-[#0f0f0f] px-4 py-3 text-white`, {fontFamily: fonts.body}]}
+                    style={[tw`mt-4 rounded-xl border border-slate-700 bg-[#0f0f0f] px-4 py-3`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
                 />
 
                 <TextInput
@@ -66,7 +72,7 @@ export function AuthScreen() {
                     value={birthday}
                     onChangeText={setBirthday}
                     keyboardType="numbers-and-punctuation"
-                    style={[tw`mt-3 rounded-xl border border-slate-700 bg-[#0f0f0f] px-4 py-3 text-white`, {fontFamily: fonts.body}]}
+                    style={[tw`mt-3 rounded-xl border border-slate-700 bg-[#0f0f0f] px-4 py-3`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
                 />
 
                 <TextInput
@@ -76,7 +82,7 @@ export function AuthScreen() {
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    style={[tw`mt-6 rounded-xl border border-slate-700 bg-[#0f0f0f] px-4 py-3 text-white`, {fontFamily: fonts.body}]}
+                    style={[tw`mt-6 rounded-xl border border-slate-700 bg-[#0f0f0f] px-4 py-3`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
                 />
 
                 <View style={tw`mt-4`}>
@@ -91,7 +97,7 @@ export function AuthScreen() {
                             value={code}
                             onChangeText={setCode}
                             keyboardType="number-pad"
-                            style={[tw`mt-4 rounded-xl border border-slate-700 bg-[#0f0f0f] px-4 py-3 text-white`, {fontFamily: fonts.body}]}
+                            style={[tw`mt-4 rounded-xl border border-slate-700 bg-[#0f0f0f] px-4 py-3`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
                         />
                         <View style={tw`mt-3`}>
                             <Button label={loading && sent ? "Verifying..." : "Verify code"} variant="primary" onPress={handleVerify}/>

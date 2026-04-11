@@ -18,7 +18,7 @@ function shiftDate(date: string, delta: number): string {
     return d.toISOString().slice(0, 10);
 }
 
-export function JournalScreen({session}: {session: Session | null}) {
+export function JournalScreen({session}: { session: Session | null }) {
     const {entries, byDate, addEntry, deleteEntry, editEntry} = useJournal(session);
     const [selectedDate, setSelectedDate] = useState<string>(isoToday());
     const [text, setText] = useState("");
@@ -41,14 +41,23 @@ export function JournalScreen({session}: {session: Session | null}) {
                         style={tw`rounded-3xl bg-black/27 p-4 border border-orange-50/17 flex-row gap-4 items-center`}>
                         <View style={tw`flex-1`}>
                             <Text
-                                style={[tw`self-center text-center px-4 py-1 text-lg font-semibold text-white`, {fontFamily: fonts.heading}]}>
+                                style={[tw`self-center text-center px-4 py-1 text-lg font-semibold`, {
+                                    fontFamily: fonts.heading,
+                                    color: "#E4E0D4"
+                                }]}>
                                 QUOTE OF THE DAY
                             </Text>
                             <Text
-                                style={[tw`self-center text-center text-xs font-semibold text-white/70`, {fontFamily: fonts.body}]}>{selectedDate}</Text>
+                                style={[tw`self-center text-center text-xs font-semibold`, {
+                                    fontFamily: fonts.body,
+                                    color: "rgba(228,224,212,0.7)"
+                                }]}>{selectedDate}</Text>
 
                             <Text
-                                style={[tw`self-center text-center mt-9 mb-3 text-lg text-white leading-tight`, {fontFamily: fonts.body}]}
+                                style={[tw`self-center text-center mt-9 mb-3 text-lg leading-tight`, {
+                                    fontFamily: fonts.body,
+                                    color: "#E4E0D4"
+                                }]}
                                 numberOfLines={3}>{todaysQuote}</Text>
                         </View>
                     </View>
@@ -56,7 +65,7 @@ export function JournalScreen({session}: {session: Session | null}) {
                     <View style={tw`mt-3 rounded-2xl bg-black/68 border border-orange-50/17 p-3`}>
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Prompt of
                             the day</Text>
-                        <Text style={[tw`mt-2 text-base text-white leading-snug`, {fontFamily: fonts.body}]}
+                        <Text style={[tw`mt-2 text-base leading-snug`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
                               numberOfLines={4}>
                             {todaysPrompt}
                         </Text>
@@ -93,12 +102,15 @@ export function JournalScreen({session}: {session: Session | null}) {
                             style={({pressed}) => [
                                 tw`rounded-xl px-4 py-2 border`,
                                 {
-                                    borderColor: "#B56941",
-                                    backgroundColor: pressed ? "rgba(181,105,65,0.15)" : "transparent",
+                                    borderColor: "#B55941",
+                                    backgroundColor: pressed ? "rgba(181,89,65,0.15)" : "transparent",
                                 },
                             ]}
                         >
-                            <Text style={[tw`text-sm text-white font-bold`, {fontFamily: fonts.heading}]}>Prev</Text>
+                            <Text style={[tw`text-sm font-bold`, {
+                                fontFamily: fonts.heading,
+                                color: "#E4E0D4"
+                            }]}>Prev</Text>
                         </Pressable>
 
                         <Text
@@ -109,12 +121,15 @@ export function JournalScreen({session}: {session: Session | null}) {
                             style={({pressed}) => [
                                 tw`rounded-xl px-4 py-2 border`,
                                 {
-                                    borderColor: "#B56941",
-                                    backgroundColor: pressed ? "rgba(181,105,65,0.15)" : "transparent",
+                                    borderColor: "#B55941",
+                                    backgroundColor: pressed ? "rgba(181,89,65,0.15)" : "transparent",
                                 },
                             ]}
                         >
-                            <Text style={[tw`text-sm text-white font-bold`, {fontFamily: fonts.heading}]}>Next</Text>
+                            <Text style={[tw`text-sm font-bold`, {
+                                fontFamily: fonts.heading,
+                                color: "#E4E0D4"
+                            }]}>Next</Text>
                         </Pressable>
                     </View>
 

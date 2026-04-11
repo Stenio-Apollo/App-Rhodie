@@ -86,9 +86,9 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
                     <View style={tw`px-4 pt-2`}>
                         <View style={tw`mt-3 gap-2 rounded-2xl border border-[#2c2c2c] bg-black/50 p-3`}>
                             <Input value={title} onChangeText={setTitle} placeholder="Task title"
-                                   style={tw`text-white gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
+                                   style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
                             <Input value={description} onChangeText={setDescription} placeholder="Description"
-                                   style={tw`text-white gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
+                                   style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
 
                             <View style={tw`flex-row gap-2`}>
                                 <View style={tw`flex-1`}>

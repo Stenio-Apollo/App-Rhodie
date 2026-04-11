@@ -13,6 +13,9 @@ const seedTasks: Task[] = [
     status: "todo",
     order: 0,
     createdAt: new Date().toISOString(),
+    source: "manual",
+    externalId: null,
+    externalUpdatedAt: null,
   },
   {
     id: "seed-2",
@@ -23,6 +26,9 @@ const seedTasks: Task[] = [
     status: "in_progress",
     order: 0,
     createdAt: new Date().toISOString(),
+    source: "manual",
+    externalId: null,
+    externalUpdatedAt: null,
   },
 ];
 

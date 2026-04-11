@@ -19,10 +19,28 @@ create table if not exists public.tasks (
   status text not null check (status in ('todo','in_progress','completed')),
   priority text not null check (priority in ('low','medium','high')),
   "order" int not null default 0,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  source text not null default 'manual',
+  external_id text,
+  external_updated_at timestamptz
 );
+alter table public.tasks add column if not exists source text not null default 'manual';
+alter table public.tasks add column if not exists external_id text;
+alter table public.tasks add column if not exists external_updated_at timestamptz;
 create index if not exists tasks_user_status_order_idx on public.tasks (user_id, status, "order");
 create index if not exists tasks_user_due_date_idx on public.tasks (user_id, due_date);
+create index if not exists tasks_user_source_external_idx on public.tasks (user_id, source, external_id);
+create unique index if not exists tasks_google_external_unique on public.tasks (user_id, source, external_id) where external_id is not null;
+
+-- Google Calendar OAuth connection
+create table if not exists public.google_calendar_connections (
+  user_id uuid primary key,
+  access_token text not null,
+  refresh_token text,
+  expires_at timestamptz,
+  scope text,
+  updated_at timestamptz not null default now()
+);
 
 -- Push tokens for Expo notifications
 create table if not exists public.push_tokens (
@@ -37,31 +55,47 @@ create table if not exists public.push_tokens (
 alter table public.journal_entries enable row level security;
 alter table public.tasks enable row level security;
 alter table public.push_tokens enable row level security;
+alter table public.google_calendar_connections enable row level security;
 
 -- Ownership policies
+drop policy if exists "own journal entries" on public.journal_entries;
 create policy "own journal entries" on public.journal_entries
   for all using (auth.uid() = user_id);
 
+drop policy if exists "own tasks" on public.tasks;
 create policy "own tasks" on public.tasks
   for all using (auth.uid() = user_id);
 
+drop policy if exists "own push tokens" on public.push_tokens;
 create policy "own push tokens" on public.push_tokens
   for all using (auth.uid() = user_id);
 
+drop policy if exists "own google calendar connection" on public.google_calendar_connections;
+create policy "own google calendar connection" on public.google_calendar_connections
+  for all using (auth.uid() = user_id);
+
 -- Insert policies
+drop policy if exists "insert journal entries" on public.journal_entries;
 create policy "insert journal entries" on public.journal_entries
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "insert tasks" on public.tasks;
 create policy "insert tasks" on public.tasks
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "insert push tokens" on public.push_tokens;
 create policy "insert push tokens" on public.push_tokens
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "insert google calendar connection" on public.google_calendar_connections;
+create policy "insert google calendar connection" on public.google_calendar_connections
   for insert with check (auth.uid() = user_id);
 
 -- Optional: lock down anon
 revoke all on public.journal_entries from anon;
 revoke all on public.tasks from anon;
 revoke all on public.push_tokens from anon;
+revoke all on public.google_calendar_connections from anon;
 
 -- Profiles
 create table if not exists public.profiles (
@@ -71,6 +105,8 @@ create table if not exists public.profiles (
   updated_at timestamptz default now()
 );
 alter table public.profiles enable row level security;
+drop policy if exists "own profile" on public.profiles;
 create policy "own profile" on public.profiles for all using (auth.uid() = id);
+drop policy if exists "insert profile" on public.profiles;
 create policy "insert profile" on public.profiles for insert with check (auth.uid() = id);
 revoke all on public.profiles from anon;

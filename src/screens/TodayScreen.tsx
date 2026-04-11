@@ -70,17 +70,17 @@ export function TodayScreen({tasks, session}: TodayScreenProps) {
                 >
                     <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/23 p-4`}>
                         <View style={tw`flex-row items-center justify-between`}>
-                            <Text style={[tw`text-xs font-semibold text-white/60`, {fontFamily: fonts.body}]}>Today
+                            <Text style={[tw`text-xs font-semibold`, {fontFamily: fonts.body, color: "rgba(228,224,212,0.6)"}]}>Today
                                 • {today}</Text>
                             {profile?.birthday && isToday(profile.birthday) ? (
                                 <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>Happy
                                     birthday!</Text>
                             ) : null}
                         </View>
-                        <Text style={[tw`mt-1 text-sm text-white`, {fontFamily: fonts.heading}]}>
+                        <Text style={[tw`mt-1 text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                             {profile?.full_name ? `Welcome, ${profile.full_name}` : "Welcome back"}
                         </Text>
-                        <Text style={[tw`mt-2 text-lg text-white leading-snug`, {fontFamily: fonts.body}]}
+                        <Text style={[tw`mt-2 text-lg leading-snug`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
                               numberOfLines={3}>
                             {todaysQuote}
                         </Text>
@@ -90,7 +90,7 @@ export function TodayScreen({tasks, session}: TodayScreenProps) {
                         <Text
                             style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Gratitude</Text>
                         {latestGratitude ? (
-                            <Text style={[tw`mt-2 text-base text-white`, {fontFamily: fonts.body}]} numberOfLines={4}>
+                            <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: "#E4E0D4"}]} numberOfLines={4}>
                                 {latestGratitude.text}
                             </Text>
                         ) : (
@@ -104,7 +104,7 @@ export function TodayScreen({tasks, session}: TodayScreenProps) {
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Prompt
                             response</Text>
                         {latestPrompt ? (
-                            <Text style={[tw`mt-2 text-base text-white`, {fontFamily: fonts.body}]} numberOfLines={4}>
+                            <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: "#E4E0D4"}]} numberOfLines={4}>
                                 {latestPrompt.text}
                             </Text>
                         ) : (
@@ -126,7 +126,7 @@ export function TodayScreen({tasks, session}: TodayScreenProps) {
                                     style={tw`mt-2 rounded-2xl border border-[#2c2c2c] bg-black/40 px-3 py-2`}
                                 >
                                     <Text
-                                        style={[tw`text-base text-white`, {fontFamily: fonts.heading}]}>{task.title}</Text>
+                                        style={[tw`text-base`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{task.title}</Text>
                                     {task.description ? (
                                         <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}
                                               numberOfLines={2}>

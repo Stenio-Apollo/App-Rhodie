@@ -1,5 +1,5 @@
-import {useState} from "react";
-import {Pressable, SafeAreaView, Text, View, Platform} from "react-native";
+import {useEffect, useRef, useState} from "react";
+import {Platform, Pressable, SafeAreaView, Text, View} from "react-native";
 import {StatusBar} from "expo-status-bar";
 import {Asset} from "expo-asset";
 import {SvgUri} from "react-native-svg";
@@ -8,6 +8,8 @@ import {KanbanScreen} from "./src/screens/KanbanScreen";
 import {JournalScreen} from "./src/screens/JournalScreen";
 import {TodayScreen} from "./src/screens/TodayScreen";
 import {AuthScreen} from "./src/screens/AuthScreen";
+import {SubscriptionScreen} from "./src/screens/SubscriptionScreen";
+import {InsightsScreen} from "./src/screens/InsightsScreen";
 import tw from "./src/lib/tw";
 import {useTasks} from "./src/state/useTasks";
 import {GradientBackground} from "./src/components/GradientBackground";
@@ -15,15 +17,19 @@ import {fonts, useAppFonts} from "./src/theme/fonts";
 import {useSupabaseAuth} from "./src/state/useSupabaseAuth";
 import {useProfile} from "./src/state/useProfile";
 import {isToday} from "./src/lib/date-utils";
-import {useEffect} from "react";
 import {registerForPushNotificationsAsync} from "./src/lib/notifications";
 import {supabase} from "./src/lib/supabase";
+import {useSubscription} from "./src/state/useSubscription";
+import {LoadingVideoOverlay} from "./src/components/LoadingVideoOverlay";
 
-type Tab = "today" | "journal" | "board" | "calendar";
+type Tab = "today" | "journal" | "board" | "calendar" | "insights";
 
 export default function App() {
     const [tab, setTab] = useState<Tab>("today");
+    const [transitioning, setTransitioning] = useState(false);
+    const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const {session, loading: authLoading, signOut} = useSupabaseAuth();
+    const subscription = useSubscription(session);
     const {profile} = useProfile(session);
     const tasksState = useTasks(session);
     const [fontsLoaded] = useAppFonts();
@@ -45,13 +51,64 @@ export default function App() {
         };
     }, [session]);
 
-    if (!fontsLoaded || authLoading) return null;
+    useEffect(() => {
+        return () => {
+            if (transitionTimeoutRef.current) {
+                clearTimeout(transitionTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    function handleTabChange(nextTab: Tab) {
+        if (nextTab === tab) return;
+        setTransitioning(true);
+        setTab(nextTab);
+        if (transitionTimeoutRef.current) {
+            clearTimeout(transitionTimeoutRef.current);
+        }
+        transitionTimeoutRef.current = setTimeout(() => {
+            setTransitioning(false);
+            transitionTimeoutRef.current = null;
+        }, 700);
+    }
+
+    const appLoading = !fontsLoaded || authLoading || (session && subscription.loading) || (session && !tasksState.isLoaded);
+    if (appLoading) {
+        return (
+            <GradientBackground>
+                <StatusBar style="light"/>
+                <LoadingVideoOverlay visible message="Starting Rhodie..."/>
+            </GradientBackground>
+        );
+    }
 
     if (!session) {
         return (
             <GradientBackground>
                 <StatusBar style="light"/>
                 <AuthScreen/>
+            </GradientBackground>
+        );
+    }
+
+    if (subscription.requiresPaywall) {
+        const priceLabel = subscription.primaryPackage?.product.priceString
+            ? `${subscription.primaryPackage.product.priceString}/month`
+            : "$3.99/month";
+        return (
+            <GradientBackground>
+                <StatusBar style="light"/>
+                <SubscriptionScreen
+                    loading={subscription.loading}
+                    trialActive={subscription.trialActive}
+                    priceLabel={priceLabel}
+                    purchaseBusy={subscription.purchaseBusy}
+                    restoreBusy={subscription.restoreBusy}
+                    error={subscription.error}
+                    onSubscribe={subscription.purchase}
+                    onRestore={subscription.restore}
+                    onSignOut={signOut}
+                />
             </GradientBackground>
         );
     }
@@ -64,21 +121,24 @@ export default function App() {
                 <View
                     style={tw`flex-row items-center justify-between px-4 py-3`}>
                     <View style={tw`flex-row items-center gap-3`}>
-                        <Text style={[tw`text-xl text-white rounded-lg border border-white px-2 py-1`, {
+                        <Text style={[tw`text-xl rounded-lg border border-white px-2 py-1`, {
+                            color: "#E4E0D4",
                             fontFamily: fonts.heading,
                             letterSpacing: 0.5
                         }]}>rh.</Text>
                         <View>
-                            <Text style={[tw`text-sm text-white`, {fontFamily: fonts.heading}]}>
+                            <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                 {profile?.full_name ? `Welcome, ${profile.full_name}` : "Welcome back"}
                             </Text>
                             {profile?.birthday && isToday(profile.birthday) ? (
-                                <Text style={[tw`text-xs text-orange-200`, {fontFamily: fonts.body}]}>Happy birthday! 🎉</Text>
+                                <Text style={[tw`text-xs text-orange-200`, {fontFamily: fonts.body}]}>Happy birthday!
+                                    🎉</Text>
                             ) : null}
                         </View>
                     </View>
-                    <Pressable onPress={signOut} style={({pressed}) => [tw`px-3 py-1 rounded-xl border border-white/30`, pressed && tw`bg-white/10`]}>
-                        <Text style={[tw`text-xs text-white`, {fontFamily: fonts.body}]}>Sign out</Text>
+                    <Pressable onPress={signOut}
+                               style={({pressed}) => [tw`px-3 py-1 rounded-xl border border-white/30`, pressed && tw`bg-white/10`]}>
+                        <Text style={[tw`text-xs`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>Sign out</Text>
                     </Pressable>
                 </View>
 
@@ -86,7 +146,10 @@ export default function App() {
                     {tab === "today" && <TodayScreen tasks={tasksState.tasks} session={session}/>}
                     {tab === "journal" && <JournalScreen session={session}/>}
                     {tab === "board" && <KanbanScreen tasksState={tasksState} session={session}/>}
-                    {tab === "calendar" && <CalendarScreen tasks={tasksState.tasks} session={session}/>}
+                    {tab === "calendar" &&
+                        <CalendarScreen tasks={tasksState.tasks} session={session}
+                                        googleCalendar={tasksState.googleCalendar}/>}
+                    {tab === "insights" && <InsightsScreen/>}
                 </View>
 
                 <View style={tw`px-4 py-3 bg-black`}>
@@ -96,18 +159,22 @@ export default function App() {
                             {key: "journal", label: "Journal", icon: require("./public/images/journal.svg")},
                             {key: "board", label: "Tasks", icon: require("./public/images/to-do-list.svg")},
                             {key: "calendar", label: "Calendar", icon: require("./public/images/calendar.svg")},
+                            {key: "insights", label: "Insights", icon: require("./public/images/insight (1).svg")},
                         ] as const).map((item) => {
                             const active = tab === item.key;
                             const uri = Asset.fromModule(item.icon).uri;
-                            const iconColor = active ? tw.color("orange-200") ?? "black" : tw.color("white") ?? "#cbd5e1";
-                            const labelColor = active ? tw.color("orange-200") ?? "#fb923c" : "#E4E0D4";
+                            const iconColor = active ? "#B55941" : "#E4E0D4";
+                            const labelColor = active ? "#B55941" : "#E4E0D4";
                             return (
                                 <Pressable
                                     key={item.key}
-                                    onPress={() => setTab(item.key)}
+                                    onPress={() => handleTabChange(item.key)}
                                     style={({pressed}) => [
                                         tw`px-3 py-1 rounded-xl  items-center`,
-                                        active ? tw`border-orange-200 bg-slate-700/10` : tw`border-transparent`,
+                                        active ? {
+                                            borderColor: "#B55941",
+                                            borderWidth: 1
+                                        } : tw`border-transparent`,
                                         pressed && tw`bg-white/5`,
                                     ]}
                                 >
@@ -125,6 +192,7 @@ export default function App() {
                         })}
                     </View>
                 </View>
+                <LoadingVideoOverlay visible={transitioning} message="Loading screen..."/>
             </SafeAreaView>
         </GradientBackground>
     );

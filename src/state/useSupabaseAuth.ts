@@ -32,8 +32,8 @@ export function useSupabaseAuth() {
   }, []);
 
   const verifyEmailOtp = useCallback(async (email: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
-    return error;
+    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+    return { error, userId: data.user?.id ?? null };
   }, []);
 
   const signOut = useCallback(async () => {

@@ -9,21 +9,21 @@ interface ButtonProps {
 }
 
 export function Button({label, onPress, variant = "primary"}: ButtonProps) {
-    const bg =
+    const bgStyle =
         variant === "secondary"
             ? tw`bg-transparent border border-zinc-200`
             : variant === "danger"
-                ? tw`bg-slate-200`
-                : tw`bg-slate-700`;
+                ? {backgroundColor: "#2B2B2B"}
+                : {backgroundColor: "#2B2B2B"};
 
-    const color = variant === "secondary" ? tw`text-zinc-200` : tw`text-black`;
+    const textColor = variant === "secondary" ? "#E4E0D4" : "#E4E0D4";
 
     return (
         <Pressable
             onPress={onPress}
             style={({pressed}) => [
                 tw`rounded-lg px-3.5 py-2.5`,
-                bg,
+                bgStyle,
                 pressed && tw`opacity-90`
             ]}
         >
@@ -31,7 +31,7 @@ export function Button({label, onPress, variant = "primary"}: ButtonProps) {
                 <Text
                     style={[
                         tw`text-center text-xs`,
-                        color,
+                        {color: textColor},
                         {fontFamily: fonts.heading},
                         pressed && tw`opacity-100`
                     ]}

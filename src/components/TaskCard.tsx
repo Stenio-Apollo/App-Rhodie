@@ -54,7 +54,7 @@ export function TaskCard({task, status, index, total, onDelete, onMove}: TaskCar
                                 style={({pressed}) => [tw`rounded-lg bg-orange-200/93 px-2 py-1`, pressed && tw`bg-[#B56941]/35`]}
                                 onPress={() => onMove(task.id, prevStatus, Number.MAX_SAFE_INTEGER)}>
                                 <Text
-                                    style={[tw`text-xs font-bold text-gray-700`, {fontFamily: fonts.button}]}>Prev</Text>
+                                    style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Prev</Text>
                             </Pressable>
                         ) : null}
                         {nextStatus ? (
@@ -62,7 +62,7 @@ export function TaskCard({task, status, index, total, onDelete, onMove}: TaskCar
                                 style={({pressed}) => [tw`rounded-lg bg-orange-200/93 px-2 py-1`, pressed && tw`bg-neutral-300/35`]}
                                 onPress={() => onMove(task.id, nextStatus, Number.MAX_SAFE_INTEGER)}>
                                 <Text
-                                    style={[tw`text-xs font-bold text-gray-700`, {fontFamily: fonts.button}]}>Next</Text>
+                                    style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Next</Text>
                             </Pressable>
                         ) : null}
                     </View>
@@ -72,19 +72,19 @@ export function TaskCard({task, status, index, total, onDelete, onMove}: TaskCar
                             <Pressable
                                 style={({pressed}) => [tw`rounded-lg bg-orange-200/93 px-2 py-1`, pressed && tw`bg-[#B56941]/35`]}
                                 onPress={() => onMove(task.id, status, index - 1)}>
-                                <Text style={[tw`text-xs font-bold text-black`, {fontFamily: fonts.body}]}>↑</Text>
+                                <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>↑</Text>
                             </Pressable>
                         ) : null}
                         {index < total - 1 ? (
                             <Pressable
                                 style={({pressed}) => [tw`rounded-lg bg-orange-200/93 px-2 py-1`, pressed && tw`bg-[#B56941]/35`]}
                                 onPress={() => onMove(task.id, status, index + 1)}>
-                                <Text style={[tw`text-xs font-bold text-black`, {fontFamily: fonts.body}]}>↓</Text>
+                                <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>↓</Text>
                             </Pressable>
                         ) : null}
                         <Pressable onPress={() => onDelete(task.id)}
                                    style={({pressed}) => [tw`rounded-lg bg-[#282828] px-2.5 py-1`, pressed && tw`bg-[#282828]/80`]}>
-                            <Text style={[tw`text-xs font-bold text-white`, {fontFamily: fonts.body}]}>Delete</Text>
+                            <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>Delete</Text>
                         </Pressable>
                     </View>
                 </View>
