@@ -40,5 +40,11 @@ export function useSupabaseAuth() {
     await supabase.auth.signOut();
   }, []);
 
-  return { session, loading, signInMagicLink, verifyEmailOtp, signOut };
+  return {
+    session,
+    loading,
+    signInMagicLink,
+    verifyEmailOtp,
+    signOut,
+  };
 }

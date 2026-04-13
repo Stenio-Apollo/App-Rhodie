@@ -51,7 +51,7 @@ export function TaskCard({task, status, index, total, onDelete, onMove}: TaskCar
                     <View style={tw`flex-row items-center gap-1.5`}>
                         {prevStatus ? (
                             <Pressable
-                                style={({pressed}) => [tw`rounded-lg bg-orange-200/93 px-2 py-1`, pressed && tw`bg-[#B56941]/35`]}
+                                style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
                                 onPress={() => onMove(task.id, prevStatus, Number.MAX_SAFE_INTEGER)}>
                                 <Text
                                     style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Prev</Text>
@@ -59,7 +59,7 @@ export function TaskCard({task, status, index, total, onDelete, onMove}: TaskCar
                         ) : null}
                         {nextStatus ? (
                             <Pressable
-                                style={({pressed}) => [tw`rounded-lg bg-orange-200/93 px-2 py-1`, pressed && tw`bg-neutral-300/35`]}
+                                style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
                                 onPress={() => onMove(task.id, nextStatus, Number.MAX_SAFE_INTEGER)}>
                                 <Text
                                     style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Next</Text>
@@ -70,14 +70,14 @@ export function TaskCard({task, status, index, total, onDelete, onMove}: TaskCar
                     <View style={tw`flex-row items-center gap-1.5`}>
                         {index > 0 ? (
                             <Pressable
-                                style={({pressed}) => [tw`rounded-lg bg-orange-200/93 px-2 py-1`, pressed && tw`bg-[#B56941]/35`]}
+                                style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
                                 onPress={() => onMove(task.id, status, index - 1)}>
                                 <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>↑</Text>
                             </Pressable>
                         ) : null}
                         {index < total - 1 ? (
                             <Pressable
-                                style={({pressed}) => [tw`rounded-lg bg-orange-200/93 px-2 py-1`, pressed && tw`bg-[#B56941]/35`]}
+                                style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
                                 onPress={() => onMove(task.id, status, index + 1)}>
                                 <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>↓</Text>
                             </Pressable>

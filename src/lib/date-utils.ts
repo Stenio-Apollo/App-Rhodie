@@ -2,7 +2,7 @@ export function isToday(input: string): boolean {
     const d = new Date(input);
     const now = new Date();
     return (
-        d.getFullYear() === now.getFullYear() &&
+        !Number.isNaN(d.getTime()) &&
         d.getMonth() === now.getMonth() &&
         d.getDate() === now.getDate()
     );

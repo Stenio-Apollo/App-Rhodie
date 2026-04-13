@@ -21,18 +21,23 @@ import {registerForPushNotificationsAsync} from "./src/lib/notifications";
 import {supabase} from "./src/lib/supabase";
 import {useSubscription} from "./src/state/useSubscription";
 import {LoadingVideoOverlay} from "./src/components/LoadingVideoOverlay";
+import {BirthdayConfetti} from "./src/components/BirthdayConfetti";
 
 type Tab = "today" | "journal" | "board" | "calendar" | "insights";
 
 export default function App() {
     const [tab, setTab] = useState<Tab>("today");
     const [transitioning, setTransitioning] = useState(false);
+    const [birthdayBurstKey, setBirthdayBurstKey] = useState("initial");
     const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const birthdayBurstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const {session, loading: authLoading, signOut} = useSupabaseAuth();
     const subscription = useSubscription(session);
     const {profile} = useProfile(session);
     const tasksState = useTasks(session);
     const [fontsLoaded] = useAppFonts();
+    const birthdayActive = Boolean(profile?.birthday && isToday(profile.birthday));
+    const appLoading = !fontsLoaded || authLoading || (session && subscription.loading) || (session && !tasksState.isLoaded);
 
     useEffect(() => {
         if (!session) return;
@@ -56,8 +61,34 @@ export default function App() {
             if (transitionTimeoutRef.current) {
                 clearTimeout(transitionTimeoutRef.current);
             }
+            if (birthdayBurstTimeoutRef.current) {
+                clearTimeout(birthdayBurstTimeoutRef.current);
+            }
         };
     }, []);
+
+    useEffect(() => {
+        if (birthdayBurstTimeoutRef.current) {
+            clearTimeout(birthdayBurstTimeoutRef.current);
+            birthdayBurstTimeoutRef.current = null;
+        }
+
+        if (!birthdayActive || transitioning || appLoading || !session) {
+            return;
+        }
+
+        birthdayBurstTimeoutRef.current = setTimeout(() => {
+            setBirthdayBurstKey(`${tab}-${Date.now()}`);
+            birthdayBurstTimeoutRef.current = null;
+        }, 260);
+
+        return () => {
+            if (birthdayBurstTimeoutRef.current) {
+                clearTimeout(birthdayBurstTimeoutRef.current);
+                birthdayBurstTimeoutRef.current = null;
+            }
+        };
+    }, [appLoading, birthdayActive, session, tab, transitioning]);
 
     function handleTabChange(nextTab: Tab) {
         if (nextTab === tab) return;
@@ -72,7 +103,6 @@ export default function App() {
         }, 700);
     }
 
-    const appLoading = !fontsLoaded || authLoading || (session && subscription.loading) || (session && !tasksState.isLoaded);
     if (appLoading) {
         return (
             <GradientBackground>
@@ -192,6 +222,7 @@ export default function App() {
                         })}
                     </View>
                 </View>
+                <BirthdayConfetti visible={birthdayActive} triggerKey={birthdayBurstKey}/>
                 <LoadingVideoOverlay visible={transitioning} message="Loading screen..."/>
             </SafeAreaView>
         </GradientBackground>
