@@ -1,10 +1,9 @@
 import type { Task, TaskStatus } from "../types";
 
-export const STATUS_ORDER: TaskStatus[] = ["todo", "in_progress", "completed"];
+export const STATUS_ORDER: TaskStatus[] = ["todo", "completed"];
 
 export function statusLabel(status: TaskStatus): string {
   if (status === "todo") return "To Do";
-  if (status === "in_progress") return "In Progress";
   return "Completed";
 }
 

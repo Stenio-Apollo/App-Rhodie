@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
-import {AppState, type AppStateStatus} from "react-native";
+import {Alert, AppState, type AppStateStatus} from "react-native";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import Constants from "expo-constants";
@@ -16,7 +16,7 @@ type TaskRow = {
     title: string;
     description: string | null;
     due_date: string | null;
-    status: TaskStatus;
+    status: "todo" | "completed";
     priority: TaskPriority;
     order: number | null;
     created_at: string;
@@ -46,13 +46,18 @@ type GoogleCalendarEvent = {
     };
 };
 
+function normalizeTaskStatus(status: string | null | undefined): TaskStatus {
+    if (status === "completed") return "completed";
+    return "todo";
+}
+
 function mapTaskRowToTask(row: TaskRow): Task {
     return {
         id: row.id,
         title: row.title,
         description: row.description ?? "",
         dueDate: row.due_date ?? null,
-        status: row.status,
+        status: normalizeTaskStatus(row.status),
         priority: row.priority,
         order: row.order ?? 0,
         createdAt: row.created_at,
@@ -119,7 +124,7 @@ export function useTasks(session: Session | null) {
         discovery,
     );
 
-    const loadRemoteTasks = useCallback(async (userId: string): Promise<Task[]> => {
+    const loadRemoteTasks = useCallback(async (userId: string): Promise<Task[] | null> => {
         const {data, error} = await supabase
             .from("tasks")
             .select("*")
@@ -129,7 +134,7 @@ export function useTasks(session: Session | null) {
 
         if (error) {
             console.warn("Supabase tasks load error", error.message);
-            return [];
+            return null;
         }
 
         return ((data ?? []) as TaskRow[]).map(mapTaskRowToTask);
@@ -329,7 +334,7 @@ export function useTasks(session: Session | null) {
             }
 
             const latest = await loadRemoteTasks(session.user.id);
-            setTasks(latest);
+            setTasks(latest ?? tasks);
             setLastGoogleSyncAt(new Date().toISOString());
             setGoogleConnected(true);
         } catch (error) {
@@ -415,12 +420,18 @@ export function useTasks(session: Session | null) {
         async function hydrateLocal() {
             const loaded = await loadTasks();
             if (!mounted) return;
-            setTasks(loaded);
+            setTasks(loaded.map((task) => ({
+                ...task,
+                status: normalizeTaskStatus(task.status),
+            })));
             setIsLoaded(true);
         }
 
         async function hydrateRemote(userId: string) {
-            const local = await loadTasks();
+            const local = (await loadTasks()).map((task) => ({
+                ...task,
+                status: normalizeTaskStatus(task.status),
+            }));
 
             if (local.length > 0) {
                 const toUpsert = local.map((task) => ({
@@ -443,7 +454,7 @@ export function useTasks(session: Session | null) {
 
             const remoteTasks = await loadRemoteTasks(userId);
             if (!mounted) return;
-            setTasks(remoteTasks);
+            setTasks(remoteTasks ?? local ?? []);
             setIsLoaded(true);
         }
 
@@ -483,10 +494,8 @@ export function useTasks(session: Session | null) {
 
     useEffect(() => {
         if (!isLoaded) return;
-        if (!session) {
-            void saveTasks(tasks);
-        }
-    }, [isLoaded, tasks, session]);
+        void saveTasks(tasks);
+    }, [isLoaded, tasks]);
 
     const syncTaskOrdering = useCallback(
         async (userId: string, nextTasks: Task[], taskIds: string[]) => {
@@ -534,10 +543,12 @@ export function useTasks(session: Session | null) {
                 externalUpdatedAt: null,
             };
 
-            setTasks((prev) => [...prev, nextTask]);
+            const nextTasks = [...tasks, nextTask];
+            setTasks(nextTasks);
+            void saveTasks(nextTasks);
 
             if (session) {
-                await supabase.from("tasks").insert({
+                const {error} = await supabase.from("tasks").insert({
                     id: nextTask.id,
                     user_id: session.user.id,
                     title: nextTask.title,
@@ -551,6 +562,10 @@ export function useTasks(session: Session | null) {
                     external_id: nextTask.externalId,
                     external_updated_at: nextTask.externalUpdatedAt,
                 });
+                if (error) {
+                    console.warn("Supabase task insert error", error.message);
+                    Alert.alert("Save error", "Could not save task to server. It will stay locally for now.");
+                }
             }
         },
         [tasks, session],
@@ -559,21 +574,22 @@ export function useTasks(session: Session | null) {
     const deleteTask = useCallback(
         async (taskId: string) => {
             const target = tasks.find((task) => task.id === taskId);
-            setTasks((prev) => {
-                const current = prev.find((task) => task.id === taskId);
-                if (!current) return prev;
+            const current = tasks.find((task) => task.id === taskId);
+            if (!current) return;
 
-                const without = prev.filter((task) => task.id !== taskId);
-                const statusTasks = tasksForStatus(without, current.status).map((task, order) => ({
-                    ...task,
-                    order,
-                }));
+            const without = tasks.filter((task) => task.id !== taskId);
+            const statusTasks = tasksForStatus(without, current.status).map((task, order) => ({
+                ...task,
+                order,
+            }));
 
-                return [
-                    ...without.filter((task) => task.status !== current.status),
-                    ...statusTasks,
-                ];
-            });
+            const nextTasks = [
+                ...without.filter((task) => task.status !== current.status),
+                ...statusTasks,
+            ];
+
+            setTasks(nextTasks);
+            void saveTasks(nextTasks);
 
             if (session) {
                 await supabase.from("tasks").delete().eq("id", taskId).eq("user_id", session.user.id);
@@ -603,10 +619,11 @@ export function useTasks(session: Session | null) {
     const move = useCallback(
         async (taskId: string, toStatus: TaskStatus, toIndex: number) => {
             const moving = tasks.find((task) => task.id === taskId);
-            setTasks((prev) => moveTask(prev, taskId, toStatus, toIndex));
+            const next = moveTask(tasks, taskId, toStatus, toIndex);
+            setTasks(next);
+            void saveTasks(next);
 
             if (session && moving) {
-                const next = moveTask(tasks, taskId, toStatus, toIndex);
                 const affectedIds = [
                     ...tasksForStatus(next, moving.status).map((task) => task.id),
                     ...tasksForStatus(next, toStatus).map((task) => task.id),
@@ -661,7 +678,6 @@ export function useTasks(session: Session | null) {
     const grouped = useMemo(
         () => ({
             todo: tasksForStatus(tasks, "todo"),
-            in_progress: tasksForStatus(tasks, "in_progress"),
             completed: tasksForStatus(tasks, "completed"),
         }),
         [tasks],

@@ -5,18 +5,20 @@ import {fonts} from "../../theme/fonts";
 interface ButtonProps {
     label: string;
     onPress: () => void;
-    variant?: "primary" | "secondary" | "danger";
+    variant?: "primary" | "secondary" | "danger" | "outlineAccent";
 }
 
 export function Button({label, onPress, variant = "primary"}: ButtonProps) {
     const bgStyle =
         variant === "secondary"
             ? tw`bg-transparent border border-zinc-200`
+            : variant === "outlineAccent"
+                ? {backgroundColor: "transparent", borderWidth: 1, borderColor: "#B55941"}
             : variant === "danger"
                 ? {backgroundColor: "#2B2B2B"}
                 : {backgroundColor: "#2B2B2B"};
 
-    const textColor = variant === "secondary" ? "#E4E0D4" : "#E4E0D4";
+    const textColor = variant === "secondary" || variant === "outlineAccent" ? "#E4E0D4" : "#E4E0D4";
 
     return (
         <Pressable

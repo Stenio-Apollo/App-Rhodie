@@ -1,12 +1,46 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
-import Purchases, {
-    type CustomerInfo,
-    type PurchasesEntitlementInfo,
-    type PurchasesOfferings,
-    type PurchasesPackage,
-} from "react-native-purchases";
 import type {Session} from "@supabase/supabase-js";
+import type {
+    CustomerInfo,
+    PurchasesEntitlementInfo,
+    PurchasesOfferings,
+    PurchasesPackage,
+} from "react-native-purchases";
 import {getRevenueCatApiKey, isRevenueCatSupported, revenueCatEntitlementId} from "../lib/revenuecat";
+
+type CustomerInfoListener = (info: CustomerInfo) => void;
+
+type PurchasesModule = {
+    isConfigured: () => Promise<boolean>;
+    configure: (options: { apiKey: string; appUserID: string }) => void;
+    getAppUserID: () => Promise<string>;
+    logIn: (userId: string) => Promise<unknown>;
+    addCustomerInfoUpdateListener: (listener: CustomerInfoListener) => void;
+    removeCustomerInfoUpdateListener: (listener: CustomerInfoListener) => void;
+    getOfferings: () => Promise<PurchasesOfferings>;
+    getCustomerInfo: () => Promise<CustomerInfo>;
+    purchasePackage: (pkg: PurchasesPackage) => Promise<{ customerInfo: CustomerInfo }>;
+    restorePurchases: () => Promise<CustomerInfo>;
+};
+
+let cachedPurchasesModule: PurchasesModule | null | undefined;
+
+function getPurchasesModule(): PurchasesModule | null {
+    if (cachedPurchasesModule !== undefined) return cachedPurchasesModule;
+    if (!isRevenueCatSupported()) {
+        cachedPurchasesModule = null;
+        return cachedPurchasesModule;
+    }
+
+    try {
+        const loadedModule = require("react-native-purchases");
+        cachedPurchasesModule = (loadedModule.default ?? loadedModule) as PurchasesModule;
+    } catch {
+        cachedPurchasesModule = null;
+    }
+
+    return cachedPurchasesModule;
+}
 
 function getActiveEntitlement(
     customerInfo: CustomerInfo | null,
@@ -18,16 +52,16 @@ function getActiveEntitlement(
     return activeEntitlements[0] ?? null;
 }
 
-async function configurePurchasesForUser(apiKey: string, userId: string) {
-    const alreadyConfigured = await Purchases.isConfigured();
+async function configurePurchasesForUser(purchases: PurchasesModule, apiKey: string, userId: string) {
+    const alreadyConfigured = await purchases.isConfigured();
     if (!alreadyConfigured) {
-        Purchases.configure({apiKey, appUserID: userId});
+        purchases.configure({apiKey, appUserID: userId});
         return;
     }
 
-    const currentUserId = await Purchases.getAppUserID();
+    const currentUserId = await purchases.getAppUserID();
     if (currentUserId !== userId) {
-        await Purchases.logIn(userId);
+        await purchases.logIn(userId);
     }
 }
 
@@ -40,7 +74,8 @@ export function useSubscription(session: Session | null) {
     const [error, setError] = useState<string | null>(null);
 
     const apiKey = getRevenueCatApiKey();
-    const billingConfigured = Boolean(apiKey) && isRevenueCatSupported();
+    const purchases = getPurchasesModule();
+    const billingConfigured = Boolean(apiKey && purchases);
     const activeEntitlement = useMemo(
         () => getActiveEntitlement(customerInfo),
         [customerInfo],
@@ -54,13 +89,17 @@ export function useSubscription(session: Session | null) {
     }, [offerings]);
 
     const refreshCustomerInfo = useCallback(async () => {
-        const info = await Purchases.getCustomerInfo();
+        if (!purchases) {
+            setCustomerInfo(null);
+            return null;
+        }
+        const info = await purchases.getCustomerInfo();
         setCustomerInfo(info);
         return info;
-    }, []);
+    }, [purchases]);
 
     useEffect(() => {
-        if (!session || !billingConfigured || !apiKey) {
+        if (!session || !billingConfigured || !apiKey || !purchases) {
             setLoading(false);
             setOfferings(null);
             setCustomerInfo(null);
@@ -79,11 +118,11 @@ export function useSubscription(session: Session | null) {
 
         void (async () => {
             try {
-                await configurePurchasesForUser(apiKey, session.user.id);
-                Purchases.addCustomerInfoUpdateListener(listener);
+                await configurePurchasesForUser(purchases, apiKey, session.user.id);
+                purchases.addCustomerInfoUpdateListener(listener);
                 const [nextOfferings, nextInfo] = await Promise.all([
-                    Purchases.getOfferings(),
-                    Purchases.getCustomerInfo(),
+                    purchases.getOfferings(),
+                    purchases.getCustomerInfo(),
                 ]);
                 if (!mounted) return;
                 setOfferings(nextOfferings);
@@ -99,12 +138,12 @@ export function useSubscription(session: Session | null) {
 
         return () => {
             mounted = false;
-            Purchases.removeCustomerInfoUpdateListener(listener);
+            purchases.removeCustomerInfoUpdateListener(listener);
         };
-    }, [apiKey, billingConfigured, session]);
+    }, [apiKey, billingConfigured, purchases, session]);
 
     const purchase = useCallback(async () => {
-        if (!billingConfigured) {
+        if (!billingConfigured || !purchases) {
             setError("Billing is not configured.");
             return;
         }
@@ -115,7 +154,7 @@ export function useSubscription(session: Session | null) {
         setPurchaseBusy(true);
         setError(null);
         try {
-            const result = await Purchases.purchasePackage(primaryPackage);
+            const result = await purchases.purchasePackage(primaryPackage);
             setCustomerInfo(result.customerInfo);
         } catch (err: unknown) {
             const cancelled = Boolean((err as {userCancelled?: boolean} | null)?.userCancelled);
@@ -126,17 +165,17 @@ export function useSubscription(session: Session | null) {
         } finally {
             setPurchaseBusy(false);
         }
-    }, [billingConfigured, primaryPackage]);
+    }, [billingConfigured, primaryPackage, purchases]);
 
     const restore = useCallback(async () => {
-        if (!billingConfigured) {
+        if (!billingConfigured || !purchases) {
             setError("Billing is not configured.");
             return;
         }
         setRestoreBusy(true);
         setError(null);
         try {
-            await Purchases.restorePurchases();
+            await purchases.restorePurchases();
             await refreshCustomerInfo();
         } catch (err) {
             const message = err instanceof Error ? err.message : "Restore failed.";
@@ -144,7 +183,7 @@ export function useSubscription(session: Session | null) {
         } finally {
             setRestoreBusy(false);
         }
-    }, [billingConfigured, refreshCustomerInfo]);
+    }, [billingConfigured, purchases, refreshCustomerInfo]);
 
     return {
         loading,
@@ -164,4 +203,3 @@ export function useSubscription(session: Session | null) {
         refreshCustomerInfo,
     };
 }
-

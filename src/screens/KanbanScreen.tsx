@@ -1,13 +1,11 @@
 import {useMemo, useState} from "react";
-import {ImageBackground, ScrollView, Text, View} from "react-native";
-import {Calendar, type DateData} from "react-native-calendars";
-import {STATUS_ORDER} from "../lib/task-utils";
+import {Alert, ImageBackground, ScrollView, View} from "react-native";
 import tw from "../lib/tw";
 import type {Task, TaskPriority, TaskStatus} from "../types";
 import {KanbanColumn} from "../components/KanbanColumn";
+import {TranslucentCalendar} from "../components/TranslucentCalendar";
 import {Button} from "../components/ui/Button";
 import {Input} from "../components/ui/Input";
-import {fonts} from "../theme/fonts";
 import type {Session} from "@supabase/supabase-js";
 
 interface KanbanScreenProps {
@@ -15,7 +13,6 @@ interface KanbanScreenProps {
         tasks: Task[];
         grouped: {
             todo: Task[];
-            in_progress: Task[];
             completed: Task[];
         };
         addTask: (payload: {
@@ -46,7 +43,6 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
         if (!filterDate) return grouped;
         return {
             todo: grouped.todo.filter(t => t.dueDate === filterDate),
-            in_progress: grouped.in_progress.filter(t => t.dueDate === filterDate),
             completed: grouped.completed.filter(t => t.dueDate === filterDate),
         };
     }, [grouped, filterDate]);
@@ -69,9 +65,18 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
     }, [dueDate, filterDate, tasks]);
 
     function handleAddTask() {
-        if (!title.trim()) return;
+        if (!title.trim()) {
+            Alert.alert("Title required", "Please enter a task title.");
+            return;
+        }
 
-        addTask({title, description, dueDate: dueDate.trim() ? dueDate.trim() : null, priority, status: "todo"});
+        const due = dueDate.trim();
+        if (due && !/^\d{4}-\d{2}-\d{2}$/.test(due)) {
+            Alert.alert("Invalid date", "Use format YYYY-MM-DD or leave blank.");
+            return;
+        }
+
+        addTask({title, description, dueDate: due ? due : null, priority, status: "todo"});
 
         setTitle("");
         setDescription("");
@@ -103,10 +108,10 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
                             </View>
 
                             {showCalendar && (
-                                <View style={tw`overflow-hidden rounded-xl border border-slate-300 bg-black/33`}>
-                                    <Calendar
+                                <View>
+                                    <TranslucentCalendar
                                         markedDates={markedDates}
-                                        onDayPress={(day: DateData) => {
+                                        onDayPress={(day) => {
                                             setDueDate(day.dateString);
                                             setFilterDate(day.dateString);
                                         }}
@@ -133,27 +138,24 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
                                 </View>
                             </ScrollView>
 
-                            <Button label="Add Task" variant="danger" onPress={handleAddTask}/>
+                            <Button label="Add Task" variant="outlineAccent" onPress={handleAddTask}/>
                         </View>
 
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`pt-3`}>
                             <View style={tw`flex-row gap-3`}>
-                                {STATUS_ORDER.map((lane) => (
-                                    <KanbanColumn
-                                        key={lane}
-                                        status={lane}
-                                        tasks={filteredGrouped[lane]}
-                                        onMove={(taskId, toStatus, toIndex) => move(taskId, toStatus, toIndex)}
-                                        onDelete={deleteTask}
-                                    />
-                                ))}
+                                <KanbanColumn
+                                    status="todo"
+                                    tasks={filteredGrouped.todo}
+                                    onDelete={deleteTask}
+                                    onComplete={(taskId) => move(taskId, "completed", Number.MAX_SAFE_INTEGER)}
+                                />
+                                <KanbanColumn
+                                    status="completed"
+                                    tasks={filteredGrouped.completed}
+                                    onDelete={deleteTask}
+                                />
                             </View>
                         </ScrollView>
-
-                        <Text style={[tw`mt-2 text-xs font-semibold text-slate-700`, {fontFamily: fonts.body}]}>Tip: Use
-                            Prev/Next and Up/Down on
-                            each
-                            card.</Text>
                     </View>
                 </ScrollView>
             </View>

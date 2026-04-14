@@ -12,12 +12,6 @@ function isoToday(): string {
     return new Date().toISOString().slice(0, 10);
 }
 
-function shiftDate(date: string, delta: number): string {
-    const d = new Date(date + "T00:00:00");
-    d.setDate(d.getDate() + delta);
-    return d.toISOString().slice(0, 10);
-}
-
 export function JournalScreen({session}: { session: Session | null }) {
     const {entries, byDate, addEntry, deleteEntry, editEntry} = useJournal(session);
     const [selectedDate, setSelectedDate] = useState<string>(isoToday());
@@ -75,12 +69,12 @@ export function JournalScreen({session}: { session: Session | null }) {
                             placeholder="Respond to this prompt..."
                             placeholderTextColor="#6b7280"
                             multiline
-                            style={[tw`mt-2 min-h-[90px] rounded-xl border border-slate-50/15 bg-black/39 px-3 py-2 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                            style={[tw`mt-2 min-h-[90px] rounded-xl border border-orange-50/17 bg-black/39 px-3 py-2 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                         />
                         <View style={tw`mt-3 flex-row justify-end gap-2`}>
                             <Button
                                 label="Use prompt text"
-                                variant="secondary"
+                                variant="outlineAccent"
                                 onPress={() => setPromptText((prev) => (prev ? `${prev}\n\n${todaysPrompt}` : todaysPrompt))}
                             />
                             <Button
@@ -94,43 +88,6 @@ export function JournalScreen({session}: { session: Session | null }) {
                                 }}
                             />
                         </View>
-                    </View>
-
-                    <View style={tw`mt-4 flex-row items-center justify-between`}>
-                        <Pressable
-                            onPress={() => setSelectedDate(shiftDate(selectedDate, -1))}
-                            style={({pressed}) => [
-                                tw`rounded-xl px-4 py-2 border`,
-                                {
-                                    borderColor: "#B55941",
-                                    backgroundColor: pressed ? "rgba(181,89,65,0.15)" : "transparent",
-                                },
-                            ]}
-                        >
-                            <Text style={[tw`text-sm font-bold`, {
-                                fontFamily: fonts.heading,
-                                color: "#E4E0D4"
-                            }]}>Prev</Text>
-                        </Pressable>
-
-                        <Text
-                            style={[tw`text-base font-bold text-[#E4E0D4]`, {fontFamily: fonts.body}]}>{selectedDate}</Text>
-
-                        <Pressable
-                            onPress={() => setSelectedDate(shiftDate(selectedDate, 1))}
-                            style={({pressed}) => [
-                                tw`rounded-xl px-4 py-2 border`,
-                                {
-                                    borderColor: "#B55941",
-                                    backgroundColor: pressed ? "rgba(181,89,65,0.15)" : "transparent",
-                                },
-                            ]}
-                        >
-                            <Text style={[tw`text-sm font-bold`, {
-                                fontFamily: fonts.heading,
-                                color: "#E4E0D4"
-                            }]}>Next</Text>
-                        </Pressable>
                     </View>
 
                     <View style={tw`mt-4 rounded-2xl border border-orange-50/19 bg-black/69 p-3`}>
@@ -295,6 +252,85 @@ export function JournalScreen({session}: { session: Session | null }) {
                                     </View>
                                 );
                             })
+                        )}
+                    </View>
+
+                    <View style={tw`mt-6 rounded-[28px] border border-[#e4e0d4]/10 bg-black/48 p-4`}>
+                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                            Memory shelf
+                        </Text>
+                        <Text style={[tw`mt-1 text-xs`, {fontFamily: fonts.body, color: "rgba(228,224,212,0.68)"}]}>
+                            Prompt responses and gratitude entries live here as individually dated keepsakes.
+                        </Text>
+
+                        {(promptEntries.length === 0 && gratitudeEntries.length === 0) ? (
+                            <Text style={[tw`mt-3 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                                Nothing saved for this date yet.
+                            </Text>
+                        ) : (
+                            <View style={tw`mt-4 gap-3`}>
+                                {[...promptEntries, ...gratitudeEntries]
+                                    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+                                    .map((entry) => {
+                                        const isPrompt = entry.category === "prompt";
+
+                                        return (
+                                            <Pressable
+                                                key={entry.id}
+                                                onPress={() => setSelectedDate(entry.date)}
+                                                style={({pressed}) => [
+                                                    tw`rounded-[24px] border p-4`,
+                                                    {
+                                                        borderColor: entry.date === selectedDate ? "#B55941" : "rgba(228,224,212,0.12)",
+                                                        backgroundColor: pressed ? "rgba(181,89,65,0.12)" : "rgba(10,10,10,0.4)",
+                                                    },
+                                                ]}
+                                            >
+                                                <View style={tw`flex-row items-center justify-between`}>
+                                                    <Text style={[tw`text-sm`, {
+                                                        fontFamily: fonts.heading,
+                                                        color: "#F4E8D8"
+                                                    }]}>
+                                                        {entry.date}
+                                                    </Text>
+                                                    <View
+                                                        style={[
+                                                            tw`rounded-full px-3 py-1`,
+                                                            {backgroundColor: isPrompt ? "rgba(181,89,65,0.18)" : "rgba(228,224,212,0.12)"}
+                                                        ]}
+                                                    >
+                                                        <Text style={[tw`text-[10px]`, {
+                                                            fontFamily: fonts.heading,
+                                                            color: "#F4E8D8"
+                                                        }]}>
+                                                            {isPrompt ? "PROMPT" : "GRATITUDE"}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                                <Text style={[tw`mt-2 text-[11px]`, {
+                                                    fontFamily: fonts.body,
+                                                    color: "rgba(244,232,216,0.58)"
+                                                }]}>
+                                                    {new Date(entry.createdAt).toLocaleString([], {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        hour: "2-digit",
+                                                        minute: "2-digit"
+                                                    })}
+                                                </Text>
+                                                <Text
+                                                    style={[tw`mt-3 text-sm leading-5`, {
+                                                        fontFamily: fonts.body,
+                                                        color: "#E4E0D4"
+                                                    }]}
+                                                    numberOfLines={5}
+                                                >
+                                                    {entry.text}
+                                                </Text>
+                                            </Pressable>
+                                        );
+                                    })}
+                            </View>
                         )}
                     </View>
 

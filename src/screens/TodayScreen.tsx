@@ -20,13 +20,11 @@ function isoToday(): string {
 
 const statusRank: Record<Task["status"], number> = {
     todo: 0,
-    in_progress: 1,
-    completed: 2,
+    completed: 1,
 };
 
 const statusLabel: Record<Task["status"], string> = {
     todo: "To do",
-    in_progress: "In progress",
     completed: "Done",
 };
 
@@ -86,7 +84,7 @@ export function TodayScreen({tasks, session}: TodayScreenProps) {
                         </Text>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/23 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#B55941] bg-black/23 p-4`}>
                         <Text
                             style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Gratitude</Text>
                         {latestGratitude ? (
@@ -100,7 +98,7 @@ export function TodayScreen({tasks, session}: TodayScreenProps) {
                         )}
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/23 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#B55941] bg-black/23 p-4`}>
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Prompt
                             response</Text>
                         {latestPrompt ? (

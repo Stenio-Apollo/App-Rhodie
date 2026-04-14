@@ -1,5 +1,4 @@
 import {Pressable, Text, View} from "react-native";
-import {STATUS_ORDER} from "../lib/task-utils";
 import tw from "../lib/tw";
 import type {Task, TaskStatus} from "../types";
 import {Badge} from "./ui/Badge";
@@ -9,10 +8,8 @@ import {fonts} from "../theme/fonts";
 interface TaskCardProps {
     task: Task;
     status: TaskStatus;
-    index: number;
-    total: number;
     onDelete: (taskId: string) => void;
-    onMove: (taskId: string, toStatus: TaskStatus, toIndex: number) => void;
+    onComplete?: (taskId: string) => void;
 }
 
 function priorityDotColor(priority: Task["priority"]): string {
@@ -21,11 +18,7 @@ function priorityDotColor(priority: Task["priority"]): string {
     return "#E4E0D4";
 }
 
-export function TaskCard({task, status, index, total, onDelete, onMove}: TaskCardProps) {
-    const statusIndex = STATUS_ORDER.indexOf(status);
-    const prevStatus = statusIndex > 0 ? STATUS_ORDER[statusIndex - 1] : null;
-    const nextStatus = statusIndex < STATUS_ORDER.length - 1 ? STATUS_ORDER[statusIndex + 1] : null;
-
+export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
     return (
         <View style={tw`mb-2.5`}>
             <Card>
@@ -49,39 +42,17 @@ export function TaskCard({task, status, index, total, onDelete, onMove}: TaskCar
 
                 <View style={tw`mt-2.5 flex-row items-center justify-between gap-2`}>
                     <View style={tw`flex-row items-center gap-1.5`}>
-                        {prevStatus ? (
+                        {status !== "completed" && onComplete ? (
                             <Pressable
                                 style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
-                                onPress={() => onMove(task.id, prevStatus, Number.MAX_SAFE_INTEGER)}>
+                                onPress={() => onComplete(task.id)}>
                                 <Text
-                                    style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Prev</Text>
-                            </Pressable>
-                        ) : null}
-                        {nextStatus ? (
-                            <Pressable
-                                style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
-                                onPress={() => onMove(task.id, nextStatus, Number.MAX_SAFE_INTEGER)}>
-                                <Text
-                                    style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Next</Text>
+                                    style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Complete</Text>
                             </Pressable>
                         ) : null}
                     </View>
 
                     <View style={tw`flex-row items-center gap-1.5`}>
-                        {index > 0 ? (
-                            <Pressable
-                                style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
-                                onPress={() => onMove(task.id, status, index - 1)}>
-                                <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>↑</Text>
-                            </Pressable>
-                        ) : null}
-                        {index < total - 1 ? (
-                            <Pressable
-                                style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
-                                onPress={() => onMove(task.id, status, index + 1)}>
-                                <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>↓</Text>
-                            </Pressable>
-                        ) : null}
                         <Pressable onPress={() => onDelete(task.id)}
                                    style={({pressed}) => [tw`rounded-lg bg-[#282828] px-2.5 py-1`, pressed && tw`bg-[#282828]/80`]}>
                             <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>Delete</Text>

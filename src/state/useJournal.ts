@@ -13,6 +13,11 @@ export interface JournalEntry {
   category: "gratitude" | "prompt";
 }
 
+function normalizeJournalCategory(category: string | undefined): JournalEntry["category"] {
+  if (category === "gratitude") return "gratitude";
+  return "prompt";
+}
+
 function createEntryId(): string {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
@@ -37,7 +42,7 @@ export function useJournal(session: Session | null = null) {
           const normalized = Array.isArray(parsed)
             ? parsed.map((e) => ({
                 ...e,
-                category: (e as JournalEntry).category ?? "gratitude",
+                category: normalizeJournalCategory((e as {category?: string}).category),
               })) as JournalEntry[]
             : [];
           setEntries(normalized);
@@ -52,7 +57,7 @@ export function useJournal(session: Session | null = null) {
       const localEntries: JournalEntry[] = localRaw
         ? ((JSON.parse(localRaw) as Partial<JournalEntry>[]) ?? []).map((e) => ({
             ...(e as JournalEntry),
-            category: (e as JournalEntry).category ?? "gratitude",
+            category: normalizeJournalCategory((e as {category?: string}).category),
           }))
         : [];
 
@@ -86,7 +91,7 @@ export function useJournal(session: Session | null = null) {
           id: e.id,
           date: e.date,
           text: e.text,
-          category: (e.category as JournalEntry["category"]) ?? "gratitude",
+          category: normalizeJournalCategory(e.category as string | undefined),
           createdAt: e.created_at,
         })) ?? [];
       setEntries(mapped);

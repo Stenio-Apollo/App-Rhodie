@@ -7,6 +7,10 @@ create table if not exists public.journal_entries (
   text text not null,
   created_at timestamptz not null default now()
 );
+update public.journal_entries set category = 'prompt' where category = 'journal';
+alter table public.journal_entries drop constraint if exists journal_entries_category_check;
+alter table public.journal_entries
+  add constraint journal_entries_category_check check (category in ('gratitude','prompt'));
 create index if not exists journal_entries_user_date_idx on public.journal_entries (user_id, date);
 
 -- Tasks / board
@@ -16,7 +20,7 @@ create table if not exists public.tasks (
   title text not null,
   description text,
   due_date date,
-  status text not null check (status in ('todo','in_progress','completed')),
+  status text not null check (status in ('todo','completed')),
   priority text not null check (priority in ('low','medium','high')),
   "order" int not null default 0,
   created_at timestamptz not null default now(),
@@ -24,6 +28,10 @@ create table if not exists public.tasks (
   external_id text,
   external_updated_at timestamptz
 );
+update public.tasks set status = 'todo' where status = 'in_progress';
+alter table public.tasks drop constraint if exists tasks_status_check;
+alter table public.tasks
+  add constraint tasks_status_check check (status in ('todo','completed'));
 alter table public.tasks add column if not exists source text not null default 'manual';
 alter table public.tasks add column if not exists external_id text;
 alter table public.tasks add column if not exists external_updated_at timestamptz;

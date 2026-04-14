@@ -1,9 +1,9 @@
 import {useMemo, useState} from "react";
 import {ImageBackground, Pressable, ScrollView, Text, View} from "react-native";
-import {Calendar, type DateData} from "react-native-calendars";
 import tw from "../lib/tw";
 import type {Task} from "../types";
 import type {Session} from "@supabase/supabase-js";
+import {TranslucentCalendar} from "../components/TranslucentCalendar";
 import {fonts} from "../theme/fonts";
 
 interface CalendarScreenProps {
@@ -23,7 +23,7 @@ interface CalendarScreenProps {
 
 export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
-    const bg = require("../../public/images/rh5.jpg");
+    const bg = require("../../public/images/rh14.jpg");
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -33,7 +33,7 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
             map[task.dueDate] = {...(map[task.dueDate] ?? {}), marked: true};
         });
 
-        map[selectedDate] = {...(map[selectedDate] ?? {}), selected: true, selectedColor: "#111827"};
+        map[selectedDate] = {...(map[selectedDate] ?? {}), selected: true, selectedColor: "#B55941"};
         return map;
     }, [selectedDate, tasks]);
 
@@ -41,13 +41,16 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-55`}>
-            <View style={tw`flex-1 bg-[#0a0a0a]/9`}>
+            <View style={tw`flex-1 bg-[#0a0a0a]/15`}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-2 pb-3`}>
-                    <Text style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
-                    <Text style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Tap a day to filter due tasks.</Text>
+                    <Text
+                        style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
+                    <Text style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Tap
+                        a day to filter due tasks.</Text>
 
-                    <View style={tw`mt-3 rounded-2xl border border-[#2c2c2c] bg-[#111111] p-3`}>
-                        <Text style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Google Calendar Sync</Text>
+                    <View style={tw`mt-3 rounded-2xl border border-orange-50/19 bg-[#111111] p-3`}>
+                        <Text style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Google
+                            Calendar Sync</Text>
                         {!googleCalendar.available ? (
                             <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
                                 Set `EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID` to enable sync.
@@ -63,7 +66,8 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
                                     </Text>
                                 ) : null}
                                 {googleCalendar.error ? (
-                                    <Text style={[tw`mt-1 text-[11px] text-red-300`, {fontFamily: fonts.body}]}>{googleCalendar.error}</Text>
+                                    <Text
+                                        style={[tw`mt-1 text-[11px] text-red-300`, {fontFamily: fonts.body}]}>{googleCalendar.error}</Text>
                                 ) : null}
                                 <View style={tw`mt-2 flex-row gap-2`}>
                                     {!googleCalendar.connected ? (
@@ -72,8 +76,8 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
                                                 void googleCalendar.connect();
                                             }}
                                             style={({pressed}) => [
-                                                tw`rounded-lg px-3 py-2`,
-                                                {backgroundColor: "#2B2B2B"},
+                                                tw`rounded-lg border px-3 py-2`,
+                                                {borderColor: "#B55941", backgroundColor: "transparent"},
                                                 (pressed || googleCalendar.busy) && tw`opacity-80`,
                                             ]}
                                         >
@@ -93,7 +97,10 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
                                                     (pressed || googleCalendar.busy) && tw`opacity-80`,
                                                 ]}
                                             >
-                                                <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                                                <Text style={[tw`text-xs`, {
+                                                    fontFamily: fonts.heading,
+                                                    color: "#E4E0D4"
+                                                }]}>
                                                     {googleCalendar.busy ? "Syncing..." : "Sync now"}
                                                 </Text>
                                             </Pressable>
@@ -106,7 +113,10 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
                                                     (pressed || googleCalendar.busy) && tw`opacity-80`,
                                                 ]}
                                             >
-                                                <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Disconnect</Text>
+                                                <Text style={[tw`text-xs`, {
+                                                    fontFamily: fonts.heading,
+                                                    color: "#E4E0D4"
+                                                }]}>Disconnect</Text>
                                             </Pressable>
                                         </>
                                     )}
@@ -115,12 +125,13 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
                         )}
                     </View>
 
-                    <View style={tw`mt-3 overflow-hidden rounded-2xl border border-[#2c2c2c] bg-[#111111] p-1`}>
-                        <Calendar markedDates={markedDates}
-                                  onDayPress={(day: DateData) => setSelectedDate(day.dateString)}/>
-                    </View>
+                    <TranslucentCalendar
+                        markedDates={markedDates}
+                        onDayPress={(day) => setSelectedDate(day.dateString)}
+                    />
 
-                    <Text style={[tw`mt-3 text-lg font-extrabold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{selectedDate}</Text>
+                    <Text
+                        style={[tw`mt-3 text-lg font-extrabold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{selectedDate}</Text>
                     {selectedTasks.length === 0 ? (
                         <View style={tw`mt-2 rounded-2xl border border-[#2c2c2c] bg-[#111111] p-3`}>
                             <Text style={[tw`text-slate-300`, {fontFamily: fonts.body}]}>No tasks due this day.</Text>
