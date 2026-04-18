@@ -30,16 +30,36 @@ npx expo start -c
 5) For push: store Expo push tokens in `push_tokens` and send via a Supabase Edge Function or other worker.
 
 ## Billing setup (RevenueCat + Store subscriptions)
-1) In RevenueCat, create an entitlement id `pro`.
-2) Add iOS and Android subscription products in RevenueCat and attach both to `pro`.
+1) In RevenueCat, create an entitlement id `Rhodie Pro` (or set `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID` to whatever identifier you use).
+2) In RevenueCat, create one current offering containing these package/product mappings:
+   - `lifetime`
+   - `yearly`
+   - `monthly`
 3) Configure store products:
-   - App Store Connect: auto-renewable monthly subscription at `$3.99`, introductory offer `14-day free trial`.
-   - Google Play Console: monthly base plan at `$3.99`, offer phase `14-day free trial`.
-4) Set keys in `.env`:
+   - App Store Connect: one lifetime in-app purchase, one yearly auto-renewable subscription, one monthly auto-renewable subscription.
+   - Google Play Console: one lifetime managed product, one yearly subscription base plan, one monthly subscription base plan.
+4) Local development can use the shared RevenueCat test key:
+   - `EXPO_PUBLIC_REVENUECAT_API_KEY`
+5) Store builds should use platform-specific public SDK keys:
    - `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY`
    - `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY`
-   - `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=pro`
-5) Build a dev client or production build (Expo Go uses preview mode and cannot make real purchases).
+6) Also set:
+   - `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID`
+   - `EXPO_PUBLIC_PRIVACY_POLICY_URL`
+   - `EXPO_PUBLIC_TERMS_OF_USE_URL`
+7) Add the same RevenueCat and legal URL variables to your EAS `preview` and `production` environments.
+8) Turn on Apple App Store Server Notifications V2 and Google Real-time Developer Notifications inside RevenueCat before launch.
+9) Test on a dev client / TestFlight / internal Android build with sandbox users before production. Expo Go cannot make real purchases.
+
+## Subscription launch checklist
+- RevenueCat dashboard has the `Rhodie Pro` entitlement (or your configured entitlement id).
+- The current offering contains `lifetime`, `yearly`, and `monthly`.
+- The RevenueCat paywall is configured in the dashboard.
+- RevenueCat Customer Center is configured in the dashboard.
+- iOS and Android products are attached to the correct packages.
+- EAS `production` environment contains the correct RevenueCat SDK keys.
+- Paywall shows working Terms of Use and Privacy Policy URLs.
+- Test these flows on-device: lifetime purchase, yearly purchase, monthly purchase, restore purchase, cancel from store, reinstall app, sign in on a second device.
 
 ## Google Calendar sync setup
 1) In Google Cloud Console, enable the Google Calendar API.

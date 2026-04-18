@@ -37,26 +37,26 @@ const outerCardShadow = {
 };
 
 const innerCardShadow = {
-    shadowColor: "#000000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: {width: 0, height: 2},
-    elevation: 2,
+    shadowColor: "#B55941",
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: {width: 0, height: 5},
+    elevation: 4,
 };
 
 const buttonShadow = {
-    shadowColor: "#000000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: {width: 0, height: 2},
-    elevation: 2,
+    shadowColor: "#B55941",
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    shadowOffset: {width: 0, height: 4},
+    elevation: 5,
 };
 
 export function InsightsScreen() {
     const [articles, setArticles] = useState<ExternalArticle[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const bg = require("../../public/images/insight (1).svg");
+    const bg = require("../../public/images/rh2.jpg");
 
     useEffect(() => {
         let mounted = true;
@@ -93,28 +93,44 @@ export function InsightsScreen() {
     );
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-45`}>
-            <View style={[tw`flex-1`, {backgroundColor: "#e1ded7"}]}>
-                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-3 pb-10`}>
-                    <Text style={[tw`text-2xl font-black`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
-                        Men's Mental Health Feed
-                    </Text>
-                    <Text style={[tw`mt-1 text-sm`, {fontFamily: fonts.body, color: "rgba(43,43,43,0.82)"}]}>
-                        Curated for men's mental health from official public-health and expert-reviewed sources.
-                    </Text>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-58`}>
+            <View style={tw`flex-1 bg-black/8`}>
+                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-5 pb-10`}>
+                    <View
+                        style={[
+                            tw`rounded-3xl border p-4`,
+                            {
+                                borderColor: "rgba(251,247,243,0.22)",
+                                backgroundColor: "rgba(251,247,243,0.64)",
+                            },
+                        ]}
+                    >
+                        <Text style={[tw`text-xs font-semibold`, {
+                            fontFamily: fonts.body,
+                            color: "rgba(43,43,43,0.7)"
+                        }]}>
+                            Insights • Official sources
+                        </Text>
+                        <Text style={[tw`mt-1 text-2xl font-black`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
+                            Men's Mental Health Feed
+                        </Text>
+                        <Text style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, color: "#2B2B2B"}]}>
+                            Curated for men's mental health from official public-health and expert-reviewed sources.
+                        </Text>
+                    </View>
 
-                    <View style={[tw`mt-4 rounded-2xl border p-3`, {
-                        borderColor: "#D9D5C9",
-                        backgroundColor: "#e1ded7",
+                    <View style={[tw`mt-4 rounded-3xl border p-3`, {
+                        borderColor: "rgba(251,247,243,0.22)",
+                        backgroundColor: "rgba(251,247,243,0.64)",
                         ...outerCardShadow
                     }]}>
                         <Text style={[tw`text-sm font-bold uppercase`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
                             Stats (Official Sources)
                         </Text>
                         {publicHealthStats.map((stat) => (
-                            <View key={stat.id} style={[tw`mt-3 rounded-xl border p-3`, {
-                                borderColor: "#D9D5C9",
-                                backgroundColor: "#fbf7f3",
+                            <View key={stat.id} style={[tw`mt-3 rounded-2xl border p-3`, {
+                                borderColor: "rgba(43,43,43,0.14)",
+                                backgroundColor: "rgba(251,247,243,0.72)",
                                 ...innerCardShadow
                             }]}>
                                 <Text style={[tw`text-lg font-black`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
@@ -133,7 +149,10 @@ export function InsightsScreen() {
                                     onPress={() => {
                                         void openExternal(stat.sourceUrl);
                                     }}
-                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {backgroundColor: "#B55941", ...buttonShadow}, pressed && tw`opacity-80`]}
+                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {
+                                        backgroundColor: "#B55941",
+                                        ...buttonShadow
+                                    }, pressed && tw`opacity-80`]}
                                 >
                                     <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                         Source: {stat.sourceName}
@@ -143,18 +162,18 @@ export function InsightsScreen() {
                         ))}
                     </View>
 
-                    <View style={[tw`mt-4 rounded-2xl border p-3`, {
-                        borderColor: "#D9D5C9",
-                        backgroundColor: "#e1ded7",
+                    <View style={[tw`mt-4 rounded-3xl border p-3`, {
+                        borderColor: "rgba(251,247,243,0.22)",
+                        backgroundColor: "rgba(251,247,243,0.64)",
                         ...outerCardShadow
                     }]}>
                         <Text style={[tw`text-sm font-bold uppercase`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
                             Educational Articles / Tidbits
                         </Text>
                         {expertReviewedResources.map((resource) => (
-                            <View key={resource.id} style={[tw`mt-3 rounded-xl border p-3`, {
-                                borderColor: "#D9D5C9",
-                                backgroundColor: "#fbf7f3",
+                            <View key={resource.id} style={[tw`mt-3 rounded-2xl border p-3`, {
+                                borderColor: "rgba(43,43,43,0.14)",
+                                backgroundColor: "rgba(251,247,243,0.72)",
                                 ...innerCardShadow
                             }]}>
                                 <Text style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
@@ -170,7 +189,10 @@ export function InsightsScreen() {
                                     onPress={() => {
                                         void openExternal(resource.sourceUrl);
                                     }}
-                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {backgroundColor: "#B55941", ...buttonShadow}, pressed && tw`opacity-80`]}
+                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {
+                                        backgroundColor: "#B55941",
+                                        ...buttonShadow
+                                    }, pressed && tw`opacity-80`]}
                                 >
                                     <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                         Open {resource.sourceName}
@@ -180,9 +202,9 @@ export function InsightsScreen() {
                         ))}
                     </View>
 
-                    <View style={[tw`mt-4 rounded-2xl border p-3`, {
-                        borderColor: "#D9D5C9",
-                        backgroundColor: "#e1ded7",
+                    <View style={[tw`mt-4 rounded-3xl border p-3`, {
+                        borderColor: "rgba(251,247,243,0.22)",
+                        backgroundColor: "rgba(251,247,243,0.64)",
                         ...outerCardShadow
                     }]}>
                         <Text style={[tw`text-sm font-bold uppercase`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
@@ -192,7 +214,7 @@ export function InsightsScreen() {
                             Simplified summaries generated from men's mental-health source titles. Tap through to read
                             the full original
                             source.
-                        </Text>
+                        </Text>s
 
                         {loading ? (
                             <Text style={[tw`mt-3 text-sm`, {fontFamily: fonts.body, color: "#2B2B2B"}]}>
@@ -211,9 +233,9 @@ export function InsightsScreen() {
                         ) : null}
 
                         {summaryCards.map((item) => (
-                            <View key={item.id} style={[tw`mt-3 rounded-xl border p-3`, {
-                                borderColor: "#D9D5C9",
-                                backgroundColor: "#fbf7f3",
+                            <View key={item.id} style={[tw`mt-3 rounded-2xl border p-3`, {
+                                borderColor: "rgba(43,43,43,0.14)",
+                                backgroundColor: "rgba(251,247,243,0.72)",
                                 ...innerCardShadow
                             }]}>
                                 <Text style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
@@ -235,7 +257,10 @@ export function InsightsScreen() {
                                     onPress={() => {
                                         void openExternal(item.url);
                                     }}
-                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {backgroundColor: "#B55941", ...buttonShadow}, pressed && tw`opacity-80`]}
+                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {
+                                        backgroundColor: "#B55941",
+                                        ...buttonShadow
+                                    }, pressed && tw`opacity-80`]}
                                 >
                                     <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                         Read original source

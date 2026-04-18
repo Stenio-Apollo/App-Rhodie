@@ -5,7 +5,7 @@ import type {Session} from "@supabase/supabase-js";
 export interface Profile {
     id: string;
     full_name: string | null;
-    birthday: string | null; // YYYY-MM-DD
+    birthday: string | null;
 }
 
 export function useProfile(session: Session | null) {
@@ -17,8 +17,10 @@ export function useProfile(session: Session | null) {
             setProfile(null);
             return;
         }
+
         let mounted = true;
         setLoading(true);
+
         supabase
             .from("profiles")
             .select("id, full_name, birthday")
@@ -27,23 +29,27 @@ export function useProfile(session: Session | null) {
             .then(({data}) => {
                 if (!mounted) return;
                 setProfile(data ?? {id: session.user.id, full_name: null, birthday: null});
-            }, () => {})
+            }, () => {
+                if (!mounted) return;
+                setProfile({id: session.user.id, full_name: null, birthday: null});
+            })
             .then(() => {
                 if (mounted) setLoading(false);
             });
+
         return () => {
             mounted = false;
         };
     }, [session]);
 
     const upsertProfile = useCallback(
-        async (payload: {full_name: string; birthday: string | null}) => {
-            if (!session) return;
+        async (payload: { full_name: string; birthday: string | null }) => {
+            if (!session) return null;
             const {data, error} = await supabase
                 .from("profiles")
                 .upsert({
                     id: session.user.id,
-                    full_name: payload.full_name.trim(),
+                    full_name: payload.full_name.trim() || null,
                     birthday: payload.birthday,
                 })
                 .select("id, full_name, birthday")
