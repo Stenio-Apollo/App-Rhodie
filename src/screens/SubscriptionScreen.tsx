@@ -4,7 +4,7 @@ import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 
 type SubscriptionPlanViewModel = {
-    id: "lifetime" | "yearly" | "monthly";
+    id: "yearly" | "monthly";
     title: string;
     subtitle: string;
     priceLabel: string | null;

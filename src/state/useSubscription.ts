@@ -9,7 +9,7 @@ import type {
 } from "react-native-purchases";
 import {getRevenueCatApiKey, isRevenueCatSupported, revenueCatEntitlementId} from "../lib/revenuecat";
 
-type SubscriptionPlanId = "lifetime" | "yearly" | "monthly";
+type SubscriptionPlanId = "yearly" | "monthly";
 
 type SubscriptionPlan = {
     id: SubscriptionPlanId;
@@ -56,7 +56,6 @@ type RevenueCatUiModule = {
 };
 
 const PLAN_METADATA: Record<SubscriptionPlanId, { title: string; subtitle: string }> = {
-    lifetime: {title: "Lifetime", subtitle: "One payment, permanent access"},
     yearly: {title: "Yearly", subtitle: "Best value for long-term consistency"},
     monthly: {title: "Monthly", subtitle: "Flexible recurring access"},
 };
@@ -108,10 +107,6 @@ function packageMatchesPlan(pkg: PurchasesPackage, planId: SubscriptionPlanId): 
         normalize(pkg.packageType),
         normalize(pkg.product.identifier),
     ];
-
-    if (planId === "lifetime") {
-        return values.some((value) => value.includes("lifetime"));
-    }
 
     if (planId === "yearly") {
         return values.some((value) => value.includes("annual") || value.includes("yearly") || value.includes("year"));
@@ -198,7 +193,7 @@ export function useSubscription(session: Session | null) {
     }, [primaryOffering]);
 
     const plans = useMemo<SubscriptionPlan[]>(() => (
-        (["lifetime", "yearly", "monthly"] as SubscriptionPlanId[]).map((planId) => {
+        (["yearly", "monthly"] as SubscriptionPlanId[]).map((planId) => {
             const pkg = getPackageForPlan(offerings, planId);
             return {
                 id: planId,

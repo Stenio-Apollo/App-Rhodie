@@ -32,12 +32,11 @@ npx expo start -c
 ## Billing setup (RevenueCat + Store subscriptions)
 1) In RevenueCat, create an entitlement id `Rhodie Pro` (or set `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID` to whatever identifier you use).
 2) In RevenueCat, create one current offering containing these package/product mappings:
-   - `lifetime`
    - `yearly`
    - `monthly`
 3) Configure store products:
-   - App Store Connect: one lifetime in-app purchase, one yearly auto-renewable subscription, one monthly auto-renewable subscription.
-   - Google Play Console: one lifetime managed product, one yearly subscription base plan, one monthly subscription base plan.
+   - App Store Connect: one yearly auto-renewable subscription and one monthly auto-renewable subscription.
+   - Google Play Console: one yearly subscription base plan and one monthly subscription base plan.
 4) Local development can use the shared RevenueCat test key:
    - `EXPO_PUBLIC_REVENUECAT_API_KEY`
 5) Store builds should use platform-specific public SDK keys:
@@ -53,13 +52,13 @@ npx expo start -c
 
 ## Subscription launch checklist
 - RevenueCat dashboard has the `Rhodie Pro` entitlement (or your configured entitlement id).
-- The current offering contains `lifetime`, `yearly`, and `monthly`.
+- The current offering contains `yearly` and `monthly`.
 - The RevenueCat paywall is configured in the dashboard.
 - RevenueCat Customer Center is configured in the dashboard.
 - iOS and Android products are attached to the correct packages.
 - EAS `production` environment contains the correct RevenueCat SDK keys.
 - Paywall shows working Terms of Use and Privacy Policy URLs.
-- Test these flows on-device: lifetime purchase, yearly purchase, monthly purchase, restore purchase, cancel from store, reinstall app, sign in on a second device.
+- Test these flows on-device: yearly purchase, monthly purchase, restore purchase, cancel from store, reinstall app, sign in on a second device.
 
 ## Google Calendar sync setup
 1) In Google Cloud Console, enable the Google Calendar API.
