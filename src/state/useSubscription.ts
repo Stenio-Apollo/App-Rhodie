@@ -1,13 +1,25 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
 import type {Session} from "@supabase/supabase-js";
+import {
+    allSubscriptionProductIds,
+    getAndroidPackageName,
+    getTrialStatus,
+    isNativeBillingSupported,
+    subscriptionProductIds,
+    shouldBypassSubscriptions,
+} from "../lib/subscriptions";
+import {
+    syncSubscriptionAccess,
+    type SubscriptionAccessRecord,
+    type SubscriptionVerificationPayload,
+} from "../lib/subscription-backend";
+import {Platform} from "react-native";
 import type {
-    CustomerInfo,
-    PurchasesEntitlementInfo,
-    PurchasesOffering,
-    PurchasesOfferings,
-    PurchasesPackage,
-} from "react-native-purchases";
-import {getRevenueCatApiKey, isRevenueCatSupported, revenueCatEntitlementId} from "../lib/revenuecat";
+    ActiveSubscription,
+    MutationRequestPurchaseArgs,
+    ProductSubscription,
+    Purchase,
+} from "expo-iap";
 
 type SubscriptionPlanId = "yearly" | "monthly";
 
@@ -15,212 +27,279 @@ type SubscriptionPlan = {
     id: SubscriptionPlanId;
     title: string;
     subtitle: string;
-    pkg: PurchasesPackage | null;
     priceLabel: string | null;
-    productIdentifier: string | null;
+    productIdentifier: string;
+    storeOfferToken: string | null;
 };
 
-type CustomerInfoListener = (info: CustomerInfo) => void;
-
-type PurchasesModule = {
-    LOG_LEVEL?: {
-        DEBUG: string;
-    };
-    isConfigured: () => Promise<boolean>;
-    configure: (options: { apiKey: string; appUserID: string }) => void;
-    getAppUserID: () => Promise<string>;
-    logIn: (userId: string) => Promise<unknown>;
-    addCustomerInfoUpdateListener: (listener: CustomerInfoListener) => void;
-    removeCustomerInfoUpdateListener: (listener: CustomerInfoListener) => void;
-    getOfferings: () => Promise<PurchasesOfferings>;
-    getCustomerInfo: () => Promise<CustomerInfo>;
-    purchasePackage: (pkg: PurchasesPackage) => Promise<{ customerInfo: CustomerInfo }>;
-    restorePurchases: () => Promise<CustomerInfo>;
-    setLogLevel?: (level: string) => Promise<void>;
-};
-
-type RevenueCatUiModule = {
-    PAYWALL_RESULT: {
-        NOT_PRESENTED: string;
-        ERROR: string;
-        CANCELLED: string;
-        PURCHASED: string;
-        RESTORED: string;
-    };
-    presentPaywall: (params?: { offering?: PurchasesOffering }) => Promise<string>;
-    presentPaywallIfNeeded: (params: {
-        requiredEntitlementIdentifier: string;
-        offering?: PurchasesOffering;
-    }) => Promise<string>;
-    presentCustomerCenter: () => Promise<void>;
+type ExpoIapModule = {
+    initConnection: () => Promise<boolean>;
+    endConnection: () => Promise<void> | void;
+    fetchProducts: (params: {
+        skus: string[];
+        type?: "subs" | "in-app" | "all" | "inapp";
+    }) => Promise<ProductSubscription[]>;
+    getAvailablePurchases: (options?: {
+        alsoPublishToEventListenerIOS?: boolean;
+        onlyIncludeActiveItemsIOS?: boolean;
+        includeSuspendedAndroid?: boolean;
+    }) => Promise<Purchase[]>;
+    getActiveSubscriptions: (subscriptionIds?: string[]) => Promise<ActiveSubscription[]>;
+    requestPurchase: (args: MutationRequestPurchaseArgs) => Promise<Purchase | Purchase[] | null>;
+    finishTransaction: (args: {
+        purchase: {
+            id: string;
+            ids?: string[];
+            isAutoRenewing?: boolean;
+            platform: Purchase["platform"];
+            productId: string;
+            purchaseState: Purchase["purchaseState"];
+            purchaseToken?: string | null;
+            quantity: number;
+            store: Purchase["store"];
+            transactionDate: number;
+            transactionId: string;
+        };
+        isConsumable?: boolean | null;
+    }) => Promise<void>;
+    restorePurchases: () => Promise<void>;
+    purchaseUpdatedListener: (listener: (purchase: Purchase) => void) => { remove: () => void };
+    purchaseErrorListener: (listener: (error: { code?: string; message?: string }) => void) => { remove: () => void };
+    deepLinkToSubscriptions: (args?: {
+        skuAndroid?: string | null;
+        packageNameAndroid?: string | null;
+    } | null) => Promise<void>;
 };
 
 const PLAN_METADATA: Record<SubscriptionPlanId, { title: string; subtitle: string }> = {
-    yearly: {title: "Yearly", subtitle: "Best value for long-term consistency"},
-    monthly: {title: "Monthly", subtitle: "Flexible recurring access"},
+    yearly: {title: "Yearly", subtitle: "Save 33% compared with paying monthly"},
+    monthly: {title: "Monthly", subtitle: "Flexible recurring access after your free trial"},
 };
 
-let cachedPurchasesModule: PurchasesModule | null | undefined;
-let cachedRevenueCatUiModule: RevenueCatUiModule | null | undefined;
+let cachedExpoIapModule: ExpoIapModule | null | undefined;
 
-function getPurchasesModule(): PurchasesModule | null {
-    if (cachedPurchasesModule !== undefined) return cachedPurchasesModule;
-    if (!isRevenueCatSupported()) {
-        cachedPurchasesModule = null;
-        return cachedPurchasesModule;
+function getExpoIapModule(): ExpoIapModule | null {
+    if (cachedExpoIapModule !== undefined) return cachedExpoIapModule;
+    if (!isNativeBillingSupported()) {
+        cachedExpoIapModule = null;
+        return cachedExpoIapModule;
     }
 
     try {
-        const loadedModule = require("react-native-purchases");
-        cachedPurchasesModule = (loadedModule.default ?? loadedModule) as PurchasesModule;
+        const loadedModule = require("expo-iap");
+        cachedExpoIapModule = (loadedModule.default ?? loadedModule) as ExpoIapModule;
     } catch {
-        cachedPurchasesModule = null;
+        cachedExpoIapModule = null;
     }
 
-    return cachedPurchasesModule;
-}
-
-function getRevenueCatUiModule(): RevenueCatUiModule | null {
-    if (cachedRevenueCatUiModule !== undefined) return cachedRevenueCatUiModule;
-    if (!isRevenueCatSupported()) {
-        cachedRevenueCatUiModule = null;
-        return cachedRevenueCatUiModule;
-    }
-
-    try {
-        const loadedModule = require("react-native-purchases-ui");
-        cachedRevenueCatUiModule = (loadedModule.default ?? loadedModule) as RevenueCatUiModule;
-    } catch {
-        cachedRevenueCatUiModule = null;
-    }
-
-    return cachedRevenueCatUiModule;
-}
-
-function normalize(value: string | null | undefined): string {
-    return (value ?? "").trim().toLowerCase();
-}
-
-function packageMatchesPlan(pkg: PurchasesPackage, planId: SubscriptionPlanId): boolean {
-    const values = [
-        normalize(pkg.identifier),
-        normalize(pkg.packageType),
-        normalize(pkg.product.identifier),
-    ];
-
-    if (planId === "yearly") {
-        return values.some((value) => value.includes("annual") || value.includes("yearly") || value.includes("year"));
-    }
-
-    return values.some((value) => value.includes("monthly") || value.includes("month"));
-}
-
-function getActiveEntitlement(
-    customerInfo: CustomerInfo | null,
-): PurchasesEntitlementInfo | null {
-    if (!customerInfo) return null;
-    const explicit = customerInfo.entitlements.active[revenueCatEntitlementId];
-    if (explicit) return explicit;
-    const activeEntitlements = Object.values(customerInfo.entitlements.active);
-    return activeEntitlements[0] ?? null;
-}
-
-function getPackageForPlan(offerings: PurchasesOfferings | null, planId: SubscriptionPlanId): PurchasesPackage | null {
-    const packages = offerings?.current?.availablePackages ?? [];
-    return packages.find((pkg) => packageMatchesPlan(pkg, planId)) ?? null;
+    return cachedExpoIapModule;
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {
     if (error instanceof Error && error.message.trim()) {
         return error.message;
     }
+    if (typeof error === "object" && error && "message" in error && typeof error.message === "string" && error.message.trim()) {
+        return error.message;
+    }
     return fallback;
 }
 
-async function configurePurchasesForUser(purchases: PurchasesModule, apiKey: string, userId: string) {
-    if (__DEV__ && purchases.setLogLevel && purchases.LOG_LEVEL?.DEBUG) {
-        await purchases.setLogLevel(purchases.LOG_LEVEL.DEBUG);
-    }
-
-    const alreadyConfigured = await purchases.isConfigured();
-    if (!alreadyConfigured) {
-        purchases.configure({apiKey, appUserID: userId});
-        return;
-    }
-
-    const currentUserId = await purchases.getAppUserID();
-    if (currentUserId !== userId) {
-        await purchases.logIn(userId);
-    }
+function isCancelledPurchaseError(error: { code?: string; message?: string } | null | undefined): boolean {
+    const code = (error?.code ?? "").toLowerCase();
+    const message = (error?.message ?? "").toLowerCase();
+    return code.includes("cancel") || message.includes("cancel");
 }
 
-function didUnlockAccess(paywallResult: string, uiModule: RevenueCatUiModule): boolean {
-    return (
-        paywallResult === uiModule.PAYWALL_RESULT.PURCHASED ||
-        paywallResult === uiModule.PAYWALL_RESULT.RESTORED
-    );
+function toPurchaseInput(purchase: Purchase) {
+    return {
+        id: purchase.id,
+        ids: purchase.ids ?? undefined,
+        isAutoRenewing: purchase.isAutoRenewing,
+        platform: purchase.platform,
+        productId: purchase.productId,
+        purchaseState: purchase.purchaseState,
+        purchaseToken: purchase.purchaseToken ?? null,
+        quantity: purchase.quantity,
+        store: purchase.store,
+        transactionDate: purchase.transactionDate,
+        transactionId: purchase.transactionId ?? purchase.id,
+    };
+}
+
+function getPlanProductId(planId: SubscriptionPlanId): string {
+    return planId === "yearly" ? subscriptionProductIds.yearly : subscriptionProductIds.monthly;
+}
+
+function getProductForPlan(products: ProductSubscription[], planId: SubscriptionPlanId) {
+    const productId = getPlanProductId(planId);
+    return products.find((product) => product.id === productId) ?? null;
+}
+
+function getAndroidOfferToken(product: ProductSubscription | null): string | null {
+    if (!product || product.platform !== "android") return null;
+    const matchingOffer = product.subscriptionOffers?.find((offer) => Boolean(offer.offerTokenAndroid)) ?? null;
+    return matchingOffer?.offerTokenAndroid ?? null;
+}
+
+function getVerificationPayload(
+    activeSubscription: {
+        productIdentifier: string;
+        expirationDate: string | null;
+        willRenew: boolean;
+        unsubscribeDetectedAt: string | null;
+        billingIssueDetectedAt: string | null;
+    } | null,
+    availablePurchases: Purchase[],
+): SubscriptionVerificationPayload {
+    if (!activeSubscription) return null;
+
+    const matchingPurchase = [...availablePurchases]
+        .filter((purchase) => purchase.productId === activeSubscription.productIdentifier)
+        .sort((left, right) => right.transactionDate - left.transactionDate)[0] ?? null;
+
+    if (!matchingPurchase) return null;
+
+    if (Platform.OS === "ios") {
+        return {
+            platform: "ios",
+            productIdentifier: matchingPurchase.productId,
+            purchaseToken: matchingPurchase.purchaseToken ?? null,
+            transactionId: matchingPurchase.transactionId ?? null,
+            environmentIOS: "environmentIOS" in matchingPurchase && typeof matchingPurchase.environmentIOS === "string"
+                ? matchingPurchase.environmentIOS
+                : null,
+        };
+    }
+
+    return {
+        platform: "android",
+        productIdentifier: matchingPurchase.productId,
+        purchaseToken: matchingPurchase.purchaseToken ?? null,
+        transactionId: matchingPurchase.transactionId ?? null,
+        packageNameAndroid: getAndroidPackageName(),
+    };
+}
+
+function buildPurchaseRequest(plan: SubscriptionPlan): MutationRequestPurchaseArgs {
+    if (Platform.OS === "ios") {
+        return {
+            type: "subs",
+            request: {
+                apple: {
+                    sku: plan.productIdentifier,
+                },
+            },
+        };
+    }
+
+    return {
+        type: "subs",
+        request: {
+            google: {
+                skus: [plan.productIdentifier],
+                subscriptionOffers: plan.storeOfferToken
+                    ? [{sku: plan.productIdentifier, offerToken: plan.storeOfferToken}]
+                    : undefined,
+            },
+        },
+    };
 }
 
 export function useSubscription(session: Session | null) {
+    const billingModule = getExpoIapModule();
+    const runtimeSupportsBilling = isNativeBillingSupported();
+    const bypassSubscriptions = shouldBypassSubscriptions();
+    const billingConfigured = Boolean(runtimeSupportsBilling && billingModule);
+
     const [loading, setLoading] = useState(false);
-    const [offerings, setOfferings] = useState<PurchasesOfferings | null>(null);
-    const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+    const [storeConnected, setStoreConnected] = useState(false);
+    const [products, setProducts] = useState<ProductSubscription[]>([]);
+    const [availablePurchases, setAvailablePurchases] = useState<Purchase[]>([]);
+    const [activeSubscriptions, setActiveSubscriptions] = useState<ActiveSubscription[]>([]);
     const [purchaseBusy, setPurchaseBusy] = useState(false);
     const [restoreBusy, setRestoreBusy] = useState(false);
-    const [paywallBusy, setPaywallBusy] = useState(false);
-    const [customerCenterBusy, setCustomerCenterBusy] = useState(false);
+    const [manageBusy, setManageBusy] = useState(false);
+    const [backendAccess, setBackendAccess] = useState<SubscriptionAccessRecord | null>(null);
     const [error, setError] = useState<string | null>(null);
-
-    const apiKey = getRevenueCatApiKey();
-    const purchases = getPurchasesModule();
-    const revenueCatUI = getRevenueCatUiModule();
-    const runtimeSupportsBilling = isRevenueCatSupported();
-    const billingConfigured = Boolean(apiKey && purchases);
     const setupIssue = runtimeSupportsBilling && !billingConfigured
-        ? "RevenueCat is not configured for this build. Add the iOS/Android public API keys before launch."
+        ? "Native billing is unavailable in this build."
+        : !runtimeSupportsBilling
+            ? "Subscriptions require a development build, TestFlight, or production build. Expo Go cannot access App Store or Play billing."
         : null;
-    const activeEntitlement = useMemo(
-        () => getActiveEntitlement(customerInfo),
-        [customerInfo],
+    const trialStatus = useMemo(
+        () => getTrialStatus(session?.user.created_at ?? null),
+        [session?.user.created_at],
     );
-    const isSubscribed = Boolean(activeEntitlement?.isActive);
-    const trialActive = activeEntitlement?.periodType === "TRIAL";
-
-    const primaryOffering = offerings?.current ?? null;
-    const primaryPackage = useMemo(() => {
-        if (!primaryOffering) return null;
-        return primaryOffering.monthly ?? primaryOffering.availablePackages[0] ?? null;
-    }, [primaryOffering]);
 
     const plans = useMemo<SubscriptionPlan[]>(() => (
         (["yearly", "monthly"] as SubscriptionPlanId[]).map((planId) => {
-            const pkg = getPackageForPlan(offerings, planId);
+            const product = getProductForPlan(products, planId);
             return {
                 id: planId,
                 title: PLAN_METADATA[planId].title,
                 subtitle: PLAN_METADATA[planId].subtitle,
-                pkg,
-                priceLabel: pkg?.product.priceString ?? null,
-                productIdentifier: pkg?.product.identifier ?? null,
+                priceLabel: product?.displayPrice ?? null,
+                productIdentifier: product?.id ?? getPlanProductId(planId),
+                storeOfferToken: getAndroidOfferToken(product),
             };
         })
-    ), [offerings]);
+    ), [products]);
 
-    const refreshCustomerInfo = useCallback(async () => {
-        if (!purchases) {
-            setCustomerInfo(null);
+    const refreshStoreState = useCallback(async () => {
+        if (!billingConfigured || !billingModule) {
+            setProducts([]);
+            setAvailablePurchases([]);
+            setActiveSubscriptions([]);
+            return false;
+        }
+
+        const [nextProducts, nextPurchases, nextSubscriptions] = await Promise.all([
+            billingModule.fetchProducts({skus: allSubscriptionProductIds, type: "subs"}),
+            billingModule.getAvailablePurchases({
+                onlyIncludeActiveItemsIOS: true,
+                includeSuspendedAndroid: false,
+            }),
+            billingModule.getActiveSubscriptions(allSubscriptionProductIds),
+        ]);
+
+        setProducts(nextProducts ?? []);
+        setAvailablePurchases(nextPurchases ?? []);
+        setActiveSubscriptions(nextSubscriptions ?? []);
+        return true;
+    }, [billingConfigured, billingModule]);
+
+    const syncBackendState = useCallback(async (activeSubscriptionSnapshot: {
+        productIdentifier: string;
+        expirationDate: string | null;
+        willRenew: boolean;
+        unsubscribeDetectedAt: string | null;
+        billingIssueDetectedAt: string | null;
+    } | null, verificationPayload: SubscriptionVerificationPayload) => {
+        if (!session) {
+            setBackendAccess(null);
             return null;
         }
-        const info = await purchases.getCustomerInfo();
-        setCustomerInfo(info);
-        return info;
-    }, [purchases]);
+
+        const record = await syncSubscriptionAccess({
+            platform: Platform.OS,
+            billingConfigured,
+            storeConnected,
+            activeSubscription: activeSubscriptionSnapshot,
+            verificationPayload,
+        });
+        setBackendAccess(record);
+        return record;
+    }, [billingConfigured, session, storeConnected]);
 
     useEffect(() => {
-        if (!session || !billingConfigured || !apiKey || !purchases) {
+        if (!session || !billingConfigured || !billingModule) {
             setLoading(false);
-            setOfferings(null);
-            setCustomerInfo(null);
+            setStoreConnected(false);
+            setProducts([]);
+            setAvailablePurchases([]);
+            setActiveSubscriptions([]);
+            setBackendAccess(null);
             setError(null);
             return;
         }
@@ -228,23 +307,36 @@ export function useSubscription(session: Session | null) {
         let mounted = true;
         setLoading(true);
         setError(null);
-
-        const listener = (info: CustomerInfo) => {
-            if (!mounted) return;
-            setCustomerInfo(info);
-        };
+        const purchaseUpdateSubscription = billingModule.purchaseUpdatedListener((purchase) => {
+            void (async () => {
+                try {
+                    await billingModule.finishTransaction({
+                        purchase: toPurchaseInput(purchase),
+                        isConsumable: false,
+                    });
+                    if (!mounted) return;
+                    await refreshStoreState();
+                } catch (err) {
+                    if (!mounted) return;
+                    setError(getErrorMessage(err, "Purchase completed, but the app could not refresh your access."));
+                }
+            })();
+        });
+        const purchaseErrorSubscription = billingModule.purchaseErrorListener((purchaseError) => {
+            if (!mounted || isCancelledPurchaseError(purchaseError)) return;
+            setError(purchaseError.message ?? "Purchase failed.");
+        });
 
         void (async () => {
             try {
-                await configurePurchasesForUser(purchases, apiKey, session.user.id);
-                purchases.addCustomerInfoUpdateListener(listener);
-                const [nextOfferings, nextInfo] = await Promise.all([
-                    purchases.getOfferings(),
-                    purchases.getCustomerInfo(),
-                ]);
+                const connected = await billingModule.initConnection();
                 if (!mounted) return;
-                setOfferings(nextOfferings);
-                setCustomerInfo(nextInfo);
+                setStoreConnected(connected);
+                if (!connected) {
+                    setError("Could not connect to the App Store / Play subscription service.");
+                    return;
+                }
+                await refreshStoreState();
             } catch (err) {
                 if (!mounted) return;
                 setError(getErrorMessage(err, "Failed to load subscription data."));
@@ -255,56 +347,104 @@ export function useSubscription(session: Session | null) {
 
         return () => {
             mounted = false;
-            purchases.removeCustomerInfoUpdateListener(listener);
+            purchaseUpdateSubscription.remove();
+            purchaseErrorSubscription.remove();
+            void billingModule.endConnection();
         };
-    }, [apiKey, billingConfigured, purchases, session]);
+    }, [billingConfigured, billingModule, refreshStoreState, session]);
 
-    const purchasePackage = useCallback(async (pkg: PurchasesPackage | null) => {
-        if (!billingConfigured || !purchases) {
-            setError("Billing is not configured.");
+    const activeSubscription = useMemo(() => {
+        const nextSubscription = activeSubscriptions.find((subscription) =>
+            allSubscriptionProductIds.includes(subscription.productId) && subscription.isActive,
+        ) ?? null;
+
+        if (!nextSubscription) return null;
+
+        const expirationMs =
+            nextSubscription.renewalInfoIOS?.renewalDate ??
+            nextSubscription.expirationDateIOS ??
+            null;
+        const expirationDate = expirationMs ? new Date(expirationMs).toISOString() : null;
+        const willRenew = nextSubscription.renewalInfoIOS?.willAutoRenew ?? nextSubscription.autoRenewingAndroid ?? false;
+        const billingIssueDetectedAt = nextSubscription.renewalInfoIOS?.gracePeriodExpirationDate
+            ? new Date(nextSubscription.renewalInfoIOS.gracePeriodExpirationDate).toISOString()
+            : nextSubscription.renewalInfoIOS?.expirationReason === "BILLING_ERROR" && expirationDate
+                ? expirationDate
+                : null;
+
+        return {
+            productIdentifier: nextSubscription.productId,
+            expirationDate,
+            willRenew,
+            unsubscribeDetectedAt: !willRenew && expirationDate ? expirationDate : null,
+            billingIssueDetectedAt,
+        };
+    }, [activeSubscriptions]);
+
+    const isSubscribed = Boolean(activeSubscription);
+    const trialActive = trialStatus.isActive;
+    const verificationPayload = useMemo(
+        () => getVerificationPayload(activeSubscription, availablePurchases),
+        [activeSubscription, availablePurchases],
+    );
+
+    useEffect(() => {
+        if (!session) {
+            setBackendAccess(null);
+            return;
+        }
+
+        void syncBackendState(activeSubscription, verificationPayload).catch(() => {
+            // Local store state remains the fallback if backend sync fails.
+        });
+    }, [activeSubscription, session, syncBackendState, trialActive, verificationPayload]);
+
+    const purchasePlan = useCallback(async (planId: SubscriptionPlanId) => {
+        if (!billingConfigured || !billingModule) {
+            setError("Billing is not available in this build.");
             return false;
         }
-        if (!pkg) {
-            setError("That subscription package is not available in the current RevenueCat offering.");
+
+        const selectedPlan = plans.find((plan) => plan.id === planId) ?? null;
+        if (!selectedPlan) {
+            setError("That subscription plan is not available right now.");
             return false;
         }
+
         setPurchaseBusy(true);
         setError(null);
+
         try {
-            const result = await purchases.purchasePackage(pkg);
-            setCustomerInfo(result.customerInfo);
+            const connected = storeConnected || await billingModule.initConnection();
+            setStoreConnected(connected);
+            if (!connected) {
+                setError("Could not connect to the store for this purchase.");
+                return false;
+            }
+
+            await billingModule.requestPurchase(buildPurchaseRequest(selectedPlan));
+            await refreshStoreState();
             return true;
         } catch (err: unknown) {
-            const cancelled = Boolean((err as {userCancelled?: boolean} | null)?.userCancelled);
-            if (!cancelled) {
-                setError(getErrorMessage(err, "Purchase failed."));
-            }
+            const purchaseError = err as { code?: string; message?: string } | null;
+            if (isCancelledPurchaseError(purchaseError ?? undefined)) return false;
+            setError(getErrorMessage(err, "Purchase failed."));
             return false;
         } finally {
             setPurchaseBusy(false);
         }
-    }, [billingConfigured, purchases]);
-
-    const purchase = useCallback(async () => {
-        return purchasePackage(primaryPackage);
-    }, [primaryPackage, purchasePackage]);
-
-    const purchasePlan = useCallback(async (planId: SubscriptionPlanId) => {
-        const selectedPlan = plans.find((plan) => plan.id === planId) ?? null;
-        return purchasePackage(selectedPlan?.pkg ?? null);
-    }, [plans, purchasePackage]);
+    }, [billingConfigured, billingModule, plans, refreshStoreState, storeConnected]);
 
     const restore = useCallback(async () => {
-        if (!billingConfigured || !purchases) {
-            setError("Billing is not configured.");
+        if (!billingConfigured || !billingModule) {
+            setError("Billing is not available in this build.");
             return false;
         }
         setRestoreBusy(true);
         setError(null);
         try {
-            const nextInfo = await purchases.restorePurchases();
-            setCustomerInfo(nextInfo);
-            await refreshCustomerInfo();
+            await billingModule.restorePurchases();
+            await refreshStoreState();
             return true;
         } catch (err) {
             setError(getErrorMessage(err, "Restore failed."));
@@ -312,115 +452,65 @@ export function useSubscription(session: Session | null) {
         } finally {
             setRestoreBusy(false);
         }
-    }, [billingConfigured, purchases, refreshCustomerInfo]);
+    }, [billingConfigured, billingModule, refreshStoreState]);
 
-    const presentPaywall = useCallback(async () => {
-        if (!billingConfigured) {
-            setError("Billing is not configured.");
+    const openManageSubscriptions = useCallback(async () => {
+        if (!billingConfigured || !billingModule) {
+            setError("Billing is not available in this build.");
             return false;
         }
-        if (!revenueCatUI) {
-            setError("RevenueCat Paywalls UI is not available in this build.");
-            return false;
-        }
-        setPaywallBusy(true);
+        setManageBusy(true);
         setError(null);
+
         try {
-            const result = await revenueCatUI.presentPaywall(
-                primaryOffering ? {offering: primaryOffering} : undefined,
+            await billingModule.deepLinkToSubscriptions(
+                Platform.OS === "android"
+                    ? {
+                        skuAndroid: subscriptionProductIds.monthly,
+                        packageNameAndroid: getAndroidPackageName(),
+                    }
+                    : undefined,
             );
-            if (didUnlockAccess(result, revenueCatUI)) {
-                await refreshCustomerInfo();
-                return true;
-            }
-            return false;
-        } catch (err) {
-            setError(getErrorMessage(err, "Could not present the RevenueCat paywall."));
-            return false;
-        } finally {
-            setPaywallBusy(false);
-        }
-    }, [billingConfigured, primaryOffering, refreshCustomerInfo, revenueCatUI]);
-
-    const presentPaywallIfNeeded = useCallback(async () => {
-        if (!billingConfigured) {
-            setError("Billing is not configured.");
-            return false;
-        }
-        if (!revenueCatUI) {
-            setError("RevenueCat Paywalls UI is not available in this build.");
-            return false;
-        }
-        setPaywallBusy(true);
-        setError(null);
-        try {
-            const result = await revenueCatUI.presentPaywallIfNeeded({
-                requiredEntitlementIdentifier: revenueCatEntitlementId,
-                offering: primaryOffering ?? undefined,
-            });
-            if (didUnlockAccess(result, revenueCatUI)) {
-                await refreshCustomerInfo();
-                return true;
-            }
-            return false;
-        } catch (err) {
-            setError(getErrorMessage(err, "Could not present the entitlement-gated RevenueCat paywall."));
-            return false;
-        } finally {
-            setPaywallBusy(false);
-        }
-    }, [billingConfigured, primaryOffering, refreshCustomerInfo, revenueCatUI]);
-
-    const presentCustomerCenter = useCallback(async () => {
-        if (!billingConfigured) {
-            setError("Billing is not configured.");
-            return false;
-        }
-        if (!revenueCatUI) {
-            setError("RevenueCat Customer Center is not available in this build.");
-            return false;
-        }
-        setCustomerCenterBusy(true);
-        setError(null);
-        try {
-            await revenueCatUI.presentCustomerCenter();
-            await refreshCustomerInfo();
             return true;
         } catch (err) {
-            setError(getErrorMessage(err, "Could not open RevenueCat Customer Center."));
+            setError(getErrorMessage(err, "Could not open the store subscription settings."));
             return false;
         } finally {
-            setCustomerCenterBusy(false);
+            setManageBusy(false);
         }
-    }, [billingConfigured, refreshCustomerInfo, revenueCatUI]);
+    }, [billingConfigured, billingModule]);
+
+    const effectiveAccessSource = backendAccess?.accessSource ?? (isSubscribed ? "subscription" : trialActive ? "trial" : "none");
+    const effectiveTrialActive = effectiveAccessSource === "trial";
+    const effectiveIsSubscribed = effectiveAccessSource === "subscription";
+    const effectiveTrialStartedAt = backendAccess?.trial.startedAt ?? trialStatus.startedAt;
+    const effectiveTrialEndsAt = backendAccess?.trial.endsAt ?? trialStatus.endsAt;
+    const effectiveTrialDaysRemaining = backendAccess?.trial.daysRemaining ?? trialStatus.daysRemaining;
 
     return {
         loading,
         billingConfigured,
         runtimeSupportsBilling,
+        storeConnected,
         setupIssue,
-        offerings,
-        primaryOffering,
-        primaryPackage,
         plans,
-        customerInfo,
-        activeEntitlement,
-        isSubscribed,
-        trialActive,
-        requiresPaywall: runtimeSupportsBilling && !isSubscribed,
+        availablePurchases,
+        backendAccess,
+        activeSubscription,
+        isSubscribed: bypassSubscriptions || effectiveIsSubscribed,
+        trialActive: !bypassSubscriptions && effectiveTrialActive,
+        trialStartedAt: effectiveTrialStartedAt,
+        trialEndsAt: effectiveTrialEndsAt,
+        trialDaysRemaining: effectiveTrialDaysRemaining,
+        requiresPaywall: !bypassSubscriptions && runtimeSupportsBilling && effectiveAccessSource === "none",
         purchaseBusy,
         restoreBusy,
-        paywallBusy,
-        customerCenterBusy,
-        paywallAvailable: Boolean(revenueCatUI),
-        customerCenterAvailable: Boolean(revenueCatUI),
+        manageBusy,
+        bypassSubscriptions,
         error,
-        purchase,
         purchasePlan,
         restore,
-        presentPaywall,
-        presentPaywallIfNeeded,
-        presentCustomerCenter,
-        refreshCustomerInfo,
+        openManageSubscriptions,
+        refreshStoreState,
     };
 }

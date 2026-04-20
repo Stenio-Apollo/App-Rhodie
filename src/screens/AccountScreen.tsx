@@ -3,7 +3,6 @@ import {
     Alert,
     ImageBackground,
     Linking,
-    Platform,
     Pressable,
     ScrollView,
     Text,
@@ -40,22 +39,20 @@ interface AccountScreenProps {
         billingConfigured: boolean;
         isSubscribed: boolean;
         trialActive: boolean;
-        customerCenterAvailable: boolean;
-        customerCenterBusy: boolean;
-        activeEntitlement: {
+        trialEndsAt: string | null;
+        trialDaysRemaining: number;
+        activeSubscription: {
             expirationDate: string | null;
             willRenew: boolean;
             productIdentifier: string;
             unsubscribeDetectedAt: string | null;
             billingIssueDetectedAt: string | null;
         } | null;
-        customerInfo: {
-            managementURL: string | null;
-        } | null;
         restoreBusy: boolean;
+        manageBusy: boolean;
         error: string | null;
         restore: () => void;
-        presentCustomerCenter: () => Promise<boolean>;
+        openManageSubscriptions: () => Promise<boolean>;
     };
     onClose: () => void;
     onSignOut: () => void;
@@ -97,25 +94,32 @@ function formatDateLabel(value: string | null | undefined): string | null {
 
 function getSubscriptionStatusLabel(props: AccountScreenProps["subscription"]): string {
     if (!props.billingConfigured) return "Billing not configured";
-    if (props.trialActive) return "Trial active";
+    if (props.trialActive) return "Free trial active";
     if (props.isSubscribed) return "Rhodie Pro active";
     return "No active subscription";
 }
 
 function getSubscriptionDetail(props: AccountScreenProps["subscription"]): string {
-    const entitlement = props.activeEntitlement;
-    if (!entitlement) {
+    if (props.trialActive) {
+        const trialEndsLabel = formatDateLabel(props.trialEndsAt);
+        return trialEndsLabel
+            ? `Full access until ${trialEndsLabel}`
+            : `Free access with ${props.trialDaysRemaining} day(s) remaining.`;
+    }
+
+    const activeSubscription = props.activeSubscription;
+    if (!activeSubscription) {
         return props.billingConfigured
-            ? "No active entitlement found for this account."
-            : "RevenueCat is not enabled in this build.";
+            ? "Your trial has ended and there is no active store subscription on this account."
+            : "Store billing is not enabled in this build.";
     }
 
-    const expirationLabel = formatDateLabel(entitlement.expirationDate);
+    const expirationLabel = formatDateLabel(activeSubscription.expirationDate);
     if (!expirationLabel) {
-        return entitlement.productIdentifier;
+        return activeSubscription.productIdentifier;
     }
 
-    return entitlement.willRenew
+    return activeSubscription.willRenew
         ? `Renews ${expirationLabel}`
         : `Access ends ${expirationLabel}`;
 }
@@ -170,12 +174,6 @@ export function AccountScreen({
         [birthdayMonth],
     );
 
-    const manageSubscriptionUrl =
-        subscription.customerInfo?.managementURL ??
-        (Platform.OS === "ios"
-            ? "https://apps.apple.com/account/subscriptions"
-            : "https://play.google.com/store/account/subscriptions");
-
     const supportEmailUrl = useMemo(() => {
         const subject = encodeURIComponent("Rhodie Support");
         const body = encodeURIComponent(
@@ -221,17 +219,10 @@ export function AccountScreen({
     }
 
     async function handleManageSubscription() {
-        if (subscription.customerCenterAvailable) {
-            const opened = await subscription.presentCustomerCenter();
-            if (opened) return;
-        }
-
-        const supported = await Linking.canOpenURL(manageSubscriptionUrl);
-        if (!supported) {
+        const opened = await subscription.openManageSubscriptions();
+        if (!opened) {
             Alert.alert("Unavailable", "Subscription settings could not be opened on this device.");
-            return;
         }
-        await Linking.openURL(manageSubscriptionUrl);
     }
 
     async function runDeleteAccount() {
@@ -263,9 +254,9 @@ export function AccountScreen({
         );
     }
 
-    const subscriptionWarning = subscription.activeEntitlement?.billingIssueDetectedAt
+    const subscriptionWarning = subscription.activeSubscription?.billingIssueDetectedAt
         ? "There is a billing issue on this subscription."
-        : subscription.activeEntitlement?.unsubscribeDetectedAt
+        : subscription.activeSubscription?.unsubscribeDetectedAt
             ? "This subscription is set to end unless it is renewed."
             : null;
 
@@ -435,7 +426,7 @@ export function AccountScreen({
                         <View style={tw`mt-4 flex-row flex-wrap gap-2`}>
                             <Button label="Manage subscription" onPress={() => {
                                 void handleManageSubscription();
-                            }} variant="outlineAccent" disabled={subscription.customerCenterBusy}/>
+                            }} variant="outlineAccent" disabled={subscription.manageBusy}/>
                             <Button
                                 label={subscription.restoreBusy ? "Restoring..." : "Restore purchases"}
                                 onPress={subscription.restore}

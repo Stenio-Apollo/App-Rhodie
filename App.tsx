@@ -25,7 +25,7 @@ import {LoadingVideoOverlay} from "./src/components/LoadingVideoOverlay";
 import {BirthdayConfetti} from "./src/components/BirthdayConfetti";
 import {clearTasksStorage} from "./src/lib/storage";
 import {clearJournalStorage} from "./src/state/useJournal";
-import {getPrivacyPolicyUrl, getTermsOfUseUrl} from "./src/lib/revenuecat";
+import {getPrivacyPolicyUrl, getTermsOfUseUrl} from "./src/lib/subscriptions";
 
 type Tab = "today" | "journal" | "board" | "calendar" | "insights";
 
@@ -169,10 +169,10 @@ export default function App() {
                     purchaseEnabled={subscription.billingConfigured && !subscription.setupIssue}
                     purchaseBusy={subscription.purchaseBusy}
                     restoreBusy={subscription.restoreBusy}
-                    paywallBusy={subscription.paywallBusy}
                     error={subscription.setupIssue ?? subscription.error}
                     privacyPolicyUrl={getPrivacyPolicyUrl()}
                     termsOfUseUrl={getTermsOfUseUrl()}
+                    trialEndsAt={subscription.trialEndsAt}
                     plans={subscription.plans.map((plan) => ({
                         id: plan.id,
                         title: plan.title,
@@ -180,7 +180,6 @@ export default function App() {
                         priceLabel: plan.priceLabel,
                         productIdentifier: plan.productIdentifier,
                     }))}
-                    onPresentPaywall={subscription.presentPaywall}
                     onPurchasePlan={subscription.purchasePlan}
                     onRestore={subscription.restore}
                     onSignOut={handleSignOut}

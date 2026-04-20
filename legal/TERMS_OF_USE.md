@@ -45,9 +45,8 @@ Rhodie may offer paid products, including:
 
 - Monthly subscription
 - Yearly subscription
-- Lifetime access
 
-Subscription billing and payment processing are handled by Apple or Google through their respective app stores. RevenueCat is used to manage subscription status and entitlements.
+Subscription billing and payment processing are handled by Apple or Google through their respective app stores. Rhodie uses its backend services to verify subscription status and manage access.
 
 ### Auto-Renewing Subscriptions
 
@@ -57,13 +56,9 @@ If you purchase a monthly or yearly subscription:
 - the app store linked to your purchase method will charge you according to its billing terms; and
 - you can manage or cancel subscriptions through your Apple App Store or Google Play account settings.
 
-### Lifetime Access
-
-If offered, lifetime access is a one-time purchase that provides access for the lifetime of the purchased product offering, subject to continued availability of the service and applicable law.
-
 ### Free Trials and Promotional Offers
 
-We may offer free trials, introductory pricing, or promotions. Eligibility, duration, and pricing are determined by us, the app stores, or RevenueCat, and may change.
+We may offer free trials, introductory pricing, or promotions. Eligibility, duration, and pricing are determined by us and/or the applicable app store, and may change.
 
 ## 7. Refunds
 
@@ -104,4 +99,3 @@ These Terms are governed by the laws applicable in your jurisdiction, without re
 If you have questions about these Terms, contact:
 
 **Email:** s3.gerlin@gmail.com
-

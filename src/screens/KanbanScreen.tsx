@@ -38,7 +38,6 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
     const [priority, setPriority] = useState<TaskPriority>("medium");
     const [showCalendar, setShowCalendar] = useState(false);
     const [filterDate, setFilterDate] = useState<string | null>(null);
-
     const filteredGrouped = useMemo(() => {
         if (!filterDate) return grouped;
         return {

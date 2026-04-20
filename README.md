@@ -12,7 +12,7 @@
   - App-written simplified summaries with source links
 - Journal entries
 - Supabase auth + cloud sync (tasks, journal, profile, push tokens)
-- Subscription paywall (RevenueCat): 14-day free trial then monthly billing
+- Subscription paywall: 14-day free trial, then monthly or yearly billing through the App Store / Google Play
 - Local persistence fallback with AsyncStorage
 
 ## Run
@@ -29,34 +29,29 @@ npx expo start -c
 4) Enable email auth (or your provider) in Supabase Auth.  
 5) For push: store Expo push tokens in `push_tokens` and send via a Supabase Edge Function or other worker.
 
-## Billing setup (RevenueCat + Store subscriptions)
-1) In RevenueCat, create an entitlement id `Rhodie Pro` (or set `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID` to whatever identifier you use).
-2) In RevenueCat, create one current offering containing these package/product mappings:
-   - `yearly`
-   - `monthly`
-3) Configure store products:
-   - App Store Connect: one yearly auto-renewable subscription and one monthly auto-renewable subscription.
-   - Google Play Console: one yearly subscription base plan and one monthly subscription base plan.
-4) Local development can use the shared RevenueCat test key:
-   - `EXPO_PUBLIC_REVENUECAT_API_KEY`
-5) Store builds should use platform-specific public SDK keys:
-   - `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY`
-   - `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY`
-6) Also set:
-   - `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID`
+## Billing setup (Store billing + Supabase verification)
+1) Configure store products:
+- App Store Connect: monthly `rhodie.30` and yearly `rhodie.365` auto-renewable subscriptions.
+   - Google Play Console: matching monthly and yearly subscriptions/base plans.
+2) Apply the Supabase migration for `subscription_access`.
+3) Deploy the `subscription-access` and `delete-account` Edge Functions.
+4) Set Supabase Edge Function secrets:
+   - `SUBSCRIPTION_TRIAL_DAYS`
+   - Apple App Store Server API credentials
+   - Google Play Developer API service-account credentials
+5) Set app config / env values:
+   - `EXPO_PUBLIC_MONTHLY_PRODUCT_ID`
+   - `EXPO_PUBLIC_YEARLY_PRODUCT_ID`
    - `EXPO_PUBLIC_PRIVACY_POLICY_URL`
    - `EXPO_PUBLIC_TERMS_OF_USE_URL`
-7) Add the same RevenueCat and legal URL variables to your EAS `preview` and `production` environments.
-8) Turn on Apple App Store Server Notifications V2 and Google Real-time Developer Notifications inside RevenueCat before launch.
-9) Test on a dev client / TestFlight / internal Android build with sandbox users before production. Expo Go cannot make real purchases.
+6) Turn off `EXPO_PUBLIC_BYPASS_SUBSCRIPTIONS` before any real billing build.
+7) Test on a dev client / TestFlight / internal Android build with sandbox users before production. Expo Go cannot make real purchases.
 
 ## Subscription launch checklist
-- RevenueCat dashboard has the `Rhodie Pro` entitlement (or your configured entitlement id).
-- The current offering contains `yearly` and `monthly`.
-- The RevenueCat paywall is configured in the dashboard.
-- RevenueCat Customer Center is configured in the dashboard.
-- iOS and Android products are attached to the correct packages.
-- EAS `production` environment contains the correct RevenueCat SDK keys.
+- App Store Connect and Google Play products exist for `rhodie.30` and `rhodie.365`.
+- Supabase `subscription_access` table exists with RLS enabled.
+- `subscription-access` function is deployed and has the required Apple / Google verification secrets.
+- EAS `production` environment has `EXPO_PUBLIC_BYPASS_SUBSCRIPTIONS=false`.
 - Paywall shows working Terms of Use and Privacy Policy URLs.
 - Test these flows on-device: yearly purchase, monthly purchase, restore purchase, cancel from store, reinstall app, sign in on a second device.
 

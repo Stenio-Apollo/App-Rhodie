@@ -14,15 +14,14 @@ type SubscriptionPlanViewModel = {
 interface SubscriptionScreenProps {
     loading: boolean;
     trialActive: boolean;
+    trialEndsAt: string | null;
     purchaseEnabled: boolean;
     purchaseBusy: boolean;
     restoreBusy: boolean;
-    paywallBusy: boolean;
     error: string | null;
     privacyPolicyUrl: string | null;
     termsOfUseUrl: string | null;
     plans: SubscriptionPlanViewModel[];
-    onPresentPaywall: () => void;
     onPurchasePlan: (planId: SubscriptionPlanViewModel["id"]) => void;
     onRestore: () => void;
     onSignOut: () => void;
@@ -31,20 +30,22 @@ interface SubscriptionScreenProps {
 export function SubscriptionScreen({
     loading,
     trialActive,
+    trialEndsAt,
     purchaseEnabled,
     purchaseBusy,
     restoreBusy,
-    paywallBusy,
     error,
     privacyPolicyUrl,
     termsOfUseUrl,
     plans,
-    onPresentPaywall,
     onPurchasePlan,
     onRestore,
     onSignOut,
 }: SubscriptionScreenProps) {
     const legalLinksReady = Boolean(privacyPolicyUrl && termsOfUseUrl);
+    const trialEndsLabel = trialEndsAt
+        ? new Date(trialEndsAt).toLocaleDateString(undefined, {month: "short", day: "numeric", year: "numeric"})
+        : null;
 
     return (
         <ScrollView style={tw`flex-1 bg-black`} contentContainerStyle={tw`flex-grow justify-center px-6 py-8`}>
@@ -53,24 +54,28 @@ export function SubscriptionScreen({
                     Rhodie Pro
                 </Text>
                 <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
-                    Unlock the full Rhodie experience with RevenueCat-backed subscriptions and entitlements.
+                    Keep full access to Rhodie with a direct App Store or Play subscription.
                 </Text>
 
                 <View style={tw`mt-5 gap-2`}>
                     <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>
-                        • RevenueCat entitlement checking for Rhodie Pro
+                        • 14 days of free access from the moment the account is created
                     </Text>
                     <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>
-                        • Customer info syncing across devices
+                        • Monthly or yearly plans to continue after the trial ends
                     </Text>
                     <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>
-                        • Hosted paywall plus restore and customer center support
+                        • Restore purchases any time from the same Apple ID or Google account
                     </Text>
                 </View>
 
                 {trialActive ? (
                     <Text style={[tw`mt-5 text-xs text-emerald-300`, {fontFamily: fonts.body}]}>
-                        Your free trial is currently active.
+                        Your free access is active{trialEndsLabel ? ` until ${trialEndsLabel}` : ""}.
+                    </Text>
+                ) : trialEndsLabel ? (
+                    <Text style={[tw`mt-5 text-xs text-amber-300`, {fontFamily: fonts.body}]}>
+                        Your 14-day free access ended on {trialEndsLabel}. Choose a plan to continue.
                     </Text>
                 ) : null}
 
@@ -113,15 +118,6 @@ export function SubscriptionScreen({
                     ))}
                 </View>
 
-                <View style={tw`mt-5`}>
-                    <Button
-                        label={loading || paywallBusy ? "Opening..." : "Open RevenueCat Paywall"}
-                        onPress={onPresentPaywall}
-                        variant="outlineAccent"
-                        disabled={!purchaseEnabled || loading || paywallBusy}
-                    />
-                </View>
-
                 <View style={tw`mt-3`}>
                     <Button
                         label={restoreBusy ? "Restoring..." : "Restore purchases"}
@@ -159,7 +155,7 @@ export function SubscriptionScreen({
                 )}
 
                 <View style={tw`mt-6`}>
-                    <Button label="Sign out" onPress={onSignOut} variant="danger"/>
+                    <Button label={loading ? "Checking access..." : "Sign out"} onPress={onSignOut} variant="danger" disabled={loading}/>
                 </View>
             </View>
         </ScrollView>

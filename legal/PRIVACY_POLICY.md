@@ -15,7 +15,7 @@ We may collect the following information:
 - App content you create, such as journal entries, gratitude entries, tasks, due dates, and related activity.
 - Calendar connection data if you choose to connect Google Calendar.
 - Push notification tokens used to deliver reminders and notifications.
-- Subscription and purchase status information from RevenueCat and the Apple App Store or Google Play.
+- Subscription and purchase status information from the Apple App Store or Google Play, plus verification and access records stored in our backend.
 - Limited technical and diagnostic information needed to operate, secure, and improve the app.
 
 ## 2. How We Use Information
@@ -33,22 +33,20 @@ We use information to:
 
 ## 3. Subscription and Payment Information
 
-Rhodie uses RevenueCat to manage subscriptions and purchase status. Payments are processed by Apple or Google, not by Rhodie directly. We do not store your full payment card details.
+Rhodie uses the Apple App Store and Google Play for subscription billing. We also use our backend services to verify subscription status and manage access. We do not store your full payment card details.
 
 We may receive information such as:
 
 - active subscription status,
-- entitlement status,
 - renewal or expiration dates,
 - product identifiers, and
-- management links or restore status.
+- verification or restore status.
 
 ## 4. Third-Party Services
 
 We may use third-party providers to operate the app, including:
 
 - **Supabase** for authentication, database storage, and backend services;
-- **RevenueCat** for subscription management;
 - **Apple App Store** and **Google Play** for purchases;
 - **Google Calendar** if you choose to connect your account; and
 - notification and infrastructure providers required to deliver app functionality.
@@ -101,4 +99,3 @@ We may update this Privacy Policy from time to time. If we make material changes
 If you have questions about this Privacy Policy or Rhodie's privacy practices, contact:
 
 **Email:** s3.gerlin@gmail.com
-

@@ -32,6 +32,7 @@ async function deleteUserData(userId: string) {
         "tasks",
         "push_tokens",
         "google_calendar_connections",
+        "subscription_access",
     ] as const;
 
     for (const table of userTables) {

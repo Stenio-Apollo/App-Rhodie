@@ -66,6 +66,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                         <TextInput
                             value={promptText}
                             onChangeText={setPromptText}
+                            keyboardAppearance="dark"
                             placeholder="Respond to this prompt..."
                             placeholderTextColor="#6b7280"
                             multiline
@@ -106,6 +107,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                                     parts[idx] = val;
                                     setText(parts.slice(0, 3).join("\n"));
                                 }}
+                                keyboardAppearance="dark"
                                 placeholder="•"
                                 placeholderTextColor="#6b7280"
                                 style={[tw`mt-2 rounded-lg border border-slate-50/15 bg-black/39 px-3 py-2 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
@@ -146,6 +148,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                                             <TextInput
                                                 value={editingText}
                                                 onChangeText={setEditingText}
+                                                keyboardAppearance="dark"
                                                 multiline
                                                 style={[tw`mt-1 rounded-xl border border-slate-50/11 bg-black/13 px-3 py-2 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                                             />
@@ -209,6 +212,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                                             <TextInput
                                                 value={editingText}
                                                 onChangeText={setEditingText}
+                                                keyboardAppearance="dark"
                                                 multiline
                                                 style={[tw`mt-1 rounded-xl border border-slate-50/11 bg-black/13 px-3 py-2 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                                             />

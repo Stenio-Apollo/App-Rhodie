@@ -1,0 +1,41 @@
+diff --git a/node_modules/expo-iap/ios/ExpoIapModule.swift b/node_modules/expo-iap/ios/ExpoIapModule.swift
+index c220f61..ab556c6 100644
+--- a/node_modules/expo-iap/ios/ExpoIapModule.swift
++++ b/node_modules/expo-iap/ios/ExpoIapModule.swift
+@@ -14,9 +14,9 @@ public final class ExpoIapModule: Module {
+     nonisolated public func definition() -> ModuleDefinition {
+         Name("ExpoIap")
+ 
+-        Constant("ERROR_CODES") {
+-            OpenIapSerialization.errorCodes()
+-        }
++        Constants([
++            "ERROR_CODES": OpenIapSerialization.errorCodes()
++        ])
+ 
+         Events(
+             OpenIapEvent.purchaseUpdated.rawValue,
+diff --git a/node_modules/expo-iap/ios/onside/OnsideIapModule.swift b/node_modules/expo-iap/ios/onside/OnsideIapModule.swift
+index 5d03796..6ea80eb 100644
+--- a/node_modules/expo-iap/ios/onside/OnsideIapModule.swift
++++ b/node_modules/expo-iap/ios/onside/OnsideIapModule.swift
+@@ -596,13 +596,13 @@ public final class ExpoIapOnsideModule: Module {
+     nonisolated public func definition() -> ModuleDefinition {
+         Name("ExpoIapOnside")
+ 
+-        Constant("ERROR_CODES") {
+-            OpenIapSerialization.errorCodes()
+-        }
++        Constants([
++            "ERROR_CODES": OpenIapSerialization.errorCodes()
++        ])
+ 
+-        Constant("IS_ONSIDE_KIT_INSTALLED_IOS") {
+-            false
+-        }
++        Constants([
++            "IS_ONSIDE_KIT_INSTALLED_IOS": false
++        ])
+ 
+         Events(
+             OnsideEvent.purchaseUpdated.rawValue,
