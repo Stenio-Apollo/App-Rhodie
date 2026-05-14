@@ -18,13 +18,19 @@
     },
     "production": {
       "environment": "production",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "ios": {
+        "image": "latest"
+      }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "6762026555"
+        "ascAppId": "6762026555",
+        "ascApiKeyPath": "/Users/steniogerlin/Downloads/AuthKey_56NV3Q5Y7B.p8",
+        "ascApiKeyId": "56NV3Q5Y7B",
+        "ascApiKeyIssuerId": "d93370ef-cc03-4a72-8576-c7f8682d58d3"
       }
     }
   }

@@ -32,7 +32,10 @@ export function JournalScreen({session}: { session: Session | null }) {
             <View style={tw`flex-1 bg-black/7`}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-3 pb-6`}>
                     <View
-                        style={tw`rounded-3xl bg-black/27 p-4 border border-orange-50/17 flex-row gap-4 items-center`}>
+                        style={[
+                            tw`rounded-3xl bg-black/27 p-4 border flex-row gap-4 items-center`,
+                            {borderColor: "rgba(181,89,65,0.72)"},
+                        ]}>
                         <View style={tw`flex-1`}>
                             <Text
                                 style={[tw`self-center text-center px-4 py-1 text-lg font-semibold`, {
@@ -73,11 +76,6 @@ export function JournalScreen({session}: { session: Session | null }) {
                             style={[tw`mt-2 min-h-[90px] rounded-xl border border-orange-50/17 bg-black/39 px-3 py-2 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                         />
                         <View style={tw`mt-3 flex-row justify-end gap-2`}>
-                            <Button
-                                label="Use prompt text"
-                                variant="outlineAccent"
-                                onPress={() => setPromptText((prev) => (prev ? `${prev}\n\n${todaysPrompt}` : todaysPrompt))}
-                            />
                             <Button
                                 label="Add Response"
                                 variant="primary"

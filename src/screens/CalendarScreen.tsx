@@ -1,10 +1,12 @@
-import {useMemo, useState} from "react";
-import {ImageBackground, Pressable, ScrollView, Text, View} from "react-native";
+import {useEffect, useMemo, useState} from "react";
+import {ImageBackground, Modal, Pressable, ScrollView, Text, View} from "react-native";
 import tw from "../lib/tw";
 import type {Task} from "../types";
 import type {Session} from "@supabase/supabase-js";
 import {TranslucentCalendar} from "../components/TranslucentCalendar";
 import {fonts} from "../theme/fonts";
+import {Input} from "../components/ui/Input";
+import type {WeeklyGoal, WeeklyGoalPreset} from "../state/useWeeklyGoal";
 
 interface CalendarScreenProps {
     tasks: Task[];
@@ -19,10 +21,23 @@ interface CalendarScreenProps {
         disconnect: () => Promise<void>;
         syncNow: () => Promise<void>;
     };
+    weeklyGoal: WeeklyGoal | null;
+    weeklyGoalPresets: WeeklyGoalPreset[];
+    onSaveWeeklyGoal: (payload: {text: string; presetId?: string | null}) => Promise<void>;
+    onRecordWeeklyGoalCheck: (achieved: boolean) => Promise<void>;
 }
 
-export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
+export function CalendarScreen({
+    tasks,
+    googleCalendar,
+    weeklyGoal,
+    weeklyGoalPresets,
+    onSaveWeeklyGoal,
+    onRecordWeeklyGoalCheck,
+}: CalendarScreenProps) {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+    const [customGoal, setCustomGoal] = useState("");
+    const [goalCheckVisible, setGoalCheckVisible] = useState(false);
     const bg = require("../../public/images/rh14.jpg");
 
     const markedDates = useMemo(() => {
@@ -38,6 +53,22 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
     }, [selectedDate, tasks]);
 
     const selectedTasks = tasks.filter((task) => task.dueDate === selectedDate).sort((a, b) => a.order - b.order);
+    const customGoalReady = customGoal.trim().length > 0;
+
+    useEffect(() => {
+        if (!weeklyGoal) return;
+
+        const timeout = setTimeout(() => {
+            setGoalCheckVisible(true);
+        }, 350);
+
+        return () => clearTimeout(timeout);
+    }, []);
+
+    function handleGoalCheck(achieved: boolean) {
+        setGoalCheckVisible(false);
+        void onRecordWeeklyGoalCheck(achieved);
+    }
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-55`}>
@@ -157,7 +188,164 @@ export function CalendarScreen({tasks, googleCalendar}: CalendarScreenProps) {
                             </View>
                         ))
                     )}
+
+                    <View style={tw`mt-3 rounded-[28px] border border-orange-50/17 bg-black/42 p-3`}>
+                        <View style={tw`flex-row items-start justify-between gap-3`}>
+                            <View style={tw`flex-1`}>
+                                <Text style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                    This week's goal
+                                </Text>
+                                <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
+                                    Pick a focus for the week or write your own.
+                                </Text>
+                            </View>
+                            {weeklyGoal ? (
+                                <Text
+                                    style={[
+                                        tw`rounded-lg border border-[#B55941] px-2 py-1 text-[10px] font-bold uppercase text-[#E4E0D4]`,
+                                        {fontFamily: fonts.body},
+                                    ]}
+                                >
+                                    Set
+                                </Text>
+                            ) : null}
+                        </View>
+
+                        {weeklyGoal ? (
+                            <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-black/35 px-3 py-2`}>
+                                <Text style={[tw`text-xs font-semibold text-slate-400`, {fontFamily: fonts.body}]}>
+                                    Current focus
+                                </Text>
+                                <Text style={[tw`mt-1 text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                    {weeklyGoal.text}
+                                </Text>
+                                <Text
+                                    style={[
+                                        tw`mt-2 text-[11px] font-semibold`,
+                                        {
+                                            fontFamily: fonts.body,
+                                            color: weeklyGoal.achievedAt ? "#B55941" : "rgba(228,224,212,0.68)",
+                                        },
+                                    ]}
+                                >
+                                    {weeklyGoal.achievedAt
+                                        ? `Achieved ${new Date(weeklyGoal.achievedAt).toLocaleDateString(undefined, {month: "short", day: "numeric"})}`
+                                        : weeklyGoal.lastCheckedAt
+                                            ? "Still in progress"
+                                            : "Not checked yet"}
+                                </Text>
+                            </View>
+                        ) : null}
+
+                        <View style={tw`mt-3 flex-row flex-wrap gap-2`}>
+                            {weeklyGoalPresets.map((goal) => {
+                                const selected = weeklyGoal?.presetId === goal.id;
+                                return (
+                                    <Pressable
+                                        key={goal.id}
+                                        onPress={() => {
+                                            setCustomGoal("");
+                                            void onSaveWeeklyGoal({text: goal.title, presetId: goal.id});
+                                        }}
+                                        style={({pressed}) => [
+                                            tw`w-[48%] rounded-xl border px-3 py-3`,
+                                            selected
+                                                ? {borderColor: "#B55941", backgroundColor: "rgba(181,89,65,0.18)"}
+                                                : {borderColor: "#2c2c2c", backgroundColor: "rgba(0,0,0,0.35)"},
+                                            pressed && tw`opacity-80`,
+                                        ]}
+                                    >
+                                        <Text style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                            {goal.title}
+                                        </Text>
+                                        <Text style={[tw`mt-1 text-[11px] leading-4 text-slate-300`, {fontFamily: fonts.body}]}>
+                                            {goal.description}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        <View style={tw`mt-3`}>
+                            <Input
+                                value={customGoal}
+                                onChangeText={setCustomGoal}
+                                placeholder="Write your own weekly goal"
+                                returnKeyType="done"
+                                maxLength={120}
+                            />
+                            <Pressable
+                                disabled={!customGoalReady}
+                                onPress={() => {
+                                    if (!customGoalReady) return;
+                                    const text = customGoal.trim();
+                                    setCustomGoal("");
+                                    void onSaveWeeklyGoal({text, presetId: null});
+                                }}
+                                style={({pressed}) => [
+                                    tw`mt-2 rounded-xl px-3 py-2.5 items-center`,
+                                    {backgroundColor: "#B55941"},
+                                    !customGoalReady && tw`opacity-50`,
+                                    pressed && customGoalReady ? tw`opacity-80` : null,
+                                ]}
+                            >
+                                <Text style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                    Use custom goal
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </View>
                 </ScrollView>
+                <Modal
+                    visible={goalCheckVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setGoalCheckVisible(false)}
+                >
+                    <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
+                        <View style={tw`w-full rounded-[28px] border border-[#B55941] bg-[#0f0f0f] p-5`}>
+                            <Text style={[tw`text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                Weekly goal check-in
+                            </Text>
+                            <Text style={[tw`mt-3 text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
+                                Have you achieved this week's goal?
+                            </Text>
+                            {weeklyGoal ? (
+                                <View style={tw`mt-4 rounded-2xl border border-orange-50/17 bg-black/42 px-3 py-3`}>
+                                    <Text style={[tw`text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        {weeklyGoal.text}
+                                    </Text>
+                                </View>
+                            ) : null}
+                            <View style={tw`mt-5 flex-row gap-3`}>
+                                <Pressable
+                                    onPress={() => handleGoalCheck(false)}
+                                    style={({pressed}) => [
+                                        tw`flex-1 rounded-xl border border-orange-50/17 px-3 py-3`,
+                                        {backgroundColor: "rgba(0,0,0,0.35)"},
+                                        pressed && tw`opacity-80`,
+                                    ]}
+                                >
+                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        Not yet
+                                    </Text>
+                                </Pressable>
+                                <Pressable
+                                    onPress={() => handleGoalCheck(true)}
+                                    style={({pressed}) => [
+                                        tw`flex-1 rounded-xl px-3 py-3`,
+                                        {backgroundColor: "#B55941"},
+                                        pressed && tw`opacity-80`,
+                                    ]}
+                                >
+                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        Yes
+                                    </Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </ImageBackground>
     );

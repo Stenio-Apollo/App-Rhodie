@@ -8,10 +8,12 @@ import {fonts} from "../theme/fonts";
 import type {Session} from "@supabase/supabase-js";
 import {useProfile} from "../state/useProfile";
 import {isToday} from "../lib/date-utils";
+import type {WeeklyGoal} from "../state/useWeeklyGoal";
 
 interface TodayScreenProps {
     tasks: Task[];
     session: Session | null;
+    weeklyGoal: WeeklyGoal | null;
 }
 
 function isoToday(): string {
@@ -28,7 +30,7 @@ const statusLabel: Record<Task["status"], string> = {
     completed: "Done",
 };
 
-export function TodayScreen({tasks, session}: TodayScreenProps) {
+export function TodayScreen({tasks, session, weeklyGoal}: TodayScreenProps) {
     const {byDate} = useJournal(session);
     const {profile} = useProfile(session);
     const today = isoToday();
@@ -82,6 +84,24 @@ export function TodayScreen({tasks, session}: TodayScreenProps) {
                               numberOfLines={3}>
                             {todaysQuote}
                         </Text>
+                    </View>
+
+                    <View style={tw`rounded-3xl border border-[#B55941] bg-black/23 p-4`}>
+                        <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Weekly
+                            goal</Text>
+                        {weeklyGoal ? (
+                            <>
+                                <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: "#E4E0D4"}]} numberOfLines={3}>
+                                    {weeklyGoal.text}
+                                </Text>
+                                <Text style={[tw`mt-2 text-[11px] font-semibold text-slate-400`, {fontFamily: fonts.body}]}>
+                                    Week of {weeklyGoal.weekStartDate}
+                                </Text>
+                            </>
+                        ) : (
+                            <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Choose a weekly
+                                goal from Calendar.</Text>
+                        )}
                     </View>
 
                     <View style={tw`rounded-3xl border border-[#B55941] bg-black/23 p-4`}>

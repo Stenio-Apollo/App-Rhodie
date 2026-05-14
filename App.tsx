@@ -26,23 +26,26 @@ import {BirthdayConfetti} from "./src/components/BirthdayConfetti";
 import {clearTasksStorage} from "./src/lib/storage";
 import {clearJournalStorage} from "./src/state/useJournal";
 import {getPrivacyPolicyUrl, getTermsOfUseUrl} from "./src/lib/subscriptions";
+import {clearWeeklyGoalStorage, useWeeklyGoal} from "./src/state/useWeeklyGoal";
 
 type Tab = "today" | "journal" | "board" | "calendar" | "insights";
 
 export default function App() {
     const [tab, setTab] = useState<Tab>("today");
     const [accountOpen, setAccountOpen] = useState(false);
-    const [transitioning, setTransitioning] = useState(false);
     const [birthdayBurstKey, setBirthdayBurstKey] = useState("initial");
-    const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const birthdayBurstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const {session, loading: authLoading, signOut, deleteAccount} = useSupabaseAuth();
     const subscription = useSubscription(session);
     const {profile, upsertProfile} = useProfile(session);
     const tasksState = useTasks(session);
+    const weeklyGoalState = useWeeklyGoal(session?.user.id);
     const [fontsLoaded] = useAppFonts();
     const birthdayActive = Boolean(profile?.birthday && isToday(profile.birthday));
-    const appLoading = !fontsLoaded || authLoading || (session && subscription.loading) || (session && !tasksState.isLoaded);
+    const appLoading = !fontsLoaded ||
+        authLoading ||
+        (session && subscription.loading) ||
+        (session && (!tasksState.isLoaded || !weeklyGoalState.isLoaded));
 
     useEffect(() => {
         if (!session) {
@@ -69,9 +72,6 @@ export default function App() {
 
     useEffect(() => {
         return () => {
-            if (transitionTimeoutRef.current) {
-                clearTimeout(transitionTimeoutRef.current);
-            }
             if (birthdayBurstTimeoutRef.current) {
                 clearTimeout(birthdayBurstTimeoutRef.current);
             }
@@ -84,7 +84,7 @@ export default function App() {
             birthdayBurstTimeoutRef.current = null;
         }
 
-        if (!birthdayActive || transitioning || appLoading || !session) {
+        if (!birthdayActive || appLoading || !session) {
             return;
         }
 
@@ -99,7 +99,7 @@ export default function App() {
                 birthdayBurstTimeoutRef.current = null;
             }
         };
-    }, [appLoading, birthdayActive, session, tab, transitioning]);
+    }, [appLoading, birthdayActive, session, tab]);
 
     function handleTabChange(nextTab: Tab) {
         if (accountOpen) {
@@ -108,15 +108,7 @@ export default function App() {
         }
         if (nextTab === tab) return;
 
-        setTransitioning(true);
         setTab(nextTab);
-        if (transitionTimeoutRef.current) {
-            clearTimeout(transitionTimeoutRef.current);
-        }
-        transitionTimeoutRef.current = setTimeout(() => {
-            setTransitioning(false);
-            transitionTimeoutRef.current = null;
-        }, 700);
     }
 
     async function handleSignOut() {
@@ -136,7 +128,7 @@ export default function App() {
             return errorMessage;
         }
 
-        await Promise.all([clearTasksStorage(), clearJournalStorage()]);
+        await Promise.all([clearTasksStorage(), clearJournalStorage(), clearWeeklyGoalStorage(session?.user.id)]);
         setAccountOpen(false);
         return null;
     }
@@ -258,11 +250,21 @@ export default function App() {
                             onDeleteAccount={handleDeleteAccount}
                         />
                     ) : null}
-                    {!accountOpen && tab === "today" ? <TodayScreen tasks={tasksState.tasks} session={session}/> : null}
+                    {!accountOpen && tab === "today" ? (
+                        <TodayScreen tasks={tasksState.tasks} session={session} weeklyGoal={weeklyGoalState.goal}/>
+                    ) : null}
                     {!accountOpen && tab === "journal" ? <JournalScreen session={session}/> : null}
                     {!accountOpen && tab === "board" ? <KanbanScreen tasksState={tasksState} session={session}/> : null}
                     {!accountOpen && tab === "calendar" ? (
-                        <CalendarScreen tasks={tasksState.tasks} session={session} googleCalendar={tasksState.googleCalendar}/>
+                        <CalendarScreen
+                            tasks={tasksState.tasks}
+                            session={session}
+                            googleCalendar={tasksState.googleCalendar}
+                            weeklyGoal={weeklyGoalState.goal}
+                            weeklyGoalPresets={weeklyGoalState.presets}
+                            onSaveWeeklyGoal={weeklyGoalState.saveGoal}
+                            onRecordWeeklyGoalCheck={weeklyGoalState.recordGoalCheck}
+                        />
                     ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen/> : null}
                 </View>
@@ -305,7 +307,6 @@ export default function App() {
                     </View>
                 </View>
                 <BirthdayConfetti visible={birthdayActive} triggerKey={birthdayBurstKey}/>
-                <LoadingVideoOverlay visible={transitioning} message="Loading screen..."/>
             </SafeAreaView>
         </GradientBackground>
     );
