@@ -1,6 +1,5 @@
-import {useEffect, useState} from "react";
-import {KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View} from "react-native";
-import {Button} from "../components/ui/Button";
+import {useEffect, useMemo, useState} from "react";
+import {ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View} from "react-native";
 import {Input} from "../components/ui/Input";
 import {fonts} from "../theme/fonts";
 import tw from "../lib/tw";
@@ -23,6 +22,7 @@ const MONTH_OPTIONS = [
 ] as const;
 
 const DAY_OPTIONS = Array.from({length: 31}, (_, index) => `${index + 1}`.padStart(2, "0"));
+type AuthMode = "signIn" | "create";
 
 function daysInMonth(month: string): number {
     return new Date(2000, Number(month), 0).getDate();
@@ -41,6 +41,7 @@ function birthdayLabel(month: string, day: string): string {
 
 export function AuthScreen() {
     const {signInMagicLink, verifyEmailOtp} = useSupabaseAuth();
+    const [mode, setMode] = useState<AuthMode>("signIn");
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [birthdayMonth, setBirthdayMonth] = useState("");
@@ -51,13 +52,7 @@ export function AuthScreen() {
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        setError(null);
-        setMessage(null);
-        setSent(false);
-        setCode("");
-    }, []);
+    const bg = require("../../public/images/rh13.jpg");
 
     useEffect(() => {
         if (!birthdayMonth) {
@@ -74,25 +69,39 @@ export function AuthScreen() {
 
     const birthday = formatBirthday(birthdayMonth, birthdayDay);
     const visibleDayOptions = birthdayMonth ? DAY_OPTIONS.slice(0, daysInMonth(birthdayMonth)) : [];
+    const title = mode === "signIn" ? "Sign in" : "Create account";
+    const subtitle = mode === "signIn"
+        ? "Enter your email to receive a login code."
+        : "Create your Rhodie account with a login code.";
 
-    async function upsertProfile(userId: string) {
-        if (!name.trim() && !birthday) return null;
+    const segmentedContainerStyle = useMemo(
+        () => [tw`mt-4 rounded-xl border border-[#2c2c2c] bg-black/50 p-0.5 flex-row`],
+        [],
+    );
+
+    async function upsertProfile(userId: string): Promise<{ error: { message: string } | null; skipped: boolean }> {
+        if (!name.trim() && !birthday) return {error: null, skipped: false};
+        const {data: sessionData} = await supabase.auth.getSession();
+        const activeSessionUserId = sessionData.session?.user.id ?? null;
+        if (!activeSessionUserId || activeSessionUserId !== userId) {
+            return {error: null, skipped: true};
+        }
         const {error: profileError} = await supabase.from("profiles").upsert({
             id: userId,
             full_name: name.trim() || null,
             birthday,
         });
-        return profileError;
+        return {error: profileError ? {message: profileError.message} : null, skipped: false};
     }
 
     async function handleSendCode() {
         setLoading(true);
         setError(null);
         setMessage(null);
-        const err = await signInMagicLink(email.trim());
+        const sendError = await signInMagicLink(email.trim());
         setLoading(false);
-        if (err) {
-            setError(err.message);
+        if (sendError) {
+            setError(sendError.message);
             return;
         }
         setSent(true);
@@ -103,147 +112,200 @@ export function AuthScreen() {
         setLoading(true);
         setError(null);
         setMessage(null);
-        const {error: err, userId} = await verifyEmailOtp(email.trim(), code.trim());
-        if (err) {
-            setError(err.message);
+        const {error: verifyError, userId} = await verifyEmailOtp(email.trim(), code.trim());
+        if (verifyError) {
             setLoading(false);
+            setError(verifyError.message);
             return;
         }
-        if (userId) {
-            const profileError = await upsertProfile(userId);
+
+        if (userId && mode === "create") {
+            const {error: profileError, skipped} = await upsertProfile(userId);
             if (profileError) {
+                setLoading(false);
                 setError(profileError.message);
+                return;
+            }
+            if (skipped) {
+                setLoading(false);
+                setMessage("Account confirmed. Sign in once to finish profile setup.");
+                return;
             }
         }
         setLoading(false);
     }
 
     return (
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={tw`flex-1 bg-black`}>
-            <ScrollView contentContainerStyle={tw`flex-grow justify-center px-6 py-10`} keyboardShouldPersistTaps="handled">
-                <Text style={[tw`text-2xl text-center`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Sign in</Text>
-                <Text style={[tw`mt-2 text-sm text-slate-300 text-center`, {fontFamily: fonts.body}]}>
-                    Enter your email to get a login code, then paste the code here to continue.
-                </Text>
-
-                <Input
-                    placeholder="Your name"
-                    value={name}
-                    onChangeText={setName}
-                    style={tw`mt-4 px-4 py-3`}
-                />
-
-                <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f] px-4 py-3`}>
-                    <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>
-                        Birthday
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-55`}>
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={tw`flex-1 bg-black/20`}>
+                <ScrollView contentContainerStyle={tw`flex-grow justify-center px-6 py-10`} keyboardShouldPersistTaps="handled">
+                    <Text style={[tw`text-center text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{title}</Text>
+                    <Text style={[tw`mt-2 text-center text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                        {subtitle}
                     </Text>
+
+                    <View style={segmentedContainerStyle}>
+                        <Pressable
+                            onPress={() => {
+                                setMode("signIn");
+                                setSent(false);
+                                setCode("");
+                                setError(null);
+                                setMessage(null);
+                            }}
+                            style={({pressed}) => [
+                                tw`flex-1 rounded-lg px-2 py-2`,
+                                mode === "signIn" ? {backgroundColor: "rgba(251,247,243,0.14)"} : null,
+                                pressed && tw`opacity-90`,
+                            ]}
+                        >
+                            <Text style={[tw`text-center text-xs text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Sign in</Text>
+                        </Pressable>
+                        <Pressable
+                            onPress={() => {
+                                setMode("create");
+                                setSent(false);
+                                setCode("");
+                                setError(null);
+                                setMessage(null);
+                            }}
+                            style={({pressed}) => [
+                                tw`flex-1 rounded-lg px-2 py-2`,
+                                mode === "create" ? {backgroundColor: "rgba(251,247,243,0.14)"} : null,
+                                pressed && tw`opacity-90`,
+                            ]}
+                        >
+                            <Text style={[tw`text-center text-xs text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Create</Text>
+                        </Pressable>
+                    </View>
+
+                    {mode === "create" ? (
+                        <>
+                            <Input placeholder="Your name" value={name} onChangeText={setName} style={tw`mt-4 px-4 py-3`}/>
+                            <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/70 px-4 py-3`}>
+                                <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Birthday</Text>
+                                <Pressable
+                                    onPress={() => setShowBirthdayPicker((current) => !current)}
+                                    style={({pressed}) => [tw`mt-2 rounded-lg border border-[#2c2c2c] px-3 py-3`, pressed && tw`opacity-90`]}
+                                >
+                                    <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#fbf7f3"}]}>
+                                        {birthdayLabel(birthdayMonth, birthdayDay)}
+                                    </Text>
+                                </Pressable>
+                                {showBirthdayPicker ? (
+                                    <View style={tw`mt-3 flex-row gap-3`}>
+                                        <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/70`}>
+                                            <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Month</Text>
+                                            <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                                                {MONTH_OPTIONS.map((option) => {
+                                                    const active = option.value === birthdayMonth;
+                                                    return (
+                                                        <Pressable
+                                                            key={option.value}
+                                                            onPress={() => setBirthdayMonth(option.value)}
+                                                            style={({pressed}) => [
+                                                                tw`px-3 py-3`,
+                                                                active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
+                                                                pressed && tw`opacity-90`,
+                                                            ]}
+                                                        >
+                                                            <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: active ? "#fbf7f3" : "#94a3b8"}]}>
+                                                                {option.label}
+                                                            </Text>
+                                                        </Pressable>
+                                                    );
+                                                })}
+                                            </ScrollView>
+                                        </View>
+                                        <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/70`}>
+                                            <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Day</Text>
+                                            <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                                                {birthdayMonth ? visibleDayOptions.map((option) => {
+                                                    const active = option === birthdayDay;
+                                                    return (
+                                                        <Pressable
+                                                            key={option}
+                                                            onPress={() => setBirthdayDay(option)}
+                                                            style={({pressed}) => [
+                                                                tw`px-3 py-3`,
+                                                                active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
+                                                                pressed && tw`opacity-90`,
+                                                            ]}
+                                                        >
+                                                            <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: active ? "#fbf7f3" : "#94a3b8"}]}>
+                                                                {Number(option)}
+                                                            </Text>
+                                                        </Pressable>
+                                                    );
+                                                }) : (
+                                                    <Text style={[tw`px-3 py-3 text-sm text-slate-500`, {fontFamily: fonts.body}]}>Pick a month first</Text>
+                                                )}
+                                            </ScrollView>
+                                        </View>
+                                    </View>
+                                ) : null}
+                            </View>
+                        </>
+                    ) : null}
+
+                    <Input
+                        placeholder="you@example.com"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        style={tw`mt-4 px-4 py-3`}
+                    />
+
                     <Pressable
-                        onPress={() => setShowBirthdayPicker((current) => !current)}
-                        style={({pressed}) => [tw`mt-2 rounded-lg border border-[#2c2c2c] px-3 py-3`, pressed && tw`opacity-90`]}
+                        disabled={loading || email.trim().length === 0}
+                        onPress={() => void handleSendCode()}
+                        style={({pressed}) => [
+                            tw`mt-4 rounded-lg px-3.5 py-3`,
+                            {backgroundColor: "#B55941"},
+                            (loading || email.trim().length === 0) && tw`opacity-50`,
+                            pressed && email.trim().length > 0 ? tw`opacity-90` : null,
+                        ]}
                     >
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#fbf7f3"}]}>
-                            {birthdayLabel(birthdayMonth, birthdayDay)}
+                        <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.button}]}>
+                            {loading && !sent ? "Sending..." : sent ? "Code sent" : "Send code"}
                         </Text>
                     </Pressable>
 
-                    {showBirthdayPicker ? (
-                        <View style={tw`mt-3 flex-row gap-3`}>
-                            <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/20`}>
-                                <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>
-                                    Month
+                    {sent ? (
+                        <>
+                            <Input
+                                placeholder="6-digit code"
+                                value={code}
+                                onChangeText={setCode}
+                                keyboardType="number-pad"
+                                style={tw`mt-4 px-4 py-3`}
+                            />
+                            <Pressable
+                                disabled={loading || code.trim().length === 0}
+                                onPress={() => void handleVerify()}
+                                style={({pressed}) => [
+                                    tw`mt-3 rounded-lg px-3.5 py-3`,
+                                    {backgroundColor: "#B55941"},
+                                    (loading || code.trim().length === 0) && tw`opacity-50`,
+                                    pressed && code.trim().length > 0 ? tw`opacity-90` : null,
+                                ]}
+                            >
+                                <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.button}]}>
+                                    {loading ? "Verifying..." : "Verify code"}
                                 </Text>
-                                <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                    {MONTH_OPTIONS.map((option) => {
-                                        const active = option.value === birthdayMonth;
-                                        return (
-                                            <Pressable
-                                                key={option.value}
-                                                onPress={() => setBirthdayMonth(option.value)}
-                                                style={({pressed}) => [
-                                                    tw`px-3 py-3`,
-                                                    active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
-                                                    pressed && tw`opacity-90`,
-                                                ]}
-                                            >
-                                                <Text style={[tw`text-sm`, {
-                                                    fontFamily: fonts.body,
-                                                    color: active ? "#fbf7f3" : "#94a3b8",
-                                                }]}>
-                                                    {option.label}
-                                                </Text>
-                                            </Pressable>
-                                        );
-                                    })}
-                                </ScrollView>
-                            </View>
-
-                            <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/20`}>
-                                <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>
-                                    Day
-                                </Text>
-                                <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                    {birthdayMonth ? visibleDayOptions.map((option) => {
-                                        const active = option === birthdayDay;
-                                        return (
-                                            <Pressable
-                                                key={option}
-                                                onPress={() => setBirthdayDay(option)}
-                                                style={({pressed}) => [
-                                                    tw`px-3 py-3`,
-                                                    active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
-                                                    pressed && tw`opacity-90`,
-                                                ]}
-                                            >
-                                                <Text style={[tw`text-sm`, {
-                                                    fontFamily: fonts.body,
-                                                    color: active ? "#fbf7f3" : "#94a3b8",
-                                                }]}>
-                                                    {Number(option)}
-                                                </Text>
-                                            </Pressable>
-                                        );
-                                    }) : (
-                                        <Text style={[tw`px-3 py-3 text-sm text-slate-500`, {fontFamily: fonts.body}]}>
-                                            Pick a month first
-                                        </Text>
-                                    )}
-                                </ScrollView>
-                            </View>
-                        </View>
+                            </Pressable>
+                        </>
                     ) : null}
-                </View>
 
-                <Input
-                    placeholder="you@example.com"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    style={tw`mt-4 px-4 py-3`}
-                />
-
-                <View style={tw`mt-4`}>
-                    <Button label={loading && !sent ? "Sending..." : sent ? "Code sent" : "Send code"} variant="primary" onPress={handleSendCode}/>
-                </View>
-
-                {sent ? (
-                    <>
-                        <Input
-                            placeholder="6-digit code"
-                            value={code}
-                            onChangeText={setCode}
-                            keyboardType="number-pad"
-                            style={tw`mt-4 px-4 py-3`}
-                        />
-                        <View style={tw`mt-3`}>
-                            <Button label={loading ? "Verifying..." : "Verify code"} variant="primary" onPress={handleVerify}/>
-                        </View>
-                    </>
-                ) : null}
-
-                {error ? <Text style={[tw`mt-3 text-sm text-rose-400 text-center`, {fontFamily: fonts.body}]}>{error}</Text> : null}
-                {message ? <Text style={[tw`mt-3 text-sm text-emerald-400 text-center`, {fontFamily: fonts.body}]}>{message}</Text> : null}
-            </ScrollView>
-        </KeyboardAvoidingView>
+                    {error ? (
+                        <Text style={[tw`mt-3 text-center text-sm text-rose-400`, {fontFamily: fonts.body}]}>{error}</Text>
+                    ) : null}
+                    {message ? (
+                        <Text style={[tw`mt-3 text-center text-sm text-emerald-400`, {fontFamily: fonts.body}]}>{message}</Text>
+                    ) : null}
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </ImageBackground>
     );
 }

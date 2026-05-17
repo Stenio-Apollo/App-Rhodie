@@ -3,7 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {supabase} from "../lib/supabase";
 import type {Session} from "@supabase/supabase-js";
 
-const STORAGE_KEY = "rhnative.journal.v1";
+const STORAGE_PREFIX = "rhnative.journal.v2";
+const LEGACY_STORAGE_KEY = "rhnative.journal.v1";
 
 export interface JournalEntry {
     id: string;
@@ -26,8 +27,42 @@ function createEntryId(): string {
     });
 }
 
-export async function clearJournalStorage(): Promise<void> {
-    await AsyncStorage.removeItem(STORAGE_KEY);
+function storageKey(userId: string | null | undefined): string {
+    return `${STORAGE_PREFIX}.${userId ?? "local"}`;
+}
+
+function parseJournalEntries(raw: string | null): JournalEntry[] {
+    if (!raw) return [];
+
+    try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed
+            .filter((entry): entry is Partial<JournalEntry> => Boolean(entry) && typeof entry === "object")
+            .map((entry) => {
+                const date = typeof entry.date === "string" && entry.date ? entry.date : new Date().toISOString().slice(0, 10);
+                const createdAt =
+                    typeof entry.createdAt === "string" && entry.createdAt ? entry.createdAt : new Date().toISOString();
+                return {
+                    id: typeof entry.id === "string" && entry.id ? entry.id : createEntryId(),
+                    date,
+                    text: typeof entry.text === "string" ? entry.text : "",
+                    createdAt,
+                    category: normalizeJournalCategory((entry as { category?: string }).category),
+                };
+            })
+            .filter((entry) => entry.text.trim().length > 0);
+    } catch {
+        return [];
+    }
+}
+
+export async function clearJournalStorage(userId?: string | null): Promise<void> {
+    await Promise.all([
+        AsyncStorage.removeItem(storageKey(userId ?? null)),
+        AsyncStorage.removeItem(LEGACY_STORAGE_KEY),
+    ]);
 }
 
 export function useJournal(session: Session | null = null) {
@@ -36,37 +71,41 @@ export function useJournal(session: Session | null = null) {
 
     useEffect(() => {
         let mounted = true;
+        const currentStorageKey = storageKey(session?.user.id);
 
         async function hydrateLocal() {
             try {
-                const raw = await AsyncStorage.getItem(STORAGE_KEY);
+                const [scopedRaw, legacyRaw] = await Promise.all([
+                    AsyncStorage.getItem(currentStorageKey),
+                    AsyncStorage.getItem(LEGACY_STORAGE_KEY),
+                ]);
                 if (!mounted) return;
-                if (!raw) {
-                    setEntries([]);
-                    return;
+
+                // one-time migration from legacy shared key
+                if (!scopedRaw && legacyRaw) {
+                    const legacyEntries = parseJournalEntries(legacyRaw);
+                    await AsyncStorage.setItem(currentStorageKey, JSON.stringify(legacyEntries));
+                    await AsyncStorage.removeItem(LEGACY_STORAGE_KEY);
+                    if (!mounted) return;
                 }
 
-                const parsed = JSON.parse(raw) as Partial<JournalEntry>[];
-                const normalized = Array.isArray(parsed)
-                    ? parsed.map((entry) => ({
-                        ...entry,
-                        category: normalizeJournalCategory((entry as { category?: string }).category),
-                    })) as JournalEntry[]
-                    : [];
-                setEntries(normalized);
+                const raw = scopedRaw ?? legacyRaw;
+                setEntries(parseJournalEntries(raw));
             } finally {
                 if (mounted) setIsLoaded(true);
             }
         }
 
         async function hydrateRemote(userId: string) {
-            const localRaw = await AsyncStorage.getItem(STORAGE_KEY);
-            const localEntries: JournalEntry[] = localRaw
-                ? ((JSON.parse(localRaw) as Partial<JournalEntry>[]) ?? []).map((entry) => ({
-                    ...(entry as JournalEntry),
-                    category: normalizeJournalCategory((entry as { category?: string }).category),
-                }))
+            const [scopedRaw, legacyRaw] = await Promise.all([
+                AsyncStorage.getItem(currentStorageKey),
+                AsyncStorage.getItem(LEGACY_STORAGE_KEY),
+            ]);
+            const scopedLocalEntries = parseJournalEntries(scopedRaw);
+            const migratedLegacyEntries = scopedLocalEntries.length === 0
+                ? parseJournalEntries(legacyRaw).map((entry) => ({...entry, id: createEntryId()}))
                 : [];
+            const localEntries: JournalEntry[] = [...scopedLocalEntries, ...migratedLegacyEntries];
 
             if (localEntries.length > 0) {
                 const toUpsert = localEntries.map((entry) => ({
@@ -79,6 +118,10 @@ export function useJournal(session: Session | null = null) {
                 }));
                 const {error: upsertError} = await supabase.from("journal_entries").upsert(toUpsert);
                 if (upsertError) console.warn("Supabase journal upsert error", upsertError.message);
+                await Promise.all([
+                    AsyncStorage.setItem(currentStorageKey, JSON.stringify(localEntries)),
+                    AsyncStorage.removeItem(LEGACY_STORAGE_KEY),
+                ]);
             }
 
             const {data, error} = await supabase
@@ -105,6 +148,7 @@ export function useJournal(session: Session | null = null) {
                 })) ?? [];
 
             setEntries(mapped);
+            await AsyncStorage.setItem(currentStorageKey, JSON.stringify(mapped));
             setIsLoaded(true);
         }
 
@@ -117,13 +161,13 @@ export function useJournal(session: Session | null = null) {
         return () => {
             mounted = false;
         };
-    }, [session]);
+    }, [session, session?.user.id]);
 
     useEffect(() => {
-        if (!isLoaded || session) return;
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(entries)).catch(() => {
+        if (!isLoaded) return;
+        AsyncStorage.setItem(storageKey(session?.user.id), JSON.stringify(entries)).catch(() => {
         });
-    }, [entries, isLoaded, session]);
+    }, [entries, isLoaded, session, session?.user.id]);
 
     const addEntry = useCallback(
         async (text: string, date: string, category: JournalEntry["category"] = "gratitude") => {
@@ -178,7 +222,8 @@ export function useJournal(session: Session | null = null) {
 
     const byDate = useMemo(() => {
         return entries.reduce<Record<string, JournalEntry[]>>((accumulator, entry) => {
-            accumulator[entry.date] = accumulator[entry.date] ? [...accumulator[entry.date], entry] : [entry];
+            const dateKey = entry.date || new Date().toISOString().slice(0, 10);
+            accumulator[dateKey] = accumulator[dateKey] ? [...accumulator[dateKey], entry] : [entry];
             return accumulator;
         }, {});
     }, [entries]);

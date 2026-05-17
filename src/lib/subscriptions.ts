@@ -6,8 +6,14 @@ const isExpoGoRuntime =
     Constants.appOwnership === "expo" || Constants.executionEnvironment === "storeClient";
 const bypassSubscriptionsFlag =
     extra.bypassSubscriptions ?? process.env.EXPO_PUBLIC_BYPASS_SUBSCRIPTIONS;
-const privacyPolicyUrl = extra.privacyPolicyUrl ?? process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL;
-const termsOfUseUrl = extra.termsOfUseUrl ?? process.env.EXPO_PUBLIC_TERMS_OF_USE_URL;
+const privacyPolicyUrl =
+    extra.privacyPolicyUrl ??
+    process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ??
+    "https://rh-web-mu.vercel.app/privacy";
+const termsOfUseUrl =
+    extra.termsOfUseUrl ??
+    process.env.EXPO_PUBLIC_TERMS_OF_USE_URL ??
+    "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
 const monthlyProductId =
     extra.monthlySubscriptionProductId ??
     process.env.EXPO_PUBLIC_MONTHLY_PRODUCT_ID ??

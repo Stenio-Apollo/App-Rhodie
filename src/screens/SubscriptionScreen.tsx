@@ -25,6 +25,8 @@ interface SubscriptionScreenProps {
     onPurchasePlan: (planId: SubscriptionPlanViewModel["id"]) => void;
     onRestore: () => void;
     onSignOut: () => void;
+    allowDismiss?: boolean;
+    onDismiss?: () => void;
 }
 
 export function SubscriptionScreen({
@@ -41,6 +43,8 @@ export function SubscriptionScreen({
     onPurchasePlan,
     onRestore,
     onSignOut,
+    allowDismiss = false,
+    onDismiss,
 }: SubscriptionScreenProps) {
     const legalLinksReady = Boolean(privacyPolicyUrl && termsOfUseUrl);
     const trialEndsLabel = trialEndsAt
@@ -56,6 +60,11 @@ export function SubscriptionScreen({
                 <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
                     Keep full access to Rhodie with a direct App Store or Play subscription.
                 </Text>
+                {allowDismiss && onDismiss ? (
+                    <View style={tw`mt-4 self-start`}>
+                        <Button label="Back" onPress={onDismiss} variant="secondary"/>
+                    </View>
+                ) : null}
 
                 <View style={tw`mt-5 gap-2`}>
                     <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>

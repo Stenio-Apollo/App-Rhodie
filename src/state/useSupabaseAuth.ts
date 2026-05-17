@@ -65,6 +65,22 @@ export function useSupabaseAuth() {
         return {error, userId: data.user?.id ?? null};
     }, []);
 
+    const signInWithPassword = useCallback(async (email: string, password: string) => {
+        const {error, data} = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+        return {error, userId: data.user?.id ?? null};
+    }, []);
+
+    const signUpWithPassword = useCallback(async (email: string, password: string) => {
+        const {error, data} = await supabase.auth.signUp({
+            email,
+            password,
+        });
+        return {error, userId: data.user?.id ?? null};
+    }, []);
+
     const signOut = useCallback(async () => {
         await supabase.auth.signOut();
     }, []);
@@ -91,6 +107,8 @@ export function useSupabaseAuth() {
         loading,
         signInMagicLink,
         verifyEmailOtp,
+        signInWithPassword,
+        signUpWithPassword,
         signOut,
         deleteAccount,
     };

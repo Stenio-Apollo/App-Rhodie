@@ -141,7 +141,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                                 const isEditing = editingId === entry.id;
                                 return (
                                     <View key={entry.id}
-                                          style={tw`rounded-2xl bg-black/63 backdrop-blur-md border border-orange-50/19 p-3`}>
+                                          style={tw`rounded-2xl bg-black/63 border border-orange-50/19 p-3`}>
                                         {isEditing ? (
                                             <TextInput
                                                 value={editingText}
@@ -205,7 +205,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                                 const isEditing = editingId === entry.id;
                                 return (
                                     <View key={entry.id}
-                                          style={tw`rounded-2xl bg-black/63 backdrop-blur-md border border-orange-50/19 p-3`}>
+                                          style={tw`rounded-2xl bg-black/63 border border-orange-50/19 p-3`}>
                                         {isEditing ? (
                                             <TextInput
                                                 value={editingText}

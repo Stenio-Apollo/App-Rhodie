@@ -38,6 +38,8 @@ export function CalendarScreen({
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
     const [customGoal, setCustomGoal] = useState("");
     const [goalCheckVisible, setGoalCheckVisible] = useState(false);
+    const [goalFeedbackVisible, setGoalFeedbackVisible] = useState(false);
+    const [goalFeedbackMessage, setGoalFeedbackMessage] = useState("");
     const bg = require("../../public/images/rh14.jpg");
 
     const markedDates = useMemo(() => {
@@ -54,20 +56,23 @@ export function CalendarScreen({
 
     const selectedTasks = tasks.filter((task) => task.dueDate === selectedDate).sort((a, b) => a.order - b.order);
     const customGoalReady = customGoal.trim().length > 0;
+    const isGoalLocked = Boolean(weeklyGoal?.achievedAt);
 
     useEffect(() => {
-        if (!weeklyGoal) return;
+        if (!weeklyGoal || weeklyGoal.lastCheckedAt) return;
 
         const timeout = setTimeout(() => {
             setGoalCheckVisible(true);
         }, 350);
 
         return () => clearTimeout(timeout);
-    }, []);
+    }, [weeklyGoal]);
 
     function handleGoalCheck(achieved: boolean) {
         setGoalCheckVisible(false);
         void onRecordWeeklyGoalCheck(achieved);
+        setGoalFeedbackMessage(achieved ? "keep crushing it" : "lets not forget");
+        setGoalFeedbackVisible(true);
     }
 
     return (
@@ -196,7 +201,9 @@ export function CalendarScreen({
                                     This week's goal
                                 </Text>
                                 <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
-                                    Pick a focus for the week or write your own.
+                                    {isGoalLocked
+                                        ? "Completed this week. Goal changes unlock Sunday."
+                                        : "Pick a focus for the week or write your own."}
                                 </Text>
                             </View>
                             {weeklyGoal ? (
@@ -243,7 +250,9 @@ export function CalendarScreen({
                                 return (
                                     <Pressable
                                         key={goal.id}
+                                        disabled={isGoalLocked}
                                         onPress={() => {
+                                            if (isGoalLocked) return;
                                             setCustomGoal("");
                                             void onSaveWeeklyGoal({text: goal.title, presetId: goal.id});
                                         }}
@@ -252,6 +261,7 @@ export function CalendarScreen({
                                             selected
                                                 ? {borderColor: "#B55941", backgroundColor: "rgba(181,89,65,0.18)"}
                                                 : {borderColor: "#2c2c2c", backgroundColor: "rgba(0,0,0,0.35)"},
+                                            isGoalLocked && tw`opacity-45`,
                                             pressed && tw`opacity-80`,
                                         ]}
                                     >
@@ -273,11 +283,12 @@ export function CalendarScreen({
                                 placeholder="Write your own weekly goal"
                                 returnKeyType="done"
                                 maxLength={120}
+                                editable={!isGoalLocked}
                             />
                             <Pressable
-                                disabled={!customGoalReady}
+                                disabled={!customGoalReady || isGoalLocked}
                                 onPress={() => {
-                                    if (!customGoalReady) return;
+                                    if (!customGoalReady || isGoalLocked) return;
                                     const text = customGoal.trim();
                                     setCustomGoal("");
                                     void onSaveWeeklyGoal({text, presetId: null});
@@ -285,7 +296,7 @@ export function CalendarScreen({
                                 style={({pressed}) => [
                                     tw`mt-2 rounded-xl px-3 py-2.5 items-center`,
                                     {backgroundColor: "#B55941"},
-                                    !customGoalReady && tw`opacity-50`,
+                                    (!customGoalReady || isGoalLocked) && tw`opacity-50`,
                                     pressed && customGoalReady ? tw`opacity-80` : null,
                                 ]}
                             >
@@ -304,15 +315,15 @@ export function CalendarScreen({
                 >
                     <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
                         <View style={tw`w-full rounded-[28px] border border-[#B55941] bg-[#0f0f0f] p-5`}>
-                            <Text style={[tw`text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                            <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
                                 Weekly goal check-in
                             </Text>
-                            <Text style={[tw`mt-3 text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
+                            <Text style={[tw`mt-3 text-center text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
                                 Have you achieved this week's goal?
                             </Text>
                             {weeklyGoal ? (
                                 <View style={tw`mt-4 rounded-2xl border border-orange-50/17 bg-black/42 px-3 py-3`}>
-                                    <Text style={[tw`text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                    <Text style={[tw`text-center text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
                                         {weeklyGoal.text}
                                     </Text>
                                 </View>
@@ -340,6 +351,41 @@ export function CalendarScreen({
                                 >
                                     <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
                                         Yes
+                                    </Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+                <Modal
+                    visible={goalFeedbackVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setGoalFeedbackVisible(false)}
+                >
+                    <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
+                        <View style={tw`w-full rounded-[28px] border border-[#B55941] bg-[#0f0f0f] p-5`}>
+                            <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                {goalFeedbackMessage}
+                            </Text>
+                            {weeklyGoal ? (
+                                <View style={tw`mt-4 rounded-2xl border border-orange-50/17 bg-black/42 px-3 py-3`}>
+                                    <Text style={[tw`text-center text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        {weeklyGoal.text}
+                                    </Text>
+                                </View>
+                            ) : null}
+                            <View style={tw`mt-5`}>
+                                <Pressable
+                                    onPress={() => setGoalFeedbackVisible(false)}
+                                    style={({pressed}) => [
+                                        tw`rounded-xl px-3 py-3`,
+                                        {backgroundColor: "#B55941"},
+                                        pressed && tw`opacity-80`,
+                                    ]}
+                                >
+                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        Continue
                                     </Text>
                                 </Pressable>
                             </View>

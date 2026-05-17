@@ -35,6 +35,9 @@ const DAY_OPTIONS = Array.from({length: 31}, (_, index) => `${index + 1}`.padSta
 interface AccountScreenProps {
     session: Session;
     profile: Profile | null;
+    privacyPolicyUrl: string | null;
+    termsOfUseUrl: string | null;
+    onOpenSubscriptionOffers: () => void;
     subscription: {
         billingConfigured: boolean;
         isSubscribed: boolean;
@@ -127,6 +130,9 @@ function getSubscriptionDetail(props: AccountScreenProps["subscription"]): strin
 export function AccountScreen({
     session,
     profile,
+    privacyPolicyUrl,
+    termsOfUseUrl,
+    onOpenSubscriptionOffers,
     subscription,
     onClose,
     onSignOut,
@@ -223,6 +229,19 @@ export function AccountScreen({
         if (!opened) {
             Alert.alert("Unavailable", "Subscription settings could not be opened on this device.");
         }
+    }
+
+    async function handleOpenExternalUrl(url: string | null, label: "Terms of Use" | "Privacy Policy") {
+        if (!url) {
+            Alert.alert("Unavailable", `${label} is not configured in this build.`);
+            return;
+        }
+        const supported = await Linking.canOpenURL(url);
+        if (!supported) {
+            Alert.alert("Unavailable", `${label} could not be opened on this device.`);
+            return;
+        }
+        await Linking.openURL(url);
     }
 
     async function runDeleteAccount() {
@@ -424,6 +443,11 @@ export function AccountScreen({
                         </View>
 
                         <View style={tw`mt-4 flex-row flex-wrap gap-2`}>
+                            <Button
+                                label="View plans"
+                                onPress={onOpenSubscriptionOffers}
+                                variant="secondary"
+                            />
                             <Button label="Manage subscription" onPress={() => {
                                 void handleManageSubscription();
                             }} variant="outlineAccent" disabled={subscription.manageBusy}/>
@@ -434,6 +458,27 @@ export function AccountScreen({
                                 disabled={subscription.restoreBusy}
                             />
                         </View>
+                        <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
+                            By continuing, you agree to the{" "}
+                            <Text
+                                onPress={() => {
+                                    void handleOpenExternalUrl(termsOfUseUrl, "Terms of Use");
+                                }}
+                                style={{color: "#B55941"}}
+                            >
+                                Terms of Use
+                            </Text>
+                            {" "}and{" "}
+                            <Text
+                                onPress={() => {
+                                    void handleOpenExternalUrl(privacyPolicyUrl, "Privacy Policy");
+                                }}
+                                style={{color: "#B55941"}}
+                            >
+                                Privacy Policy
+                            </Text>
+                            .
+                        </Text>
                     </View>
 
                     <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>

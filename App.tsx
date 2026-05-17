@@ -33,6 +33,7 @@ type Tab = "today" | "journal" | "board" | "calendar" | "insights";
 export default function App() {
     const [tab, setTab] = useState<Tab>("today");
     const [accountOpen, setAccountOpen] = useState(false);
+    const [subscriptionOfferOpen, setSubscriptionOfferOpen] = useState(false);
     const [birthdayBurstKey, setBirthdayBurstKey] = useState("initial");
     const birthdayBurstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const {session, loading: authLoading, signOut, deleteAccount} = useSupabaseAuth();
@@ -50,6 +51,7 @@ export default function App() {
     useEffect(() => {
         if (!session) {
             setAccountOpen(false);
+            setSubscriptionOfferOpen(false);
         }
     }, [session]);
 
@@ -113,6 +115,7 @@ export default function App() {
 
     async function handleSignOut() {
         setAccountOpen(false);
+        setSubscriptionOfferOpen(false);
         await signOut();
     }
 
@@ -128,7 +131,11 @@ export default function App() {
             return errorMessage;
         }
 
-        await Promise.all([clearTasksStorage(), clearJournalStorage(), clearWeeklyGoalStorage(session?.user.id)]);
+        await Promise.all([
+            clearTasksStorage(),
+            clearJournalStorage(session?.user.id),
+            clearWeeklyGoalStorage(session?.user.id),
+        ]);
         setAccountOpen(false);
         return null;
     }
@@ -151,7 +158,7 @@ export default function App() {
         );
     }
 
-    if (subscription.requiresPaywall) {
+    if (subscription.requiresPaywall || subscriptionOfferOpen) {
         return (
             <GradientBackground>
                 <StatusBar style="light"/>
@@ -175,6 +182,8 @@ export default function App() {
                     onPurchasePlan={subscription.purchasePlan}
                     onRestore={subscription.restore}
                     onSignOut={handleSignOut}
+                    allowDismiss={!subscription.requiresPaywall}
+                    onDismiss={() => setSubscriptionOfferOpen(false)}
                 />
             </GradientBackground>
         );
@@ -243,6 +252,9 @@ export default function App() {
                         <AccountScreen
                             session={session}
                             profile={profile}
+                            privacyPolicyUrl={getPrivacyPolicyUrl()}
+                            termsOfUseUrl={getTermsOfUseUrl()}
+                            onOpenSubscriptionOffers={() => setSubscriptionOfferOpen(true)}
                             subscription={subscription}
                             onClose={() => setAccountOpen(false)}
                             onSignOut={handleSignOut}
@@ -251,7 +263,12 @@ export default function App() {
                         />
                     ) : null}
                     {!accountOpen && tab === "today" ? (
-                        <TodayScreen tasks={tasksState.tasks} session={session} weeklyGoal={weeklyGoalState.goal}/>
+                        <TodayScreen
+                            tasks={tasksState.tasks}
+                            session={session}
+                            weeklyGoal={weeklyGoalState.goal}
+                            weeklyGoalProgress={weeklyGoalState.progress}
+                        />
                     ) : null}
                     {!accountOpen && tab === "journal" ? <JournalScreen session={session}/> : null}
                     {!accountOpen && tab === "board" ? <KanbanScreen tasksState={tasksState} session={session}/> : null}

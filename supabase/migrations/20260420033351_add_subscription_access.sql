@@ -1,5 +1,5 @@
 create table if not exists public.subscription_access (
-  user_id uuid primary key,
+  user_id text primary key,
   provider text check (provider in ('app_store', 'play_store', 'none')),
   platform text check (platform in ('ios', 'android', 'web', 'unknown')),
   product_identifier text,
@@ -19,10 +19,10 @@ alter table public.subscription_access enable row level security;
 
 drop policy if exists "own subscription access" on public.subscription_access;
 create policy "own subscription access" on public.subscription_access
-  for all using (auth.uid() = user_id);
+  for all using (auth.uid()::text = user_id);
 
 drop policy if exists "insert subscription access" on public.subscription_access;
 create policy "insert subscription access" on public.subscription_access
-  for insert with check (auth.uid() = user_id);
+  for insert with check (auth.uid()::text = user_id);
 
 revoke all on public.subscription_access from anon;
