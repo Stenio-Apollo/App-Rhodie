@@ -50,17 +50,17 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
         [tasks, today],
     );
 
-    const bg = require("../../public/images/rh6.jpg");
+    const bg = require("../../public/images/rh11.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-39`}>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-53`}>
             <View style={tw`flex-1 bg-black/1`}>
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
                         style={[
-                            tw`mb-83 text-3xl text-white/7 tracking-[11px] border-2 border-white/3 p-1 rounded-lg`,
+                            tw`mb-117 text-3xl text-slate-300/7 tracking-[7px] p-1 rounded-lg`,
                             {fontFamily: fonts.display},
                         ]}
                     >

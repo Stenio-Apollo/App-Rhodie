@@ -17,7 +17,7 @@ const termsOfUseUrl =
 const monthlyProductId =
     extra.monthlySubscriptionProductId ??
     process.env.EXPO_PUBLIC_MONTHLY_PRODUCT_ID ??
-    "rhodie.30";
+    "rhodie.pro";
 const yearlyProductId =
     extra.yearlySubscriptionProductId ??
     process.env.EXPO_PUBLIC_YEARLY_PRODUCT_ID ??
