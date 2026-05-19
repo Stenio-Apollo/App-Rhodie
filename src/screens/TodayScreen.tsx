@@ -50,13 +50,13 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
         [tasks, today],
     );
 
-    const bg = require("../../public/images/rh11.jpg");
+    const bg = require("../../public/images/rh19.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-53`}>
-            <View style={tw`flex-1 bg-black/23`}>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-40`}>
+            <View style={[tw`flex-1 bg-black/43`, {paddingHorizontal: 1}]}>
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
                         style={[
@@ -93,7 +93,7 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
                         </Text>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#B55941]/55 bg-black/23 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#B55941]/43 bg-black/43 p-4`}>
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Weekly
                             goal</Text>
                         {weeklyGoal ? (
@@ -146,7 +146,7 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
                         </View>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#B55941]/53 bg-black/39 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#B55941]/43 bg-black/43 p-4`}>
                         <Text
                             style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Gratitude</Text>
                         {latestGratitude ? (

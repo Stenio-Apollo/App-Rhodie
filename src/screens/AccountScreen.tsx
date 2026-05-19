@@ -281,7 +281,7 @@ export function AccountScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-60`}>
-            <View style={tw`flex-1 bg-black/35`}>
+            <View style={[tw`flex-1 bg-black/35`, {paddingHorizontal: 1}]}>
                 <ScrollView
                     style={tw`flex-1`}
                     contentContainerStyle={tw`px-4 pb-8 pt-4 gap-4`}

@@ -41,7 +41,7 @@ export function CalendarScreen({
     const [goalCheckVisible, setGoalCheckVisible] = useState(false);
     const [goalFeedbackVisible, setGoalFeedbackVisible] = useState(false);
     const [goalFeedbackMessage, setGoalFeedbackMessage] = useState("");
-    const bg = require("../../public/images/rh25.jpg");
+    const bg = require("../../public/images/rh11.jpg");
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -77,8 +77,8 @@ export function CalendarScreen({
     }
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-35`}>
-            <View style={tw`flex-1 bg-black/33`}>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
+            <View style={[tw`flex-1 bg-black/43`, {paddingHorizontal: 1}]}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-2 pb-3`}>
                     <Text
                         style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>

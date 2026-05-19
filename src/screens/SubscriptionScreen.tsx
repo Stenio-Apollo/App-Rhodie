@@ -52,7 +52,10 @@ export function SubscriptionScreen({
         : null;
 
     return (
-        <ScrollView style={tw`flex-1 bg-black`} contentContainerStyle={tw`flex-grow justify-center px-6 py-8`}>
+        <ScrollView
+            style={[tw`flex-1 bg-black`, {paddingHorizontal: 1}]}
+            contentContainerStyle={tw`flex-grow justify-center px-6 py-8`}
+        >
             <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/40 p-6`}>
                 <Text style={[tw`text-3xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                     Rhodie Pro

@@ -94,7 +94,7 @@ export function InsightsScreen() {
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-58`}>
-            <View style={tw`flex-1 bg-black/8`}>
+            <View style={[tw`flex-1 bg-black/8`, {paddingHorizontal: 1}]}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-5 pb-10`}>
                     <View
                         style={[

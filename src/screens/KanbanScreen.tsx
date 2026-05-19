@@ -30,7 +30,7 @@ interface KanbanScreenProps {
 
 export function KanbanScreen({tasksState}: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
-    const bg = require("../../public/images/rh6.jpg");
+    const bg = require("../../public/images/rh28.jpg");
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -84,8 +84,8 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
     }
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
-            <View style={tw`flex-1 bg-black/1`}>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-30`}>
+            <View style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-6`}>
                     <View style={tw`px-2 pt-2`}>
                         <View style={tw`mt-2 gap-2 rounded-2xl border border-[#2c2c2c] bg-black/63 p-3`}>

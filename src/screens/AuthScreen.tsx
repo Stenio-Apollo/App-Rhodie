@@ -137,7 +137,10 @@ export function AuthScreen() {
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-55`}>
-            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={tw`flex-1 bg-black/20`}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+                style={[tw`flex-1 bg-black/20`, {paddingHorizontal: 1}]}
+            >
                 <ScrollView contentContainerStyle={tw`flex-grow justify-center px-6 py-10`} keyboardShouldPersistTaps="handled">
                     <Text style={[tw`text-center text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{title}</Text>
                     <Text style={[tw`mt-2 text-center text-sm text-slate-300`, {fontFamily: fonts.body}]}>

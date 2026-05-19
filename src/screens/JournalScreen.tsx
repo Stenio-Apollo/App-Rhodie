@@ -30,7 +30,7 @@ export function JournalScreen({session}: { session: Session | null }) {
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-39`}>
-            <View style={tw`flex-1 bg-black/47`}>
+            <View style={[tw`flex-1 bg-black/47`, {paddingHorizontal: 1}]}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-3 pt-3 pb-6`}>
                     <View
                         style={[
