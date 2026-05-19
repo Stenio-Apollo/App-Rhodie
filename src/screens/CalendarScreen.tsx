@@ -41,7 +41,7 @@ export function CalendarScreen({
     const [goalCheckVisible, setGoalCheckVisible] = useState(false);
     const [goalFeedbackVisible, setGoalFeedbackVisible] = useState(false);
     const [goalFeedbackMessage, setGoalFeedbackMessage] = useState("");
-    const bg = require("../../public/images/rh11.jpg");
+    const bg = require("../../public/images/rh211.jpg");
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -78,14 +78,14 @@ export function CalendarScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
-            <View style={[tw`flex-1 bg-black/43`, {paddingHorizontal: 1}]}>
+            <View style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-2 pb-3`}>
                     <Text
                         style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
                     <Text style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Tap
                         a day to filter due tasks.</Text>
 
-                    <View style={tw`mt-3 rounded-2xl border border-orange-50/19 bg-black/39 p-3`}>
+                    <View style={tw`mt-3 rounded-2xl border border-orange-50/19 bg-black/47 p-3`}>
                         <Text style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Google
                             Calendar Sync</Text>
                         {!googleCalendar.available ? (
