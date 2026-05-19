@@ -12,7 +12,7 @@ interface TranslucentCalendarProps {
 
 export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalendarProps) {
     return (
-        <View style={tw`mt-3 overflow-hidden rounded-[28px] border border-orange-50/17 bg-black/42 p-2`}>
+        <View style={tw`mt-3 overflow-hidden rounded-[28px] border border-orange-50/17 bg-black/63 p-2`}>
             <Calendar
                 markedDates={markedDates}
                 onDayPress={onDayPress}

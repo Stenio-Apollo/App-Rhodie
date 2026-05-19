@@ -2,6 +2,7 @@ import {useEffect, useState, useCallback, useMemo} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {supabase} from "../lib/supabase";
 import type {Session} from "@supabase/supabase-js";
+import {toLocalISODate} from "../lib/date-utils";
 
 const STORAGE_PREFIX = "rhnative.journal.v2";
 const LEGACY_STORAGE_KEY = "rhnative.journal.v1";
@@ -41,7 +42,7 @@ function parseJournalEntries(raw: string | null): JournalEntry[] {
         return parsed
             .filter((entry): entry is Partial<JournalEntry> => Boolean(entry) && typeof entry === "object")
             .map((entry) => {
-                const date = typeof entry.date === "string" && entry.date ? entry.date : new Date().toISOString().slice(0, 10);
+                const date = typeof entry.date === "string" && entry.date ? entry.date : toLocalISODate();
                 const createdAt =
                     typeof entry.createdAt === "string" && entry.createdAt ? entry.createdAt : new Date().toISOString();
                 return {
@@ -222,7 +223,7 @@ export function useJournal(session: Session | null = null) {
 
     const byDate = useMemo(() => {
         return entries.reduce<Record<string, JournalEntry[]>>((accumulator, entry) => {
-            const dateKey = entry.date || new Date().toISOString().slice(0, 10);
+            const dateKey = entry.date || toLocalISODate();
             accumulator[dateKey] = accumulator[dateKey] ? [...accumulator[dateKey], entry] : [entry];
             return accumulator;
         }, {});

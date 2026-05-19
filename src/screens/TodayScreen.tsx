@@ -9,7 +9,7 @@ import type {Task} from "../types";
 import {fonts} from "../theme/fonts";
 import type {Session} from "@supabase/supabase-js";
 import {useProfile} from "../state/useProfile";
-import {isToday} from "../lib/date-utils";
+import {isToday, toLocalISODate} from "../lib/date-utils";
 import type {WeeklyGoal, WeeklyGoalProgress} from "../state/useWeeklyGoal";
 
 interface TodayScreenProps {
@@ -20,7 +20,7 @@ interface TodayScreenProps {
 }
 
 function isoToday(): string {
-    return new Date().toISOString().slice(0, 10);
+    return toLocalISODate();
 }
 
 const statusRank: Record<Task["status"], number> = {
@@ -56,7 +56,7 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-53`}>
-            <View style={tw`flex-1 bg-black/1`}>
+            <View style={tw`flex-1 bg-black/23`}>
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
                         style={[
@@ -72,7 +72,7 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
                     contentContainerStyle={tw`flex-grow justify-end px-4 pb-7 pt-4 gap-4`}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/23 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/57 p-4`}>
                         <View style={tw`flex-row items-center justify-between`}>
                             <Text style={[tw`text-xs font-semibold`, {
                                 fontFamily: fonts.body,
@@ -93,7 +93,7 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
                         </Text>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#B55941] bg-black/23 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#B55941]/55 bg-black/23 p-4`}>
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Weekly
                             goal</Text>
                         {weeklyGoal ? (
@@ -146,7 +146,7 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
                         </View>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#B55941] bg-black/23 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#B55941]/53 bg-black/39 p-4`}>
                         <Text
                             style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Gratitude</Text>
                         {latestGratitude ? (
@@ -161,7 +161,7 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
                         )}
                     </View>
 
-                    <View style={tw`mb-1 rounded-3xl border border-[#2c2c2c] bg-black/23 p-4`}>
+                    <View style={tw`mb-1 rounded-3xl border border-[#2c2c2c] bg-black/39 p-4`}>
                         <View style={tw`flex-row items-center gap-2`}>
                             <SvgUri width={16} height={16} uri={tasksIconUri} fill="#E4E0D4" stroke="#E4E0D4"/>
                             <Text

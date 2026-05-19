@@ -7,9 +7,10 @@ import {useJournal} from "../state/useJournal";
 import {Button} from "../components/ui/Button";
 import {fonts} from "../theme/fonts";
 import type {Session} from "@supabase/supabase-js";
+import {toLocalISODate} from "../lib/date-utils";
 
 function isoToday(): string {
-    return new Date().toISOString().slice(0, 10);
+    return toLocalISODate();
 }
 
 export function JournalScreen({session}: { session: Session | null }) {
@@ -19,7 +20,7 @@ export function JournalScreen({session}: { session: Session | null }) {
     const [promptText, setPromptText] = useState("");
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingText, setEditingText] = useState("");
-    const bg = require("../../public/images/rh6.jpg");
+    const bg = require("../../public/images/rh201.jpg");
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(selectedDate), [selectedDate]);
@@ -28,13 +29,13 @@ export function JournalScreen({session}: { session: Session | null }) {
     const promptEntries = todaysEntries.filter((e) => e.category === "prompt");
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-79`}>
-            <View style={tw`flex-1 bg-black/7`}>
-                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-3 pb-6`}>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-39`}>
+            <View style={tw`flex-1 bg-black/47`}>
+                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-3 pt-3 pb-6`}>
                     <View
                         style={[
-                            tw`rounded-3xl bg-black/27 p-4 border flex-row gap-4 items-center`,
-                            {borderColor: "rgba(181,89,65,0.72)"},
+                            tw`rounded-3xl bg-black/63 p-4 border flex-row gap-4 items-center, border-[#B55941]/43`,
+                            ,
                         ]}>
                         <View style={tw`flex-1`}>
                             <Text
@@ -59,7 +60,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                         </View>
                     </View>
 
-                    <View style={tw`mt-3 rounded-2xl bg-black/68 border border-orange-50/17 p-3`}>
+                    <View style={tw`mt-3 rounded-3xl bg-black/63 border border-[#2c2c2c] p-3`}>
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Prompt of
                             the day</Text>
                         <Text style={[tw`mt-2 text-base leading-snug`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
@@ -73,7 +74,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                             placeholder="Respond to this prompt..."
                             placeholderTextColor="#6b7280"
                             multiline
-                            style={[tw`mt-2 min-h-[90px] rounded-xl border border-orange-50/17 bg-black/39 px-3 py-2 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                            style={[tw`mt-2 min-h-[90px] rounded-xl border border-[#2c2c2c] bg-black/39 px-3 py-2 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                         />
                         <View style={tw`mt-3 flex-row justify-end gap-2`}>
                             <Button
@@ -89,7 +90,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                         </View>
                     </View>
 
-                    <View style={tw`mt-4 rounded-2xl border border-orange-50/19 bg-black/69 p-3`}>
+                    <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/63 p-3`}>
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
                             3 Good Things Today
                         </Text>
@@ -141,7 +142,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                                 const isEditing = editingId === entry.id;
                                 return (
                                     <View key={entry.id}
-                                          style={tw`rounded-2xl bg-black/63 border border-orange-50/19 p-3`}>
+                                          style={tw`rounded-2xl bg-black/63 border border-[#2c2c2c] p-3`}>
                                         {isEditing ? (
                                             <TextInput
                                                 value={editingText}
@@ -257,7 +258,7 @@ export function JournalScreen({session}: { session: Session | null }) {
                         )}
                     </View>
 
-                    <View style={tw`mt-6 rounded-[28px] border border-[#e4e0d4]/10 bg-black/48 p-4`}>
+                    <View style={tw`mt-6 rounded-[28px] border border-[#B55941]/55 bg-black/48 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                             Memory shelf
                         </Text>

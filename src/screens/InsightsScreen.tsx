@@ -112,7 +112,7 @@ export function InsightsScreen() {
                             Insights • Official sources
                         </Text>
                         <Text style={[tw`mt-1 text-2xl font-black`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
-                            Men's Mental Health Feed
+                            The Rhodie Brief
                         </Text>
                         <Text style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, color: "#2B2B2B"}]}>
                             Curated for men's mental health from official public-health and expert-reviewed sources.
@@ -214,7 +214,7 @@ export function InsightsScreen() {
                             Simplified summaries generated from men's mental-health source titles. Tap through to read
                             the full original
                             source.
-                        </Text>s
+                        </Text>
 
                         {loading ? (
                             <Text style={[tw`mt-3 text-sm`, {fontFamily: fonts.body, color: "#2B2B2B"}]}>

@@ -29,7 +29,7 @@ export function Button({label, onPress, variant = "primary", disabled = false}: 
             onPress={onPress}
             disabled={disabled}
             style={({pressed}) => [
-                tw`rounded-lg px-3.5 py-2.5`,
+                tw`rounded-xl px-3.5 py-2.5`,
                 bgStyle,
                 disabled && tw`opacity-50`,
                 pressed && !disabled && tw`opacity-90`,
