@@ -1,13 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {
-    Alert,
-    ImageBackground,
-    Linking,
-    Pressable,
-    ScrollView,
-    Text,
-    View,
-} from "react-native";
+import {Alert, ImageBackground, Linking, Pressable, ScrollView, Text, View,} from "react-native";
 import type {Session} from "@supabase/supabase-js";
 import tw from "../lib/tw";
 import {Button} from "../components/ui/Button";
@@ -128,17 +120,17 @@ function getSubscriptionDetail(props: AccountScreenProps["subscription"]): strin
 }
 
 export function AccountScreen({
-    session,
-    profile,
-    privacyPolicyUrl,
-    termsOfUseUrl,
-    onOpenSubscriptionOffers,
-    subscription,
-    onClose,
-    onSignOut,
-    onSaveProfile,
-    onDeleteAccount,
-}: AccountScreenProps) {
+                                  session,
+                                  profile,
+                                  privacyPolicyUrl,
+                                  termsOfUseUrl,
+                                  onOpenSubscriptionOffers,
+                                  subscription,
+                                  onClose,
+                                  onSignOut,
+                                  onSaveProfile,
+                                  onDeleteAccount,
+                              }: AccountScreenProps) {
     const mountedRef = useRef(true);
     const [name, setName] = useState(profile?.full_name ?? "");
     const [birthdayMonth, setBirthdayMonth] = useState(parseBirthdayParts(profile?.birthday).month);
@@ -148,7 +140,7 @@ export function AccountScreen({
     const [deleteBusy, setDeleteBusy] = useState(false);
     const [notice, setNotice] = useState<string | null>(null);
     const [noticeTone, setNoticeTone] = useState<"success" | "error">("success");
-    const bg = require("../../public/images/rh7.jpg");
+    const bg = require("../../public/images/rh11.jpg");
 
     useEffect(() => {
         mountedRef.current = true;
@@ -287,7 +279,8 @@ export function AccountScreen({
                     contentContainerStyle={tw`px-4 pb-8 pt-4 gap-4`}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={tw`flex-row items-start justify-between rounded-3xl border border-[#2c2c2c] bg-black/30 p-4`}>
+                    <View
+                        style={tw`flex-row items-start justify-between rounded-3xl border border-[#2c2c2c] bg-black/30 p-4`}>
                         <View style={tw`flex-1 pr-4`}>
                             <Text style={[tw`text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Account</Text>
                             <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
@@ -299,7 +292,8 @@ export function AccountScreen({
 
                     <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Profile</Text>
-                        <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>Update the name and birthday used across the app.</Text>
+                        <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>Update the name and
+                            birthday used across the app.</Text>
 
                         <Input
                             placeholder="Your name"
@@ -332,8 +326,10 @@ export function AccountScreen({
                             {showBirthdayPicker ? (
                                 <View style={tw`mt-3 flex-row gap-3`}>
                                     <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/20`}>
-                                        <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Month</Text>
-                                        <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                                        <Text
+                                            style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Month</Text>
+                                        <ScrollView style={tw`max-h-40`} nestedScrollEnabled
+                                                    showsVerticalScrollIndicator={false}>
                                             {MONTH_OPTIONS.map((option) => {
                                                 const active = option.value === birthdayMonth;
                                                 return (
@@ -359,8 +355,10 @@ export function AccountScreen({
                                     </View>
 
                                     <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/20`}>
-                                        <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Day</Text>
-                                        <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                                        <Text
+                                            style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Day</Text>
+                                        <ScrollView style={tw`max-h-40`} nestedScrollEnabled
+                                                    showsVerticalScrollIndicator={false}>
                                             {birthdayMonth ? visibleDayOptions.map((option) => {
                                                 const active = option === birthdayDay;
                                                 return (
@@ -382,7 +380,9 @@ export function AccountScreen({
                                                     </Pressable>
                                                 );
                                             }) : (
-                                                <Text style={[tw`px-3 py-3 text-sm text-slate-500`, {fontFamily: fonts.body}]}>Pick a month first</Text>
+                                                <Text
+                                                    style={[tw`px-3 py-3 text-sm text-slate-500`, {fontFamily: fonts.body}]}>Pick
+                                                    a month first</Text>
                                             )}
                                         </ScrollView>
                                     </View>
@@ -393,7 +393,8 @@ export function AccountScreen({
                                 setBirthdayMonth("");
                                 setBirthdayDay("");
                             }} style={({pressed}) => [tw`mt-3 self-start`, pressed && tw`opacity-80`]}>
-                                <Text style={[tw`text-xs text-[#B55941]`, {fontFamily: fonts.button}]}>Clear birthday</Text>
+                                <Text style={[tw`text-xs text-[#B55941]`, {fontFamily: fonts.button}]}>Clear
+                                    birthday</Text>
                             </Pressable>
                         </View>
 
@@ -420,23 +421,24 @@ export function AccountScreen({
 
                     <View style={tw`rounded-3xl border border-[#B55941] bg-black/45 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Subscription</Text>
-                        <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>View your current billing state and manage the store subscription.</Text>
+                        <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>View your current
+                            billing state and manage the store subscription.</Text>
 
                         <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/45 px-4 py-3`}>
                             <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Status</Text>
                             <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                 {getSubscriptionStatusLabel(subscription)}
                             </Text>
-                            <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}> 
+                            <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
                                 {getSubscriptionDetail(subscription)}
                             </Text>
                             {subscriptionWarning ? (
-                                <Text style={[tw`mt-3 text-xs text-orange-200`, {fontFamily: fonts.body}]}> 
+                                <Text style={[tw`mt-3 text-xs text-orange-200`, {fontFamily: fonts.body}]}>
                                     {subscriptionWarning}
                                 </Text>
                             ) : null}
                             {subscription.error ? (
-                                <Text style={[tw`mt-3 text-xs text-rose-300`, {fontFamily: fonts.body}]}> 
+                                <Text style={[tw`mt-3 text-xs text-rose-300`, {fontFamily: fonts.body}]}>
                                     {subscription.error}
                                 </Text>
                             ) : null}
@@ -483,8 +485,10 @@ export function AccountScreen({
 
                     <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Support</Text>
-                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Need help with billing, syncing, or your account? Reach out directly and we’ll open your email app.</Text>
-                        <Text style={[tw`mt-3 text-xs text-slate-400`, {fontFamily: fonts.body}]}>s3.gerlin@gmail.com</Text>
+                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Need help with
+                            billing, syncing, or your account? Reach out directly and we’ll open your email app.</Text>
+                        <Text
+                            style={[tw`mt-3 text-xs text-slate-400`, {fontFamily: fonts.body}]}>s3.gerlin@gmail.com</Text>
                         <View style={tw`mt-4 flex-row justify-end`}>
                             <Button label="Email support" onPress={() => {
                                 void handleOpenSupportEmail();
@@ -493,8 +497,11 @@ export function AccountScreen({
                     </View>
 
                     <View style={tw`rounded-3xl border border-[#7f1d1d] bg-black/45 p-4`}>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Account security</Text>
-                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Deleting your account is permanent. It removes your app data, but store subscriptions still need to be managed in Apple or Google if they are active.</Text>
+                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Account
+                            security</Text>
+                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Deleting your account
+                            is permanent. It removes your app data, but store subscriptions still need to be managed in
+                            Apple or Google if they are active.</Text>
                         <View style={tw`mt-4 flex-row flex-wrap gap-2`}>
                             <Button label="Sign out" onPress={onSignOut} variant="secondary"/>
                             <Button
