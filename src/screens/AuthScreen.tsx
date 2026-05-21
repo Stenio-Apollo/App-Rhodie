@@ -23,6 +23,7 @@ const MONTH_OPTIONS = [
 
 const DAY_OPTIONS = Array.from({length: 31}, (_, index) => `${index + 1}`.padStart(2, "0"));
 type AuthMode = "signIn" | "create";
+type AuthMethod = "code" | "password";
 
 function daysInMonth(month: string): number {
     return new Date(2000, Number(month), 0).getDate();
@@ -39,10 +40,20 @@ function birthdayLabel(month: string, day: string): string {
     return `${monthLabel} ${Number(day)}`;
 }
 
+function normalizeIdentifierToEmail(raw: string): string {
+    const trimmed = raw.trim().toLowerCase();
+    if (!trimmed) return "";
+    if (trimmed.includes("@")) return trimmed;
+    return `${trimmed}@rhodie.pro`;
+}
+
 export function AuthScreen() {
-    const {signInMagicLink, verifyEmailOtp} = useSupabaseAuth();
+    const {signInMagicLink, verifyEmailOtp, signInWithPassword, signUpWithPassword} = useSupabaseAuth();
     const [mode, setMode] = useState<AuthMode>("signIn");
+    const [method, setMethod] = useState<AuthMethod>("code");
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [name, setName] = useState("");
     const [birthdayMonth, setBirthdayMonth] = useState("");
     const [birthdayDay, setBirthdayDay] = useState("");
@@ -71,8 +82,12 @@ export function AuthScreen() {
     const visibleDayOptions = birthdayMonth ? DAY_OPTIONS.slice(0, daysInMonth(birthdayMonth)) : [];
     const title = mode === "signIn" ? "Sign in" : "Create account";
     const subtitle = mode === "signIn"
-        ? "Enter your email to receive a login code."
-        : "Create your Rhodie account with a login code.";
+        ? method === "code"
+            ? "Enter your email to receive a login code."
+            : "Enter your account and password."
+        : method === "code"
+            ? "Create your Rhodie account with a login code."
+            : "Create your Rhodie account with a password.";
 
     const segmentedContainerStyle = useMemo(
         () => [tw`mt-4 rounded-xl border border-[#2c2c2c] bg-black/50 p-0.5 flex-row`],
@@ -95,10 +110,12 @@ export function AuthScreen() {
     }
 
     async function handleSendCode() {
+        const normalizedEmail = normalizeIdentifierToEmail(email);
+        if (!normalizedEmail) return;
         setLoading(true);
         setError(null);
         setMessage(null);
-        const sendError = await signInMagicLink(email.trim());
+        const sendError = await signInMagicLink(normalizedEmail);
         setLoading(false);
         if (sendError) {
             setError(sendError.message);
@@ -109,10 +126,12 @@ export function AuthScreen() {
     }
 
     async function handleVerify() {
+        const normalizedEmail = normalizeIdentifierToEmail(email);
+        if (!normalizedEmail) return;
         setLoading(true);
         setError(null);
         setMessage(null);
-        const {error: verifyError, userId} = await verifyEmailOtp(email.trim(), code.trim());
+        const {error: verifyError, userId} = await verifyEmailOtp(normalizedEmail, code.trim());
         if (verifyError) {
             setLoading(false);
             setError(verifyError.message);
@@ -135,13 +154,70 @@ export function AuthScreen() {
         setLoading(false);
     }
 
+    async function handlePasswordAuth() {
+        const normalizedEmail = normalizeIdentifierToEmail(email);
+        if (!normalizedEmail) {
+            setError("Enter an email.");
+            return;
+        }
+        if (!password.trim()) {
+            setError("Enter a password.");
+            return;
+        }
+        if (mode === "create" && password.length < 8) {
+            setError("Password must be at least 8 characters.");
+            return;
+        }
+        if (mode === "create" && password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+        setMessage(null);
+
+        if (mode === "signIn") {
+            const {error: signInError} = await signInWithPassword(normalizedEmail, password);
+            setLoading(false);
+            if (signInError) {
+                setError(signInError.message);
+            }
+            return;
+        }
+
+        const {error: signUpError, userId} = await signUpWithPassword(normalizedEmail, password);
+        if (signUpError) {
+            setLoading(false);
+            setError(signUpError.message);
+            return;
+        }
+
+        if (userId) {
+            const {error: profileError, skipped} = await upsertProfile(userId);
+            if (profileError) {
+                setLoading(false);
+                setError(profileError.message);
+                return;
+            }
+            if (skipped) {
+                setLoading(false);
+                setMessage("Account created. Confirm your email, then sign in.");
+                return;
+            }
+        }
+
+        setLoading(false);
+        setMessage("Account created.");
+    }
+
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-55`}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
                 style={[tw`flex-1 bg-black/20`, {paddingHorizontal: 1}]}
             >
-                <ScrollView contentContainerStyle={tw`flex-grow justify-center px-6 py-10`} keyboardShouldPersistTaps="handled">
+                <ScrollView contentContainerStyle={tw`flex-grow justify-center px-6 py-10`} keyboardShouldPersistTaps="always">
                     <Text style={[tw`text-center text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{title}</Text>
                     <Text style={[tw`mt-2 text-center text-sm text-slate-300`, {fontFamily: fonts.body}]}>
                         {subtitle}
@@ -182,9 +258,53 @@ export function AuthScreen() {
                         </Pressable>
                     </View>
 
+                    <View style={segmentedContainerStyle}>
+                        <Pressable
+                            onPress={() => {
+                                setMethod("code");
+                                setSent(false);
+                                setCode("");
+                                setPassword("");
+                                setConfirmPassword("");
+                                setError(null);
+                                setMessage(null);
+                            }}
+                            style={({pressed}) => [
+                                tw`flex-1 rounded-lg px-2 py-2`,
+                                method === "code" ? {backgroundColor: "rgba(251,247,243,0.14)"} : null,
+                                pressed && tw`opacity-90`,
+                            ]}
+                        >
+                            <Text style={[tw`text-center text-xs text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Email code</Text>
+                        </Pressable>
+                        <Pressable
+                            onPress={() => {
+                                setMethod("password");
+                                setSent(false);
+                                setCode("");
+                                setError(null);
+                                setMessage(null);
+                            }}
+                            style={({pressed}) => [
+                                tw`flex-1 rounded-lg px-2 py-2`,
+                                method === "password" ? {backgroundColor: "rgba(251,247,243,0.14)"} : null,
+                                pressed && tw`opacity-90`,
+                            ]}
+                        >
+                            <Text style={[tw`text-center text-xs text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Password</Text>
+                        </Pressable>
+                    </View>
+
                     {mode === "create" ? (
                         <>
-                            <Input placeholder="Your name" value={name} onChangeText={setName} style={tw`mt-4 px-4 py-3`}/>
+                            <Input
+                                placeholder="Your name"
+                                value={name}
+                                onChangeText={setName}
+                                textContentType="name"
+                                autoComplete="name"
+                                style={tw`mt-4 px-4 py-3`}
+                            />
                             <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/70 px-4 py-3`}>
                                 <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Birthday</Text>
                                 <Pressable
@@ -252,55 +372,103 @@ export function AuthScreen() {
                     ) : null}
 
                     <Input
-                        placeholder="you@example.com"
+                        placeholder="you@example.com or rhodie.test"
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        textContentType="emailAddress"
+                        autoComplete="email"
                         style={tw`mt-4 px-4 py-3`}
                     />
 
-                    <Pressable
-                        disabled={loading || email.trim().length === 0}
-                        onPress={() => void handleSendCode()}
-                        style={({pressed}) => [
-                            tw`mt-4 rounded-lg px-3.5 py-3`,
-                            {backgroundColor: "#B55941"},
-                            (loading || email.trim().length === 0) && tw`opacity-50`,
-                            pressed && email.trim().length > 0 ? tw`opacity-90` : null,
-                        ]}
-                    >
-                        <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.button}]}>
-                            {loading && !sent ? "Sending..." : sent ? "Code sent" : "Send code"}
-                        </Text>
-                    </Pressable>
-
-                    {sent ? (
+                    {method === "code" ? (
                         <>
-                            <Input
-                                placeholder="6-digit code"
-                                value={code}
-                                onChangeText={setCode}
-                                keyboardType="number-pad"
-                                style={tw`mt-4 px-4 py-3`}
-                            />
                             <Pressable
-                                disabled={loading || code.trim().length === 0}
-                                onPress={() => void handleVerify()}
+                                disabled={loading || email.trim().length === 0}
+                                onPress={() => void handleSendCode()}
                                 style={({pressed}) => [
-                                    tw`mt-3 rounded-lg px-3.5 py-3`,
+                                    tw`mt-4 rounded-lg px-3.5 py-3`,
                                     {backgroundColor: "#B55941"},
-                                    (loading || code.trim().length === 0) && tw`opacity-50`,
-                                    pressed && code.trim().length > 0 ? tw`opacity-90` : null,
+                                    (loading || email.trim().length === 0) && tw`opacity-50`,
+                                    pressed && email.trim().length > 0 ? tw`opacity-90` : null,
                                 ]}
                             >
                                 <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.button}]}>
-                                    {loading ? "Verifying..." : "Verify code"}
+                                    {loading && !sent ? "Sending..." : sent ? "Code sent" : "Send code"}
+                                </Text>
+                            </Pressable>
+
+                            {sent ? (
+                                <>
+                                    <Input
+                                        placeholder="6-digit code"
+                                        value={code}
+                                        onChangeText={setCode}
+                                        keyboardType="number-pad"
+                                        textContentType="oneTimeCode"
+                                        autoComplete="one-time-code"
+                                        style={tw`mt-4 px-4 py-3`}
+                                    />
+                                    <Pressable
+                                        disabled={loading || code.trim().length === 0}
+                                        onPress={() => void handleVerify()}
+                                        style={({pressed}) => [
+                                            tw`mt-3 rounded-lg px-3.5 py-3`,
+                                            {backgroundColor: "#B55941"},
+                                            (loading || code.trim().length === 0) && tw`opacity-50`,
+                                            pressed && code.trim().length > 0 ? tw`opacity-90` : null,
+                                        ]}
+                                    >
+                                        <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.button}]}>
+                                            {loading ? "Verifying..." : "Verify code"}
+                                        </Text>
+                                    </Pressable>
+                                </>
+                            ) : null}
+                        </>
+                    ) : null}
+
+                    {method === "password" ? (
+                        <>
+                            <Input
+                                placeholder="Password"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                                autoCapitalize="none"
+                                textContentType={mode === "signIn" ? "password" : "newPassword"}
+                                autoComplete={mode === "signIn" ? "current-password" : "new-password"}
+                                style={tw`mt-4 px-4 py-3`}
+                            />
+                            {mode === "create" ? (
+                                <Input
+                                    placeholder="Confirm password"
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
+                                    secureTextEntry
+                                    autoCapitalize="none"
+                                    textContentType="newPassword"
+                                    autoComplete="new-password"
+                                    style={tw`mt-3 px-4 py-3`}
+                                />
+                            ) : null}
+                            <Pressable
+                                disabled={loading || email.trim().length === 0 || password.trim().length === 0}
+                                onPress={() => void handlePasswordAuth()}
+                                style={({pressed}) => [
+                                    tw`mt-4 rounded-lg px-3.5 py-3`,
+                                    {backgroundColor: "#B55941"},
+                                    (loading || email.trim().length === 0 || password.trim().length === 0) && tw`opacity-50`,
+                                    pressed && email.trim().length > 0 && password.trim().length > 0 ? tw`opacity-90` : null,
+                                ]}
+                            >
+                                <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.button}]}>
+                                    {loading ? "Working..." : mode === "signIn" ? "Sign in" : "Create account"}
                                 </Text>
                             </Pressable>
                         </>
                     ) : null}
-
                     {error ? (
                         <Text style={[tw`mt-3 text-center text-sm text-rose-400`, {fontFamily: fonts.body}]}>{error}</Text>
                     ) : null}

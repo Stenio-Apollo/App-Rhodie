@@ -1,8 +1,7 @@
-import {useEffect, useMemo, useState} from "react";
-import {ImageBackground, Modal, Pressable, ScrollView, Text, View} from "react-native";
+import {useMemo, useState} from "react";
+import {ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View} from "react-native";
 import tw from "../lib/tw";
 import type {Task} from "../types";
-import type {Session} from "@supabase/supabase-js";
 import {TranslucentCalendar} from "../components/TranslucentCalendar";
 import {fonts} from "../theme/fonts";
 import {Input} from "../components/ui/Input";
@@ -11,7 +10,6 @@ import {toLocalISODate} from "../lib/date-utils";
 
 interface CalendarScreenProps {
     tasks: Task[];
-    session: Session | null;
     googleCalendar: {
         available: boolean;
         connected: boolean;
@@ -25,7 +23,6 @@ interface CalendarScreenProps {
     weeklyGoal: WeeklyGoal | null;
     weeklyGoalPresets: WeeklyGoalPreset[];
     onSaveWeeklyGoal: (payload: { text: string; presetId?: string | null }) => Promise<void>;
-    onRecordWeeklyGoalCheck: (achieved: boolean) => Promise<void>;
 }
 
 export function CalendarScreen({
@@ -34,13 +31,9 @@ export function CalendarScreen({
                                    weeklyGoal,
                                    weeklyGoalPresets,
                                    onSaveWeeklyGoal,
-                                   onRecordWeeklyGoalCheck,
                                }: CalendarScreenProps) {
     const [selectedDate, setSelectedDate] = useState(toLocalISODate());
     const [customGoal, setCustomGoal] = useState("");
-    const [goalCheckVisible, setGoalCheckVisible] = useState(false);
-    const [goalFeedbackVisible, setGoalFeedbackVisible] = useState(false);
-    const [goalFeedbackMessage, setGoalFeedbackMessage] = useState("");
     const bg = require("../../public/images/rh211.jpg");
 
     const markedDates = useMemo(() => {
@@ -59,27 +52,19 @@ export function CalendarScreen({
     const customGoalReady = customGoal.trim().length > 0;
     const isGoalLocked = Boolean(weeklyGoal?.achievedAt);
 
-    useEffect(() => {
-        if (!weeklyGoal || weeklyGoal.lastCheckedAt) return;
-
-        const timeout = setTimeout(() => {
-            setGoalCheckVisible(true);
-        }, 350);
-
-        return () => clearTimeout(timeout);
-    }, [weeklyGoal]);
-
-    function handleGoalCheck(achieved: boolean) {
-        setGoalCheckVisible(false);
-        void onRecordWeeklyGoalCheck(achieved);
-        setGoalFeedbackMessage(achieved ? "keep crushing it" : "lets not forget");
-        setGoalFeedbackVisible(true);
-    }
-
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
-            <View style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}>
-                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-2 pb-3`}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}
+            >
+                <ScrollView
+                    style={tw`flex-1`}
+                    contentContainerStyle={tw`px-4 pt-2 pb-3`}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="interactive"
+                    automaticallyAdjustKeyboardInsets
+                >
                     <Text
                         style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
                     <Text style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Tap
@@ -313,95 +298,7 @@ export function CalendarScreen({
                         </View>
                     </View>
                 </ScrollView>
-                <Modal
-                    visible={goalCheckVisible}
-                    transparent
-                    animationType="fade"
-                    onRequestClose={() => setGoalCheckVisible(false)}
-                >
-                    <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
-                        <View style={tw`w-full rounded-[28px] border border-[#B55941] bg-[#0f0f0f] p-5`}>
-                            <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                Weekly goal check-in
-                            </Text>
-                            <Text
-                                style={[tw`mt-3 text-center text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
-                                Have you achieved this week's goal?
-                            </Text>
-                            {weeklyGoal ? (
-                                <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/42 px-3 py-3`}>
-                                    <Text
-                                        style={[tw`text-center text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                        {weeklyGoal.text}
-                                    </Text>
-                                </View>
-                            ) : null}
-                            <View style={tw`mt-5 flex-row gap-3`}>
-                                <Pressable
-                                    onPress={() => handleGoalCheck(false)}
-                                    style={({pressed}) => [
-                                        tw`flex-1 rounded-xl border border-[#2c2c2c] px-3 py-3`,
-                                        {backgroundColor: "rgba(0,0,0,0.35)"},
-                                        pressed && tw`opacity-80`,
-                                    ]}
-                                >
-                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                        Not yet
-                                    </Text>
-                                </Pressable>
-                                <Pressable
-                                    onPress={() => handleGoalCheck(true)}
-                                    style={({pressed}) => [
-                                        tw`flex-1 rounded-xl px-3 py-3`,
-                                        {backgroundColor: "#B55941"},
-                                        pressed && tw`opacity-80`,
-                                    ]}
-                                >
-                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                        Yes
-                                    </Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-                <Modal
-                    visible={goalFeedbackVisible}
-                    transparent
-                    animationType="fade"
-                    onRequestClose={() => setGoalFeedbackVisible(false)}
-                >
-                    <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
-                        <View style={tw`w-full rounded-[28px] border border-[#B55941] bg-[#0f0f0f] p-5`}>
-                            <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                {goalFeedbackMessage}
-                            </Text>
-                            {weeklyGoal ? (
-                                <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/42 px-3 py-3`}>
-                                    <Text
-                                        style={[tw`text-center text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                        {weeklyGoal.text}
-                                    </Text>
-                                </View>
-                            ) : null}
-                            <View style={tw`mt-5`}>
-                                <Pressable
-                                    onPress={() => setGoalFeedbackVisible(false)}
-                                    style={({pressed}) => [
-                                        tw`rounded-xl px-3 py-3`,
-                                        {backgroundColor: "#B55941"},
-                                        pressed && tw`opacity-80`,
-                                    ]}
-                                >
-                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                        Continue
-                                    </Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-            </View>
+            </KeyboardAvoidingView>
         </ImageBackground>
     );
 }

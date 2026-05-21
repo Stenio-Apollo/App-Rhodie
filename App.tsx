@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from "react";
-import {Alert, Platform, Pressable, SafeAreaView, Text, View} from "react-native";
+import {Alert, AppState, Modal, Platform, Pressable, SafeAreaView, Text, View} from "react-native";
 import {StatusBar} from "expo-status-bar";
 import {Asset} from "expo-asset";
 import {SvgUri} from "react-native-svg";
@@ -17,7 +17,7 @@ import {GradientBackground} from "./src/components/GradientBackground";
 import {fonts, useAppFonts} from "./src/theme/fonts";
 import {useSupabaseAuth} from "./src/state/useSupabaseAuth";
 import {useProfile} from "./src/state/useProfile";
-import {isToday} from "./src/lib/date-utils";
+import {isToday, toLocalISODate} from "./src/lib/date-utils";
 import {registerForPushNotificationsAsync} from "./src/lib/notifications";
 import {supabase} from "./src/lib/supabase";
 import {useSubscription} from "./src/state/useSubscription";
@@ -34,8 +34,14 @@ export default function App() {
     const [tab, setTab] = useState<Tab>("today");
     const [accountOpen, setAccountOpen] = useState(false);
     const [subscriptionOfferOpen, setSubscriptionOfferOpen] = useState(false);
+    const [goalCheckVisible, setGoalCheckVisible] = useState(false);
+    const [goalFeedbackVisible, setGoalFeedbackVisible] = useState(false);
+    const [goalFeedbackMessage, setGoalFeedbackMessage] = useState("");
+    const [goalCheckRunKey, setGoalCheckRunKey] = useState(0);
     const [birthdayBurstKey, setBirthdayBurstKey] = useState("initial");
     const birthdayBurstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const appStateRef = useRef(AppState.currentState);
+    const lastHandledGoalCheckRunKeyRef = useRef(0);
     const {session, loading: authLoading, signOut, deleteAccount} = useSupabaseAuth();
     const subscription = useSubscription(session);
     const {profile, upsertProfile} = useProfile(session);
@@ -52,8 +58,46 @@ export default function App() {
         if (!session) {
             setAccountOpen(false);
             setSubscriptionOfferOpen(false);
+            setGoalCheckVisible(false);
+            setGoalFeedbackVisible(false);
         }
     }, [session]);
+
+    useEffect(() => {
+        if (!session || appLoading) return;
+        setGoalCheckRunKey((current) => current + 1);
+    }, [appLoading, session]);
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", (nextState) => {
+            const wasBackground = /inactive|background/.test(appStateRef.current);
+            appStateRef.current = nextState;
+            if (!session || appLoading) return;
+            if (wasBackground && nextState === "active") {
+                setGoalCheckRunKey((current) => current + 1);
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [appLoading, session]);
+
+    useEffect(() => {
+        if (!session || appLoading || goalCheckRunKey === 0) return;
+        if (lastHandledGoalCheckRunKeyRef.current === goalCheckRunKey) return;
+        lastHandledGoalCheckRunKeyRef.current = goalCheckRunKey;
+
+        const goal = weeklyGoalState.goal;
+        if (!goal || goal.achievedAt) return;
+        if (goalCheckVisible || goalFeedbackVisible) return;
+
+        const today = toLocalISODate();
+        const lastCheckedDate = goal.lastCheckedAt ? toLocalISODate(new Date(goal.lastCheckedAt)) : null;
+        if (lastCheckedDate === today) return;
+
+        setGoalCheckVisible(true);
+    }, [appLoading, goalCheckRunKey, goalCheckVisible, goalFeedbackVisible, session, weeklyGoalState.goal]);
 
     useEffect(() => {
         if (!session) return;
@@ -138,6 +182,13 @@ export default function App() {
         ]);
         setAccountOpen(false);
         return null;
+    }
+
+    async function handleGoalCheck(achieved: boolean) {
+        setGoalCheckVisible(false);
+        await weeklyGoalState.recordGoalCheck(achieved);
+        setGoalFeedbackMessage(achieved ? "keep crushing it" : "lets not forget");
+        setGoalFeedbackVisible(true);
     }
 
     if (appLoading) {
@@ -275,12 +326,10 @@ export default function App() {
                     {!accountOpen && tab === "calendar" ? (
                         <CalendarScreen
                             tasks={tasksState.tasks}
-                            session={session}
                             googleCalendar={tasksState.googleCalendar}
                             weeklyGoal={weeklyGoalState.goal}
                             weeklyGoalPresets={weeklyGoalState.presets}
                             onSaveWeeklyGoal={weeklyGoalState.saveGoal}
-                            onRecordWeeklyGoalCheck={weeklyGoalState.recordGoalCheck}
                         />
                     ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen/> : null}
@@ -324,6 +373,98 @@ export default function App() {
                     </View>
                 </View>
                 <BirthdayConfetti visible={birthdayActive} triggerKey={birthdayBurstKey}/>
+                <Modal
+                    visible={goalCheckVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setGoalCheckVisible(false)}
+                >
+                    <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
+                        <View style={tw`w-full rounded-[28px] border border-[#B55941] bg-[#0f0f0f] p-5`}>
+                            <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                Weekly goal check-in
+                            </Text>
+                            <Text
+                                style={[tw`mt-3 text-center text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
+                                Have you achieved this week's goal?
+                            </Text>
+                            {weeklyGoalState.goal ? (
+                                <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/42 px-3 py-3`}>
+                                    <Text
+                                        style={[tw`text-center text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        {weeklyGoalState.goal.text}
+                                    </Text>
+                                </View>
+                            ) : null}
+                            <View style={tw`mt-5 flex-row gap-3`}>
+                                <Pressable
+                                    onPress={() => {
+                                        void handleGoalCheck(false);
+                                    }}
+                                    style={({pressed}) => [
+                                        tw`flex-1 rounded-xl border border-[#2c2c2c] px-3 py-3`,
+                                        {backgroundColor: "rgba(0,0,0,0.35)"},
+                                        pressed && tw`opacity-80`,
+                                    ]}
+                                >
+                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        Not yet
+                                    </Text>
+                                </Pressable>
+                                <Pressable
+                                    onPress={() => {
+                                        void handleGoalCheck(true);
+                                    }}
+                                    style={({pressed}) => [
+                                        tw`flex-1 rounded-xl px-3 py-3`,
+                                        {backgroundColor: "#B55941"},
+                                        pressed && tw`opacity-80`,
+                                    ]}
+                                >
+                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        Yes
+                                    </Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+                <Modal
+                    visible={goalFeedbackVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setGoalFeedbackVisible(false)}
+                >
+                    <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
+                        <View style={tw`w-full rounded-[28px] border border-[#B55941] bg-[#0f0f0f] p-5`}>
+                            <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                {goalFeedbackMessage}
+                            </Text>
+                            {weeklyGoalState.goal ? (
+                                <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/42 px-3 py-3`}>
+                                    <Text
+                                        style={[tw`text-center text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        {weeklyGoalState.goal.text}
+                                    </Text>
+                                </View>
+                            ) : null}
+                            <View style={tw`mt-5`}>
+                                <Pressable
+                                    onPress={() => setGoalFeedbackVisible(false)}
+                                    style={({pressed}) => [
+                                        tw`rounded-xl px-3 py-3`,
+                                        {backgroundColor: "#B55941"},
+                                        pressed && tw`opacity-80`,
+                                    ]}
+                                >
+                                    <Text style={[tw`text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        Continue
+                                    </Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </SafeAreaView>
         </GradientBackground>
     );
