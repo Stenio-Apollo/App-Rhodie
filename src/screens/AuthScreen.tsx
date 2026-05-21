@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
-import {ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View} from "react-native";
+import {ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View} from "react-native";
 import {Input} from "../components/ui/Input";
 import {fonts} from "../theme/fonts";
 import tw from "../lib/tw";
@@ -63,6 +63,7 @@ export function AuthScreen() {
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [keyboardInset, setKeyboardInset] = useState(0);
     const bg = require("../../public/images/rh13.jpg");
 
     useEffect(() => {
@@ -77,6 +78,23 @@ export function AuthScreen() {
             setBirthdayDay(`${maxDays}`.padStart(2, "0"));
         }
     }, [birthdayDay, birthdayMonth]);
+
+    useEffect(() => {
+        const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+        const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+        const showSubscription = Keyboard.addListener(showEvent, (event) => {
+            setKeyboardInset(event.endCoordinates?.height ?? 0);
+        });
+        const hideSubscription = Keyboard.addListener(hideEvent, () => {
+            setKeyboardInset(0);
+        });
+
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
+    }, []);
 
     const birthday = formatBirthday(birthdayMonth, birthdayDay);
     const visibleDayOptions = birthdayMonth ? DAY_OPTIONS.slice(0, daysInMonth(birthdayMonth)) : [];
@@ -215,9 +233,22 @@ export function AuthScreen() {
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-55`}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 18 : 0}
                 style={[tw`flex-1 bg-black/20`, {paddingHorizontal: 1}]}
             >
-                <ScrollView contentContainerStyle={tw`flex-grow justify-center px-6 py-10`} keyboardShouldPersistTaps="always">
+                <ScrollView
+                    contentContainerStyle={[
+                        tw`flex-grow px-6 pt-10`,
+                        {
+                            justifyContent: keyboardInset > 0 ? "flex-start" : "center",
+                            paddingBottom: Math.max(28, keyboardInset + 20),
+                        },
+                    ]}
+                    keyboardShouldPersistTaps="always"
+                    keyboardDismissMode="interactive"
+                    automaticallyAdjustKeyboardInsets
+                    showsVerticalScrollIndicator={false}
+                >
                     <Text style={[tw`text-center text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{title}</Text>
                     <Text style={[tw`mt-2 text-center text-sm text-slate-300`, {fontFamily: fonts.body}]}>
                         {subtitle}
