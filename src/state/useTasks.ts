@@ -418,7 +418,7 @@ export function useTasks(session: Session | null) {
         let mounted = true;
 
         async function hydrateLocal() {
-            const loaded = await loadTasks();
+            const loaded = await loadTasks(session?.user.id);
             if (!mounted) return;
             setTasks(loaded.map((task) => ({
                 ...task,
@@ -428,7 +428,7 @@ export function useTasks(session: Session | null) {
         }
 
         async function hydrateRemote(userId: string) {
-            const local = (await loadTasks()).map((task) => ({
+            const local = (await loadTasks(userId)).map((task) => ({
                 ...task,
                 status: normalizeTaskStatus(task.status),
             }));
@@ -494,8 +494,8 @@ export function useTasks(session: Session | null) {
 
     useEffect(() => {
         if (!isLoaded) return;
-        void saveTasks(tasks);
-    }, [isLoaded, tasks]);
+        void saveTasks(tasks, session?.user.id);
+    }, [isLoaded, session?.user.id, tasks]);
 
     const syncTaskOrdering = useCallback(
         async (userId: string, nextTasks: Task[], taskIds: string[]) => {
@@ -545,7 +545,7 @@ export function useTasks(session: Session | null) {
 
             const nextTasks = [...tasks, nextTask];
             setTasks(nextTasks);
-            void saveTasks(nextTasks);
+            void saveTasks(nextTasks, session?.user.id);
 
             if (session) {
                 const {error} = await supabase.from("tasks").insert({
@@ -589,7 +589,7 @@ export function useTasks(session: Session | null) {
             ];
 
             setTasks(nextTasks);
-            void saveTasks(nextTasks);
+            void saveTasks(nextTasks, session?.user.id);
 
             if (session) {
                 await supabase.from("tasks").delete().eq("id", taskId).eq("user_id", session.user.id);
@@ -621,7 +621,7 @@ export function useTasks(session: Session | null) {
             const moving = tasks.find((task) => task.id === taskId);
             const next = moveTask(tasks, taskId, toStatus, toIndex);
             setTasks(next);
-            void saveTasks(next);
+            void saveTasks(next, session?.user.id);
 
             if (session && moving) {
                 const affectedIds = [

@@ -46,7 +46,7 @@ Rhodie may offer paid products, including:
 - Monthly subscription
 - Yearly subscription
 
-Subscription billing and payment processing are handled by Apple or Google through their respective app stores. Rhodie uses its backend services to verify subscription status and manage access.
+Subscription billing and payment processing are handled through the App Store. Rhodie uses its backend services to verify subscription status and manage access.
 
 ### Auto-Renewing Subscriptions
 
@@ -54,7 +54,7 @@ If you purchase a monthly or yearly subscription:
 
 - your subscription may renew automatically unless cancelled before the renewal date;
 - the app store linked to your purchase method will charge you according to its billing terms; and
-- you can manage or cancel subscriptions through your Apple App Store or Google Play account settings.
+- you can manage or cancel subscriptions through your App Store account settings.
 
 ### Free Trials and Promotional Offers
 
@@ -62,13 +62,13 @@ We may offer free trials, introductory pricing, or promotions. Eligibility, dura
 
 ## 7. Refunds
 
-Refunds are handled by Apple or Google in accordance with their policies, except where otherwise required by law. Rhodie does not guarantee refunds for purchases processed through the app stores.
+Refunds are handled by Apple in accordance with App Store policies, except where otherwise required by law. Rhodie does not guarantee refunds for purchases processed through the app store.
 
 ## 8. Termination
 
 You may stop using Rhodie at any time. We may suspend or terminate access if you violate these Terms, misuse the service, create risk for other users, or where required for legal or security reasons.
 
-Account deletion removes in-app account data, but store subscriptions may need to be cancelled separately through Apple or Google.
+Account deletion removes in-app account data, but store subscriptions may need to be cancelled separately through the App Store.
 
 ## 9. Disclaimers
 

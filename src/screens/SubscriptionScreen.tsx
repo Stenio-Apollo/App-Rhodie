@@ -63,7 +63,7 @@ export function SubscriptionScreen({
                         Rhodie Pro
                     </Text>
                     <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
-                        Keep full access to Rhodie with a direct App Store or Play subscription.
+                        Continue with Rhodie Pro to keep full access after your free trial.
                     </Text>
                     {allowDismiss && onDismiss ? (
                         <View style={tw`mt-4 self-start`}>
@@ -73,13 +73,16 @@ export function SubscriptionScreen({
 
                     <View style={tw`mt-5 gap-2`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>
-                            • 14 days of free access from the moment the account is created
+                            • Full access to journaling, task planning, calendar tools, and insights
                         </Text>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>
-                            • Monthly or yearly plans to continue after the trial ends
+                            • 14 days of free access from the moment your account is created
                         </Text>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>
-                            • Restore purchases any time from the same Apple ID or Google account
+                            • Monthly or yearly auto-renewing plans after the trial ends
+                        </Text>
+                        <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>
+                            • Restore purchases any time from your App Store account
                         </Text>
                     </View>
 
@@ -152,6 +155,16 @@ export function SubscriptionScreen({
                             >
                                 Terms of Use
                             </Text>
+                            {" "}(
+                            <Text
+                                onPress={() => {
+                                    if (termsOfUseUrl) void Linking.openURL(termsOfUseUrl);
+                                }}
+                                style={{color: "#B55941"}}
+                            >
+                                EULA
+                            </Text>
+                            )
                             {" "}and{" "}
                             <Text
                                 onPress={() => {
@@ -165,8 +178,7 @@ export function SubscriptionScreen({
                         </Text>
                     ) : (
                         <Text style={[tw`mt-5 text-xs text-amber-300`, {fontFamily: fonts.body}]}>
-                            Add `EXPO_PUBLIC_TERMS_OF_USE_URL` and `EXPO_PUBLIC_PRIVACY_POLICY_URL` before App Store /
-                            Play submission.
+                            Add `EXPO_PUBLIC_TERMS_OF_USE_URL` and `EXPO_PUBLIC_PRIVACY_POLICY_URL` before submission.
                         </Text>
                     )}
 

@@ -5,21 +5,16 @@ import {
     getAndroidPackageName,
     getTrialStatus,
     isNativeBillingSupported,
-    subscriptionProductIds,
     shouldBypassSubscriptions,
+    subscriptionProductIds,
 } from "../lib/subscriptions";
 import {
-    syncSubscriptionAccess,
     type SubscriptionAccessRecord,
     type SubscriptionVerificationPayload,
+    syncSubscriptionAccess,
 } from "../lib/subscription-backend";
 import {Platform} from "react-native";
-import type {
-    ActiveSubscription,
-    MutationRequestPurchaseArgs,
-    ProductSubscription,
-    Purchase,
-} from "expo-iap";
+import type {ActiveSubscription, MutationRequestPurchaseArgs, ProductSubscription, Purchase,} from "expo-iap";
 
 type SubscriptionPlanId = "yearly" | "monthly";
 
@@ -72,8 +67,14 @@ type ExpoIapModule = {
 };
 
 const PLAN_METADATA: Record<SubscriptionPlanId, { title: string; subtitle: string }> = {
-    yearly: {title: "Yearly", subtitle: "Save 33% compared with paying monthly"},
-    monthly: {title: "Monthly", subtitle: "Flexible recurring access after your free trial"},
+    yearly: {
+        title: "Yearly",
+        subtitle: "Yearly renewal of journaling, goal tracking, task management, event tracking, and insights access.",
+    },
+    monthly: {
+        title: "Monthly",
+        subtitle: "Monthly renewal of journaling, goal tracking, task management, event tracking, and insights access.",
+    },
 };
 
 let cachedExpoIapModule: ExpoIapModule | null | undefined;
@@ -226,7 +227,7 @@ export function useSubscription(session: Session | null) {
         ? "Native billing is unavailable in this build."
         : !runtimeSupportsBilling
             ? "Subscriptions require a development build, TestFlight, or production build. Expo Go cannot access App Store or Play billing."
-        : null;
+            : null;
     const trialStatus = useMemo(
         () => getTrialStatus(session?.user.created_at ?? null),
         [session?.user.created_at],
@@ -333,7 +334,7 @@ export function useSubscription(session: Session | null) {
                 if (!mounted) return;
                 setStoreConnected(connected);
                 if (!connected) {
-                    setError("Could not connect to the App Store / Play subscription service.");
+                    setError("Could not connect to the store subscription service.");
                     return;
                 }
                 await refreshStoreState();
@@ -402,6 +403,12 @@ export function useSubscription(session: Session | null) {
     const purchasePlan = useCallback(async (planId: SubscriptionPlanId) => {
         if (!billingConfigured || !billingModule) {
             setError("Billing is not available in this build.");
+            return false;
+        }
+
+        const storeProduct = getProductForPlan(products, planId);
+        if (!storeProduct) {
+            setError("Subscription products are not available for this build yet. Please try again shortly.");
             return false;
         }
 

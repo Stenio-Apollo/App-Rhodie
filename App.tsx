@@ -176,7 +176,7 @@ export default function App() {
         }
 
         await Promise.all([
-            clearTasksStorage(),
+            clearTasksStorage(session?.user.id),
             clearJournalStorage(session?.user.id),
             clearWeeklyGoalStorage(session?.user.id),
         ]);

@@ -1,14 +1,16 @@
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
 
-const supabaseUrl = Deno.env.get("EDGE_SUPABASE_URL")!;
-const serviceRoleKey = Deno.env.get("EDGE_SERVICE_ROLE_KEY")!;
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? Deno.env.get("EDGE_SUPABASE_URL");
+const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("EDGE_SERVICE_ROLE_KEY");
 
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-    },
-});
+const supabase = (supabaseUrl && serviceRoleKey)
+    ? createClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+        },
+    })
+    : null;
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -55,6 +57,10 @@ Deno.serve(async (request) => {
 
     if (request.method !== "POST") {
         return json({error: "Method not allowed."}, 405);
+    }
+
+    if (!supabase) {
+        return json({error: "Function secrets are missing. Configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY."}, 500);
     }
 
     const authHeader = request.headers.get("Authorization") ?? request.headers.get("authorization");

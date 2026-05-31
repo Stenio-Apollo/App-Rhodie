@@ -6,6 +6,8 @@
 *.log
 node_modules
 dist
+dist-final-test
+dist-test
 web-build
 .next
 out
@@ -15,3 +17,5 @@ out
 
 # Local backups and workspace artifacts
 .legacy_backup_20260215-211244
+.expo-export-check
+clerk-expo

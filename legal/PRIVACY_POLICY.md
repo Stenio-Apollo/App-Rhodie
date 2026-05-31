@@ -15,7 +15,7 @@ We may collect the following information:
 - App content you create, such as journal entries, gratitude entries, tasks, due dates, and related activity.
 - Calendar connection data if you choose to connect Google Calendar.
 - Push notification tokens used to deliver reminders and notifications.
-- Subscription and purchase status information from the Apple App Store or Google Play, plus verification and access records stored in our backend.
+- Subscription and purchase status information from the App Store, plus verification and access records stored in our backend.
 - Limited technical and diagnostic information needed to operate, secure, and improve the app.
 
 ## 2. How We Use Information
@@ -33,7 +33,7 @@ We use information to:
 
 ## 3. Subscription and Payment Information
 
-Rhodie uses the Apple App Store and Google Play for subscription billing. We also use our backend services to verify subscription status and manage access. We do not store your full payment card details.
+Rhodie uses the App Store for subscription billing. We also use our backend services to verify subscription status and manage access. We do not store your full payment card details.
 
 We may receive information such as:
 
@@ -47,7 +47,7 @@ We may receive information such as:
 We may use third-party providers to operate the app, including:
 
 - **Supabase** for authentication, database storage, and backend services;
-- **Apple App Store** and **Google Play** for purchases;
+- **App Store** for purchases;
 - **Google Calendar** if you choose to connect your account; and
 - notification and infrastructure providers required to deliver app functionality.
 
@@ -74,7 +74,7 @@ You may:
 - update certain profile information in the app;
 - disconnect connected services such as Google Calendar;
 - manage push notifications through your device settings;
-- manage subscriptions through Apple or Google;
+- manage subscriptions through the App Store;
 - request account deletion through the app; and
 - contact us regarding privacy questions or requests.
 

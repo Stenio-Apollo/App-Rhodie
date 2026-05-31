@@ -223,7 +223,7 @@ export function AccountScreen({
         }
     }
 
-    async function handleOpenExternalUrl(url: string | null, label: "Terms of Use" | "Privacy Policy") {
+    async function handleOpenExternalUrl(url: string | null, label: "Terms of Use" | "Privacy Policy" | "EULA") {
         if (!url) {
             Alert.alert("Unavailable", `${label} is not configured in this build.`);
             return;
@@ -251,7 +251,7 @@ export function AccountScreen({
     function confirmDeleteAccount() {
         Alert.alert(
             "Delete account?",
-            "This permanently deletes your profile, journal entries, tasks, calendar connection, notification tokens, and sign-in for this account. Your App Store or Play Store subscription is managed separately and may need to be cancelled there first.",
+            "This permanently deletes your profile, journal entries, tasks, calendar connection, notification tokens, and sign-in for this account. Your App Store subscription is managed separately and may need to be cancelled there first.",
             [
                 {text: "Cancel", style: "cancel"},
                 {
@@ -470,6 +470,16 @@ export function AccountScreen({
                             >
                                 Terms of Use
                             </Text>
+                            {" "}(
+                            <Text
+                                onPress={() => {
+                                    void handleOpenExternalUrl(termsOfUseUrl, "EULA");
+                                }}
+                                style={{color: "#B55941"}}
+                            >
+                                EULA
+                            </Text>
+                            )
                             {" "}and{" "}
                             <Text
                                 onPress={() => {
@@ -501,7 +511,7 @@ export function AccountScreen({
                             security</Text>
                         <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Deleting your account
                             is permanent. It removes your app data, but store subscriptions still need to be managed in
-                            Apple or Google if they are active.</Text>
+                            the App Store if they are active.</Text>
                         <View style={tw`mt-4 flex-row flex-wrap gap-2`}>
                             <Button label="Sign out" onPress={onSignOut} variant="secondary"/>
                             <Button
