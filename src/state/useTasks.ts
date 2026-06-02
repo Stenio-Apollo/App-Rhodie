@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
-import {Alert, AppState, type AppStateStatus} from "react-native";
+import {Alert, AppState, Platform, type AppStateStatus} from "react-native";
 import * as AuthSession from "expo-auth-session";
+import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import Constants from "expo-constants";
 import {loadTasks, saveTasks} from "../lib/storage";
@@ -86,17 +87,34 @@ export function useTasks(session: Session | null) {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
-    const googleClientId =
-        (Constants.expoConfig?.extra as any)?.googleOAuthClientId ??
+    const googleConfig = (Constants.expoConfig?.extra as {
+        googleOAuthClientId?: string;
+        googleIosOAuthClientId?: string;
+        googleAndroidOAuthClientId?: string;
+    } | undefined) ?? {};
+    const googleWebClientId =
+        googleConfig.googleOAuthClientId ??
         process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID ??
         "";
-    const googleEnabled = googleClientId.trim().length > 0;
-    const schemeValue = Constants.expoConfig?.scheme;
-    const appScheme = Array.isArray(schemeValue) ? schemeValue[0] : schemeValue;
-    const redirectUri = AuthSession.makeRedirectUri({
-        scheme: appScheme,
-    });
-    const discovery = AuthSession.useAutoDiscovery("https://accounts.google.com");
+    const googleIosClientId =
+        googleConfig.googleIosOAuthClientId ??
+        process.env.EXPO_PUBLIC_GOOGLE_IOS_OAUTH_CLIENT_ID ??
+        "";
+    const googleAndroidClientId =
+        googleConfig.googleAndroidOAuthClientId ??
+        process.env.EXPO_PUBLIC_GOOGLE_ANDROID_OAUTH_CLIENT_ID ??
+        "";
+    const googlePlatformClientId = Platform.select({
+        ios: googleIosClientId,
+        android: googleAndroidClientId,
+        default: googleWebClientId,
+    }) ?? "";
+    const googleClientId = googlePlatformClientId || googleWebClientId;
+    const googleEnabled = Platform.select({
+        ios: googleIosClientId.trim().length > 0,
+        android: googleAndroidClientId.trim().length > 0,
+        default: googleWebClientId.trim().length > 0,
+    }) ?? false;
 
     const [googleConnected, setGoogleConnected] = useState(false);
     const [googleBusy, setGoogleBusy] = useState(false);
@@ -104,24 +122,20 @@ export function useTasks(session: Session | null) {
     const [lastGoogleSyncAt, setLastGoogleSyncAt] = useState<string | null>(null);
     const [googleConnection, setGoogleConnection] = useState<GoogleCalendarConnectionRow | null>(null);
 
-    const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    const [request, response, promptAsync] = Google.useAuthRequest(
         {
             clientId: googleEnabled ? googleClientId : "missing-google-client-id",
-            redirectUri,
+            webClientId: googleWebClientId || undefined,
+            iosClientId: googleIosClientId || undefined,
+            androidClientId: googleAndroidClientId || undefined,
             scopes: [
-                "openid",
-                "profile",
-                "email",
                 "https://www.googleapis.com/auth/calendar.readonly",
             ],
-            responseType: AuthSession.ResponseType.Code,
-            usePKCE: true,
             extraParams: {
                 access_type: "offline",
                 prompt: "consent",
             },
         },
-        discovery,
     );
 
     const loadRemoteTasks = useCallback(async (userId: string): Promise<Task[] | null> => {
@@ -175,46 +189,30 @@ export function useTasks(session: Session | null) {
                 return null;
             }
 
-            const body = new URLSearchParams({
-                client_id: googleClientId,
-                grant_type: "refresh_token",
-                refresh_token: connection.refresh_token,
-            });
+            const tokenResult = await AuthSession.refreshAsync({
+                clientId: googleClientId,
+                refreshToken: connection.refresh_token,
+            }, Google.discovery);
 
-            const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-                method: "POST",
-                headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                body: body.toString(),
-            });
-
-            if (!tokenResponse.ok) {
-                return null;
-            }
-
-            const tokenJson = (await tokenResponse.json()) as {
-                access_token?: string;
-                expires_in?: number;
-                scope?: string;
-            };
-
-            if (!tokenJson.access_token) {
+            if (!tokenResult.accessToken) {
                 return null;
             }
 
             const refreshed: GoogleCalendarConnectionRow = {
                 ...connection,
-                access_token: tokenJson.access_token,
-                expires_at: tokenJson.expires_in
-                    ? new Date(Date.now() + tokenJson.expires_in * 1000).toISOString()
+                access_token: tokenResult.accessToken,
+                refresh_token: tokenResult.refreshToken ?? connection.refresh_token,
+                expires_at: tokenResult.expiresIn
+                    ? new Date(Date.now() + tokenResult.expiresIn * 1000).toISOString()
                     : connection.expires_at,
-                scope: tokenJson.scope ?? connection.scope,
+                scope: tokenResult.scope ?? connection.scope,
                 updated_at: new Date().toISOString(),
             };
 
             const {error} = await supabase.from("google_calendar_connections").upsert({
                 user_id: connection.user_id,
                 access_token: refreshed.access_token,
-                refresh_token: connection.refresh_token,
+                refresh_token: refreshed.refresh_token,
                 expires_at: refreshed.expires_at,
                 scope: refreshed.scope,
                 updated_at: refreshed.updated_at,
@@ -358,42 +356,31 @@ export function useTasks(session: Session | null) {
 
         if (response.type !== "success") {
             setGoogleBusy(false);
+            if (response.type === "error") {
+                setGoogleError(response.error?.message ?? "Google authorization failed.");
+            }
             return;
         }
 
-        const code = response.params.code;
-        const codeVerifier = request?.codeVerifier;
-        if (!code || !codeVerifier || !discovery?.tokenEndpoint) {
+        const authentication = response.authentication;
+        if (!authentication?.accessToken) {
             setGoogleBusy(false);
-            setGoogleError("Google authorization was incomplete. Please try again.");
+            setGoogleError("Google authorization did not return an access token.");
             return;
         }
 
         void (async () => {
             try {
                 setGoogleError(null);
-                const tokenResult = await AuthSession.exchangeCodeAsync(
-                    {
-                        clientId: googleClientId,
-                        code,
-                        redirectUri,
-                        extraParams: {code_verifier: codeVerifier},
-                    },
-                    discovery,
-                );
-
-                const expiresAt = tokenResult.expiresIn
-                    ? new Date(Date.now() + tokenResult.expiresIn * 1000).toISOString()
+                const expiresAt = authentication.expiresIn
+                    ? new Date(Date.now() + authentication.expiresIn * 1000).toISOString()
                     : null;
-                if (!tokenResult.accessToken) {
-                    throw new Error("Google access token missing from response.");
-                }
                 const row = {
                     user_id: session.user.id,
-                    access_token: tokenResult.accessToken,
-                    refresh_token: tokenResult.refreshToken ?? null,
+                    access_token: authentication.accessToken,
+                    refresh_token: authentication.refreshToken ?? null,
                     expires_at: expiresAt,
-                    scope: tokenResult.scope ?? null,
+                    scope: authentication.scope ?? null,
                     updated_at: new Date().toISOString(),
                 };
 
@@ -412,7 +399,7 @@ export function useTasks(session: Session | null) {
                 setGoogleBusy(false);
             }
         })();
-    }, [discovery, googleClientId, googleEnabled, redirectUri, request, response, session, syncGoogleCalendar]);
+    }, [googleEnabled, response, session, syncGoogleCalendar]);
 
     useEffect(() => {
         let mounted = true;
@@ -646,9 +633,17 @@ export function useTasks(session: Session | null) {
         }
         setGoogleBusy(true);
         setGoogleError(null);
-        const result = await promptAsync();
-        if (result.type !== "success") {
+        try {
+            const result = await promptAsync();
+            if (result.type !== "success") {
+                setGoogleBusy(false);
+                if (result.type === "error") {
+                    setGoogleError(result.error?.message ?? "Google authorization failed.");
+                }
+            }
+        } catch (error) {
             setGoogleBusy(false);
+            setGoogleError(error instanceof Error ? error.message : "Could not start Google authorization.");
         }
     }, [googleEnabled, promptAsync, request, session]);
 

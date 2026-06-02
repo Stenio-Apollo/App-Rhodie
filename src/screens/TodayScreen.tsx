@@ -11,6 +11,7 @@ import type {Session} from "@supabase/supabase-js";
 import {useProfile} from "../state/useProfile";
 import {isToday, toLocalISODate} from "../lib/date-utils";
 import type {WeeklyGoal, WeeklyGoalProgress} from "../state/useWeeklyGoal";
+import {haptics} from "../lib/haptics";
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -56,7 +57,7 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-40`}>
-            <View style={[tw`flex-1 bg-black/43`, {paddingHorizontal: 1}]}>
+            <View style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}>
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
                         style={[
@@ -69,8 +70,9 @@ export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: To
                 </View>
                 <ScrollView
                     style={tw`flex-1`}
-                    contentContainerStyle={tw`flex-grow justify-end px-4 pb-7 pt-4 gap-4`}
+                    contentContainerStyle={tw`flex-grow justify-end px-4 pb-28 pt-4 gap-4`}
                     showsVerticalScrollIndicator={false}
+                    onScrollBeginDrag={haptics.scroll}
                 >
                     <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/57 p-4`}>
                         <View style={tw`flex-row items-center justify-between`}>

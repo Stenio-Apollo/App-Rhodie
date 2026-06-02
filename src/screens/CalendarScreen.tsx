@@ -7,6 +7,7 @@ import {fonts} from "../theme/fonts";
 import {Input} from "../components/ui/Input";
 import type {WeeklyGoal, WeeklyGoalPreset} from "../state/useWeeklyGoal";
 import {toLocalISODate} from "../lib/date-utils";
+import {haptics} from "../lib/haptics";
 
 interface CalendarScreenProps {
     tasks: Task[];
@@ -60,10 +61,11 @@ export function CalendarScreen({
             >
                 <ScrollView
                     style={tw`flex-1`}
-                    contentContainerStyle={tw`px-4 pt-2 pb-3`}
+                    contentContainerStyle={tw`px-4 pt-2 pb-28`}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="interactive"
                     automaticallyAdjustKeyboardInsets
+                    onScrollBeginDrag={haptics.scroll}
                 >
                     <Text
                         style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
@@ -75,7 +77,7 @@ export function CalendarScreen({
                             Calendar Sync</Text>
                         {!googleCalendar.available ? (
                             <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
-                                Set `EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID` to enable sync.
+                                Set the Google OAuth client ID for this platform to enable sync.
                             </Text>
                         ) : (
                             <>
@@ -95,6 +97,7 @@ export function CalendarScreen({
                                     {!googleCalendar.connected ? (
                                         <Pressable
                                             onPress={() => {
+                                                haptics.selection();
                                                 void googleCalendar.connect();
                                             }}
                                             style={({pressed}) => [
@@ -111,6 +114,7 @@ export function CalendarScreen({
                                         <>
                                             <Pressable
                                                 onPress={() => {
+                                                    haptics.selection();
                                                     void googleCalendar.syncNow();
                                                 }}
                                                 style={({pressed}) => [
@@ -128,6 +132,7 @@ export function CalendarScreen({
                                             </Pressable>
                                             <Pressable
                                                 onPress={() => {
+                                                    haptics.selection();
                                                     void googleCalendar.disconnect();
                                                 }}
                                                 style={({pressed}) => [
@@ -149,7 +154,10 @@ export function CalendarScreen({
 
                     <TranslucentCalendar
                         markedDates={markedDates}
-                        onDayPress={(day) => setSelectedDate(day.dateString)}
+                        onDayPress={(day) => {
+                            haptics.calendarDateSelected();
+                            setSelectedDate(day.dateString);
+                        }}
                     />
 
                     <Text
@@ -242,6 +250,7 @@ export function CalendarScreen({
                                         disabled={isGoalLocked}
                                         onPress={() => {
                                             if (isGoalLocked) return;
+                                            haptics.selection();
                                             setCustomGoal("");
                                             void onSaveWeeklyGoal({text: goal.title, presetId: goal.id});
                                         }}
@@ -280,6 +289,7 @@ export function CalendarScreen({
                                 disabled={!customGoalReady || isGoalLocked}
                                 onPress={() => {
                                     if (!customGoalReady || isGoalLocked) return;
+                                    haptics.selection();
                                     const text = customGoal.trim();
                                     setCustomGoal("");
                                     void onSaveWeeklyGoal({text, presetId: null});

@@ -2,12 +2,15 @@
   "expo": {
     "name": "Rhodie",
     "slug": "rhnative",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "./assets/iconNew.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "scheme": "rhnative",
+    "scheme": [
+      "rhnative",
+      "com.rhnative.app"
+    ],
     "splash": {
       "image": "./assets/iconNew.png",
       "resizeMode": "contain",
@@ -16,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rhnative.app",
-      "buildNumber": "1",
+      "buildNumber": "57",
       "infoPlist": {
         "CFBundleDisplayName": "Rhodie",
         "NSUserNotificationUsageDescription": "We use notifications to remind you about tasks and journal prompts.",
@@ -43,6 +46,7 @@
       "supabaseUrl": "https://ddjnezmzwvhcgpktaqpv.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkam5lem16d3ZoY2dwa3RhcXB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MTc2ODQsImV4cCI6MjA5MTI5MzY4NH0.I9FvVxcxzug9bBgDtlBdJdR4utguPZVU3aO-Vzg-08U",
       "googleOAuthClientId": "526221683122-fufnnugs79ije3dlk95apt4k0u38biq0.apps.googleusercontent.com",
+      "googleIosOAuthClientId": "379117828234-923m6s9b1lucad45tmkrq5bmep694lnc.apps.googleusercontent.com",
       "privacyPolicyUrl": "https://rh-web-mu.vercel.app/privacy",
       "termsOfUseUrl": "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
       "monthlySubscriptionProductId": "rhodie.pro",

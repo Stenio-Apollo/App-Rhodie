@@ -9,6 +9,7 @@ import {
     publicHealthStats,
     summarizeForApp,
 } from "../lib/mental-health-feed";
+import {haptics} from "../lib/haptics";
 
 async function openExternal(url: string): Promise<void> {
     try {
@@ -95,7 +96,7 @@ export function InsightsScreen() {
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-58`}>
             <View style={[tw`flex-1 bg-black/8`, {paddingHorizontal: 1}]}>
-                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-5 pb-10`}>
+                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-5 pb-28`} onScrollBeginDrag={haptics.scroll}>
                     <View
                         style={[
                             tw`rounded-3xl border p-4`,
@@ -147,6 +148,7 @@ export function InsightsScreen() {
                                 </Text>
                                 <Pressable
                                     onPress={() => {
+                                        haptics.selection();
                                         void openExternal(stat.sourceUrl);
                                     }}
                                     style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {
@@ -187,6 +189,7 @@ export function InsightsScreen() {
                                 </Text>
                                 <Pressable
                                     onPress={() => {
+                                        haptics.selection();
                                         void openExternal(resource.sourceUrl);
                                     }}
                                     style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {
@@ -255,6 +258,7 @@ export function InsightsScreen() {
                                 </Text>
                                 <Pressable
                                     onPress={() => {
+                                        haptics.selection();
                                         void openExternal(item.url);
                                     }}
                                     style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {

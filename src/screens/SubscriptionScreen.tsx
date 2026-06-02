@@ -2,6 +2,7 @@ import {ImageBackground, Linking, ScrollView, Text, View} from "react-native";
 import {Button} from "../components/ui/Button";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
+import {haptics} from "../lib/haptics";
 
 type SubscriptionPlanViewModel = {
     id: "yearly" | "monthly";
@@ -57,6 +58,7 @@ export function SubscriptionScreen({
             <ScrollView
                 style={[tw`flex-1 bg-black/35`, {paddingHorizontal: 1}]}
                 contentContainerStyle={tw`flex-grow justify-center px-6 py-8`}
+                onScrollBeginDrag={haptics.scroll}
             >
                 <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/55 p-6`}>
                     <Text style={[tw`text-3xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
@@ -149,6 +151,7 @@ export function SubscriptionScreen({
                             By continuing, you agree to the{" "}
                             <Text
                                 onPress={() => {
+                                    haptics.selection();
                                     if (termsOfUseUrl) void Linking.openURL(termsOfUseUrl);
                                 }}
                                 style={{color: "#B55941"}}
@@ -158,6 +161,7 @@ export function SubscriptionScreen({
                             {" "}(
                             <Text
                                 onPress={() => {
+                                    haptics.selection();
                                     if (termsOfUseUrl) void Linking.openURL(termsOfUseUrl);
                                 }}
                                 style={{color: "#B55941"}}
@@ -168,6 +172,7 @@ export function SubscriptionScreen({
                             {" "}and{" "}
                             <Text
                                 onPress={() => {
+                                    haptics.selection();
                                     if (privacyPolicyUrl) void Linking.openURL(privacyPolicyUrl);
                                 }}
                                 style={{color: "#B55941"}}

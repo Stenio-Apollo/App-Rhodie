@@ -5,6 +5,7 @@ import {fonts} from "../theme/fonts";
 import tw from "../lib/tw";
 import {useSupabaseAuth} from "../state/useSupabaseAuth";
 import {supabase} from "../lib/supabase";
+import {haptics} from "../lib/haptics";
 
 const MONTH_OPTIONS = [
     {value: "01", label: "Jan"},
@@ -136,9 +137,11 @@ export function AuthScreen() {
         const sendError = await signInMagicLink(normalizedEmail);
         setLoading(false);
         if (sendError) {
+            haptics.authenticationError();
             setError(sendError.message);
             return;
         }
+        haptics.authenticationSuccess();
         setSent(true);
         setMessage("Check your email for the login code.");
     }
@@ -152,6 +155,7 @@ export function AuthScreen() {
         const {error: verifyError, userId} = await verifyEmailOtp(normalizedEmail, code.trim());
         if (verifyError) {
             setLoading(false);
+            haptics.authenticationError();
             setError(verifyError.message);
             return;
         }
@@ -160,6 +164,7 @@ export function AuthScreen() {
             const {error: profileError, skipped} = await upsertProfile(userId);
             if (profileError) {
                 setLoading(false);
+                haptics.authenticationError();
                 setError(profileError.message);
                 return;
             }
@@ -170,23 +175,28 @@ export function AuthScreen() {
             }
         }
         setLoading(false);
+        haptics.authenticationSuccess();
     }
 
     async function handlePasswordAuth() {
         const normalizedEmail = normalizeIdentifierToEmail(email);
         if (!normalizedEmail) {
+            haptics.authenticationError();
             setError("Enter an email.");
             return;
         }
         if (!password.trim()) {
+            haptics.authenticationError();
             setError("Enter a password.");
             return;
         }
         if (mode === "create" && password.length < 8) {
+            haptics.authenticationError();
             setError("Password must be at least 8 characters.");
             return;
         }
         if (mode === "create" && password !== confirmPassword) {
+            haptics.authenticationError();
             setError("Passwords do not match.");
             return;
         }
@@ -199,7 +209,10 @@ export function AuthScreen() {
             const {error: signInError} = await signInWithPassword(normalizedEmail, password);
             setLoading(false);
             if (signInError) {
+                haptics.authenticationError();
                 setError(signInError.message);
+            } else {
+                haptics.authenticationSuccess();
             }
             return;
         }
@@ -207,6 +220,7 @@ export function AuthScreen() {
         const {error: signUpError, userId} = await signUpWithPassword(normalizedEmail, password);
         if (signUpError) {
             setLoading(false);
+            haptics.authenticationError();
             setError(signUpError.message);
             return;
         }
@@ -215,6 +229,7 @@ export function AuthScreen() {
             const {error: profileError, skipped} = await upsertProfile(userId);
             if (profileError) {
                 setLoading(false);
+                haptics.authenticationError();
                 setError(profileError.message);
                 return;
             }
@@ -226,6 +241,7 @@ export function AuthScreen() {
         }
 
         setLoading(false);
+        haptics.authenticationSuccess();
         setMessage("Account created.");
     }
 
@@ -248,6 +264,7 @@ export function AuthScreen() {
                     keyboardDismissMode="interactive"
                     automaticallyAdjustKeyboardInsets
                     showsVerticalScrollIndicator={false}
+                    onScrollBeginDrag={haptics.scroll}
                 >
                     <Text style={[tw`text-center text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{title}</Text>
                     <Text style={[tw`mt-2 text-center text-sm text-slate-300`, {fontFamily: fonts.body}]}>
@@ -257,6 +274,7 @@ export function AuthScreen() {
                     <View style={segmentedContainerStyle}>
                         <Pressable
                             onPress={() => {
+                                haptics.selection();
                                 setMode("signIn");
                                 setSent(false);
                                 setCode("");
@@ -273,6 +291,7 @@ export function AuthScreen() {
                         </Pressable>
                         <Pressable
                             onPress={() => {
+                                haptics.selection();
                                 setMode("create");
                                 setSent(false);
                                 setCode("");
@@ -292,6 +311,7 @@ export function AuthScreen() {
                     <View style={segmentedContainerStyle}>
                         <Pressable
                             onPress={() => {
+                                haptics.selection();
                                 setMethod("code");
                                 setSent(false);
                                 setCode("");
@@ -310,6 +330,7 @@ export function AuthScreen() {
                         </Pressable>
                         <Pressable
                             onPress={() => {
+                                haptics.selection();
                                 setMethod("password");
                                 setSent(false);
                                 setCode("");
@@ -339,7 +360,10 @@ export function AuthScreen() {
                             <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/70 px-4 py-3`}>
                                 <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Birthday</Text>
                                 <Pressable
-                                    onPress={() => setShowBirthdayPicker((current) => !current)}
+                                    onPress={() => {
+                                        haptics.selection();
+                                        setShowBirthdayPicker((current) => !current);
+                                    }}
                                     style={({pressed}) => [tw`mt-2 rounded-lg border border-[#2c2c2c] px-3 py-3`, pressed && tw`opacity-90`]}
                                 >
                                     <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#fbf7f3"}]}>
@@ -356,7 +380,10 @@ export function AuthScreen() {
                                                     return (
                                                         <Pressable
                                                             key={option.value}
-                                                            onPress={() => setBirthdayMonth(option.value)}
+                                                            onPress={() => {
+                                                                haptics.selection();
+                                                                setBirthdayMonth(option.value);
+                                                            }}
                                                             style={({pressed}) => [
                                                                 tw`px-3 py-3`,
                                                                 active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
@@ -379,7 +406,10 @@ export function AuthScreen() {
                                                     return (
                                                         <Pressable
                                                             key={option}
-                                                            onPress={() => setBirthdayDay(option)}
+                                                            onPress={() => {
+                                                                haptics.selection();
+                                                                setBirthdayDay(option);
+                                                            }}
                                                             style={({pressed}) => [
                                                                 tw`px-3 py-3`,
                                                                 active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,

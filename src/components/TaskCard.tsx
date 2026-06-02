@@ -4,6 +4,7 @@ import type {Task, TaskStatus} from "../types";
 import {Badge} from "./ui/Badge";
 import {Card} from "./ui/Card";
 import {fonts} from "../theme/fonts";
+import {haptics} from "../lib/haptics";
 
 interface TaskCardProps {
     task: Task;
@@ -20,7 +21,12 @@ function priorityDotColor(priority: Task["priority"]): string {
 
 export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
     return (
-        <View style={tw`mb-2.5`}>
+        <Pressable
+            onPress={haptics.tapTask}
+            onLongPress={haptics.longPressTask}
+            delayLongPress={320}
+            style={tw`mb-2.5`}
+        >
             <Card>
                 <View style={tw`flex-row items-start justify-between gap-2`}>
                     <Text
@@ -45,7 +51,10 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                         {status !== "completed" && onComplete ? (
                             <Pressable
                                 style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
-                                onPress={() => onComplete(task.id)}>
+                                onPress={() => {
+                                    haptics.completeTask();
+                                    onComplete(task.id);
+                                }}>
                                 <Text
                                     style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Complete</Text>
                             </Pressable>
@@ -53,13 +62,16 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                     </View>
 
                     <View style={tw`flex-row items-center gap-1.5`}>
-                        <Pressable onPress={() => onDelete(task.id)}
+                        <Pressable onPress={() => {
+                            haptics.deleteTask();
+                            onDelete(task.id);
+                        }}
                                    style={({pressed}) => [tw`rounded-lg bg-[#282828] px-2.5 py-1`, pressed && tw`bg-[#282828]/80`]}>
                             <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>Delete</Text>
                         </Pressable>
                     </View>
                 </View>
             </Card>
-        </View>
+        </Pressable>
     );
 }

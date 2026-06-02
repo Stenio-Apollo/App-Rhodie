@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from "react";
-import {Alert, AppState, Modal, Platform, Pressable, SafeAreaView, Text, View} from "react-native";
+import {Alert, AppState, Image, Modal, Platform, Pressable, SafeAreaView, Text, View} from "react-native";
 import {StatusBar} from "expo-status-bar";
+import {BlurView} from "expo-blur";
 import {Asset} from "expo-asset";
 import {SvgUri} from "react-native-svg";
 import {CalendarScreen} from "./src/screens/CalendarScreen";
@@ -27,6 +28,7 @@ import {clearTasksStorage} from "./src/lib/storage";
 import {clearJournalStorage} from "./src/state/useJournal";
 import {getPrivacyPolicyUrl, getTermsOfUseUrl} from "./src/lib/subscriptions";
 import {clearWeeklyGoalStorage, useWeeklyGoal} from "./src/state/useWeeklyGoal";
+import {haptics} from "./src/lib/haptics";
 
 type Tab = "today" | "journal" | "board" | "calendar" | "insights";
 
@@ -148,6 +150,8 @@ export default function App() {
     }, [appLoading, birthdayActive, session, tab]);
 
     function handleTabChange(nextTab: Tab) {
+        haptics.navigation();
+
         if (accountOpen) {
             setAccountOpen(false);
             if (nextTab === tab) return;
@@ -187,6 +191,9 @@ export default function App() {
     async function handleGoalCheck(achieved: boolean) {
         setGoalCheckVisible(false);
         await weeklyGoalState.recordGoalCheck(achieved);
+        if (achieved) {
+            haptics.reachStreakMilestone();
+        }
         setGoalFeedbackMessage(achieved ? "keep crushing it" : "lets not forget");
         setGoalFeedbackVisible(true);
     }
@@ -245,6 +252,7 @@ export default function App() {
         : birthdayActive
             ? "Happy birthday! Tap here"
             : "Tap to manage account";
+    const profileIconColor = accountOpen ? "#B55941" : "#E4E0D4";
 
     return (
         <GradientBackground>
@@ -262,31 +270,42 @@ export default function App() {
                             rh.
                         </Text>
                         <Pressable
-                            onPress={() => setAccountOpen((current) => !current)}
+                            onPress={() => {
+                                haptics.selection();
+                                setAccountOpen((current) => !current);
+                            }}
                             style={({pressed}) => [
                                 tw`rounded-2xl px-2 py-1.5`,
                                 accountOpen ? {borderWidth: 1, borderColor: "#B55941"} : null,
                                 pressed && tw`bg-white/5`,
                             ]}
                         >
-                            <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}> 
+                            <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                 {profile?.full_name ? `Welcome, ${profile.full_name}` : "Welcome back"}
                             </Text>
-                            <Text
-                                style={[
-                                    tw`text-[11px]`,
-                                    {
-                                        fontFamily: fonts.body,
-                                        color: accountOpen ? "#B55941" : "rgba(228,224,212,0.72)",
-                                    },
-                                ]}
-                            >
-                                {headerSubtitle}
-                            </Text>
+                            <View style={tw`mt-0.5 flex-row items-center gap-1.5`}>
+                                <Image
+                                    source={require("./public/images/profile.png")}
+                                    style={{width: 13, height: 13, tintColor: profileIconColor}}
+                                    resizeMode="contain"
+                                />
+                                <Text
+                                    style={[
+                                        tw`text-[11px]`,
+                                        {
+                                            fontFamily: fonts.body,
+                                            color: accountOpen ? "#B55941" : "rgba(228,224,212,0.72)",
+                                        },
+                                    ]}
+                                >
+                                    {headerSubtitle}
+                                </Text>
+                            </View>
                         </Pressable>
                     </View>
                     <Pressable
                         onPress={() => {
+                            haptics.selection();
                             void handleSignOut();
                         }}
                         style={({pressed}) => [
@@ -298,7 +317,7 @@ export default function App() {
                     </Pressable>
                 </View>
 
-                <View style={tw`flex-1 bg-[#0f0f0f] rounded-t-3xl overflow-hidden`}>
+                <View style={tw`relative flex-1 bg-[#0f0f0f] rounded-t-3xl overflow-hidden`}>
                     {accountOpen ? (
                         <AccountScreen
                             session={session}
@@ -333,43 +352,60 @@ export default function App() {
                         />
                     ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen/> : null}
-                </View>
-
-                <View style={tw`px-4 py-3 bg-black`}>
-                    <View style={tw`flex-row justify-between`}>
-                        {([
-                            {key: "today", label: "Home", icon: require("./public/images/home.svg")},
-                            {key: "journal", label: "Journal", icon: require("./public/images/journal.svg")},
-                            {key: "board", label: "Tasks", icon: require("./public/images/to-do-list.svg")},
-                            {key: "calendar", label: "Calendar", icon: require("./public/images/calendar.svg")},
-                            {key: "insights", label: "Insights", icon: require("./public/images/insight (1).svg")},
-                        ] as const).map((item) => {
-                            const active = !accountOpen && tab === item.key;
-                            const uri = Asset.fromModule(item.icon).uri;
-                            const iconColor = active ? "#B55941" : "#E4E0D4";
-                            const labelColor = active ? "#B55941" : "#E4E0D4";
-                            return (
-                                <Pressable
-                                    key={item.key}
-                                    onPress={() => handleTabChange(item.key)}
-                                    style={({pressed}) => [
-                                        tw`px-3 py-1 rounded-xl items-center`,
-                                        active ? {borderColor: "#B55941", borderWidth: 1} : tw`border-transparent`,
-                                        pressed && tw`bg-white/5`,
-                                    ]}
-                                >
-                                    <Text
-                                        style={[
-                                            tw`text-[11px] font-bold mb-1`,
-                                            {fontFamily: fonts.heading, color: labelColor},
-                                        ]}
-                                    >
-                                        {item.label}
-                                    </Text>
-                                    <SvgUri width={24} height={24} uri={uri} fill={iconColor} stroke={iconColor}/>
-                                </Pressable>
-                            );
-                        })}
+                    <View style={tw`absolute bottom-0 left-0 right-0 px-4 pb-3 pt-2`}>
+                        <View
+                            style={tw`overflow-hidden rounded-2xl border border-[#B55941]/33 bg-black/10 p-1`}
+                        >
+                            <BlurView
+                                intensity={72}
+                                tint="dark"
+                                style={tw`overflow-hidden rounded-2xl border border-[#B55941]/69`}
+                            >
+                                <View style={tw`flex-row justify-between bg-black/47 px-2 py-2`}>
+                                    {([
+                                        {key: "today", label: "Home", icon: require("./public/images/home.svg")},
+                                        {key: "journal", label: "Journal", icon: require("./public/images/journal.svg")},
+                                        {key: "board", label: "Tasks", icon: require("./public/images/to-do-list.svg")},
+                                        {key: "calendar", label: "Calendar", icon: require("./public/images/calendar.svg")},
+                                        {
+                                            key: "insights",
+                                            label: "Insights",
+                                            icon: require("./public/images/insight (1).svg")
+                                        },
+                                    ] as const).map((item) => {
+                                        const active = !accountOpen && tab === item.key;
+                                        const uri = Asset.fromModule(item.icon).uri;
+                                        const activeNavColor = "rgb(181 89 65)";
+                                        const iconColor = active ? activeNavColor : "#E4E0D4";
+                                        const labelColor = "#E4E0D4";
+                                        return (
+                                            <Pressable
+                                                key={item.key}
+                                                onPress={() => handleTabChange(item.key)}
+                                                style={({pressed}) => [
+                                                    tw`px-3 py-1 rounded-xl mt-1 mb-1 items-center border border-[#B55941]/19 bg-black/11`,
+                                                    active
+                                                        ? {borderColor: activeNavColor}
+                                                        : {},
+                                                    pressed && tw`bg-white/5`,
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={[
+                                                        tw`text-[11px] font-bold mb-2`,
+                                                        {fontFamily: fonts.heading, color: labelColor},
+                                                    ]}
+                                                >
+                                                    {item.label}
+                                                </Text>
+                                                <SvgUri width={24} height={24} uri={uri} fill={iconColor}
+                                                        stroke={iconColor}/>
+                                            </Pressable>
+                                        );
+                                    })}
+                                </View>
+                            </BlurView>
+                        </View>
                     </View>
                 </View>
                 <BirthdayConfetti visible={birthdayActive} triggerKey={birthdayBurstKey}/>
@@ -399,6 +435,7 @@ export default function App() {
                             <View style={tw`mt-5 flex-row gap-3`}>
                                 <Pressable
                                     onPress={() => {
+                                        haptics.selection();
                                         void handleGoalCheck(false);
                                     }}
                                     style={({pressed}) => [
@@ -450,7 +487,10 @@ export default function App() {
                             ) : null}
                             <View style={tw`mt-5`}>
                                 <Pressable
-                                    onPress={() => setGoalFeedbackVisible(false)}
+                                    onPress={() => {
+                                        haptics.selection();
+                                        setGoalFeedbackVisible(false);
+                                    }}
                                     style={({pressed}) => [
                                         tw`rounded-xl px-3 py-3`,
                                         {backgroundColor: "#B55941"},

@@ -6,6 +6,7 @@ import {Button} from "../components/ui/Button";
 import {Input} from "../components/ui/Input";
 import {fonts} from "../theme/fonts";
 import type {Profile} from "../state/useProfile";
+import {haptics} from "../lib/haptics";
 
 const MONTH_OPTIONS = [
     {value: "01", label: "Jan"},
@@ -278,6 +279,7 @@ export function AccountScreen({
                     style={tw`flex-1`}
                     contentContainerStyle={tw`px-4 pb-8 pt-4 gap-4`}
                     showsVerticalScrollIndicator={false}
+                    onScrollBeginDrag={haptics.scroll}
                 >
                     <View
                         style={tw`flex-row items-start justify-between rounded-3xl border border-[#2c2c2c] bg-black/30 p-4`}>
@@ -312,7 +314,10 @@ export function AccountScreen({
                         <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f] px-4 py-3`}>
                             <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Birthday</Text>
                             <Pressable
-                                onPress={() => setShowBirthdayPicker((current) => !current)}
+                                onPress={() => {
+                                    haptics.selection();
+                                    setShowBirthdayPicker((current) => !current);
+                                }}
                                 style={({pressed}) => [
                                     tw`mt-2 rounded-lg border border-[#2c2c2c] px-3 py-3`,
                                     pressed && tw`opacity-90`,
@@ -335,7 +340,10 @@ export function AccountScreen({
                                                 return (
                                                     <Pressable
                                                         key={option.value}
-                                                        onPress={() => setBirthdayMonth(option.value)}
+                                                        onPress={() => {
+                                                            haptics.selection();
+                                                            setBirthdayMonth(option.value);
+                                                        }}
                                                         style={({pressed}) => [
                                                             tw`px-3 py-3`,
                                                             active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
@@ -364,7 +372,10 @@ export function AccountScreen({
                                                 return (
                                                     <Pressable
                                                         key={option}
-                                                        onPress={() => setBirthdayDay(option)}
+                                                        onPress={() => {
+                                                            haptics.selection();
+                                                            setBirthdayDay(option);
+                                                        }}
                                                         style={({pressed}) => [
                                                             tw`px-3 py-3`,
                                                             active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
@@ -390,6 +401,7 @@ export function AccountScreen({
                             ) : null}
 
                             <Pressable onPress={() => {
+                                haptics.selection();
                                 setBirthdayMonth("");
                                 setBirthdayDay("");
                             }} style={({pressed}) => [tw`mt-3 self-start`, pressed && tw`opacity-80`]}>

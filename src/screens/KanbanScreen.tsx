@@ -7,6 +7,7 @@ import {TranslucentCalendar} from "../components/TranslucentCalendar";
 import {Button} from "../components/ui/Button";
 import {Input} from "../components/ui/Input";
 import type {Session} from "@supabase/supabase-js";
+import {haptics} from "../lib/haptics";
 
 interface KanbanScreenProps {
     tasksState: {
@@ -76,6 +77,7 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
         }
 
         addTask({title, description, dueDate: due ? due : null, priority, status: "todo"});
+        haptics.createNewTask();
 
         setTitle("");
         setDescription("");
@@ -86,7 +88,7 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-30`}>
             <View style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}>
-                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-6`}>
+                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-28`} onScrollBeginDrag={haptics.scroll}>
                     <View style={tw`px-2 pt-2`}>
                         <View style={tw`mt-2 gap-2 rounded-2xl border border-[#2c2c2c] bg-black/63 p-3`}>
                             <Input value={title} onChangeText={setTitle} placeholder="Task title"
@@ -102,7 +104,9 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
                                 <Button
                                     label={showCalendar ? "Hide Calendar" : "Show Calendar"}
                                     variant="secondary"
-                                    onPress={() => setShowCalendar(!showCalendar)}
+                                    onPress={() => {
+                                        setShowCalendar(!showCalendar);
+                                    }}
                                 />
                             </View>
 
@@ -111,6 +115,7 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
                                     <TranslucentCalendar
                                         markedDates={markedDates}
                                         onDayPress={(day) => {
+                                            haptics.calendarDateSelected();
                                             setDueDate(day.dateString);
                                             setFilterDate(day.dateString);
                                         }}
@@ -137,7 +142,7 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
                                 </View>
                             </ScrollView>
 
-                            <Button label="Add Task" variant="outlineAccent" onPress={handleAddTask}/>
+                            <Button label="Add Task" variant="outlineAccent" onPress={handleAddTask} hapticAction={false}/>
                         </View>
 
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`pt-3`}>

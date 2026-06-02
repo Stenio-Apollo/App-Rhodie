@@ -1,15 +1,17 @@
 import {Pressable, Text} from "react-native";
 import tw from "../../lib/tw";
 import {fonts} from "../../theme/fonts";
+import {type HapticAction, triggerHaptic} from "../../lib/haptics";
 
 interface ButtonProps {
     label: string;
     onPress: () => void;
     variant?: "primary" | "secondary" | "danger" | "outlineAccent";
     disabled?: boolean;
+    hapticAction?: HapticAction | false;
 }
 
-export function Button({label, onPress, variant = "primary", disabled = false}: ButtonProps) {
+export function Button({label, onPress, variant = "primary", disabled = false, hapticAction = "selection"}: ButtonProps) {
     const bgStyle =
         variant === "secondary"
             ? tw`bg-transparent border border-zinc-200`
@@ -26,7 +28,12 @@ export function Button({label, onPress, variant = "primary", disabled = false}: 
 
     return (
         <Pressable
-            onPress={onPress}
+            onPress={() => {
+                if (hapticAction) {
+                    triggerHaptic(hapticAction);
+                }
+                onPress();
+            }}
             disabled={disabled}
             style={({pressed}) => [
                 tw`rounded-xl px-3.5 py-2.5`,

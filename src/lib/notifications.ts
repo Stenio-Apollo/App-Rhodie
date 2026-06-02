@@ -25,7 +25,16 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
         return null;
     }
 
-    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const projectId =
+        Constants.easConfig?.projectId ??
+        (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId;
+
+    if (!projectId) {
+        console.warn("[push] Missing EAS projectId; cannot request Expo push token in production.");
+        return null;
+    }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync({projectId});
     const token = tokenData.data;
 
     if (Platform.OS === "android") {

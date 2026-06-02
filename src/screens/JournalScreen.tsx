@@ -8,6 +8,7 @@ import {Button} from "../components/ui/Button";
 import {fonts} from "../theme/fonts";
 import type {Session} from "@supabase/supabase-js";
 import {toLocalISODate} from "../lib/date-utils";
+import {haptics} from "../lib/haptics";
 
 function isoToday(): string {
     return toLocalISODate();
@@ -31,7 +32,11 @@ export function JournalScreen({session}: { session: Session | null }) {
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-39`}>
             <View style={[tw`flex-1 bg-black/47`, {paddingHorizontal: 1}]}>
-                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-3 pt-3 pb-6`}>
+                <ScrollView
+                    style={tw`flex-1`}
+                    contentContainerStyle={tw`px-3 pt-3 pb-28`}
+                    onScrollBeginDrag={haptics.scroll}
+                >
                     <View
                         style={[
                             tw`rounded-3xl bg-black/63 p-4 border flex-row gap-4 items-center, border-[#B55941]/43`,
@@ -80,8 +85,10 @@ export function JournalScreen({session}: { session: Session | null }) {
                             <Button
                                 label="Add Response"
                                 variant="primary"
+                                hapticAction={false}
                                 onPress={() => {
                                     if (promptText.trim()) {
+                                        haptics.saveJournalEntry();
                                         addEntry(promptText, selectedDate, "prompt");
                                         setPromptText("");
                                     }
@@ -116,12 +123,14 @@ export function JournalScreen({session}: { session: Session | null }) {
                             <Button
                                 label="Add Gratitude"
                                 variant="primary"
+                                hapticAction={false}
                                 onPress={() => {
                                     const items = text
                                         .split("\n")
                                         .map((s) => s.trim())
                                         .filter(Boolean);
                                     if (items.length === 0) return;
+                                    haptics.saveGratitudeEntry();
                                     const bulletText = items.slice(0, 3).map((item) => `• ${item}`).join("\n");
                                     addEntry(bulletText, selectedDate, "gratitude");
                                     setText("");
@@ -280,7 +289,10 @@ export function JournalScreen({session}: { session: Session | null }) {
                                         return (
                                             <Pressable
                                                 key={entry.id}
-                                                onPress={() => setSelectedDate(entry.date)}
+                                                onPress={() => {
+                                                    haptics.selection();
+                                                    setSelectedDate(entry.date);
+                                                }}
                                                 style={({pressed}) => [
                                                     tw`rounded-[24px] border p-4`,
                                                     {
