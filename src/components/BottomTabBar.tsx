@@ -213,7 +213,7 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
                     />
 
                     {/* Tab row */}
-                    <View onLayout={handleRowLayout} style={tw`flex-row px-2 py-2`}>
+                    <View onLayout={handleRowLayout} style={tw`flex-row px-2 py-1.5`}>
                         {/* Sliding active pill — rendered behind the tabs */}
                         {tabWidth > 0 && activeIndex >= 0 ? (
                             <Animated.View
@@ -266,21 +266,24 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
                                         onTabPress(item.key);
                                     }}
                                     style={({pressed}) => [
-                                        tw`flex-1 items-center justify-center py-1`,
+                                        tw`flex-1 items-center justify-center px-1 py-0.5`,
                                         pressed && {transform: [{scale: 0.94}], opacity: 0.85},
                                     ]}
                                 >
                                     <Text
+                                        numberOfLines={1}
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={0.75}
                                         style={[
-                                            tw`text-[11px] font-bold mb-1.5`,
+                                            tw`text-[10px] font-bold mb-1`,
                                             {fontFamily: fonts.heading, color: INACTIVE_COLOR},
                                         ]}
                                     >
                                         {item.label}
                                     </Text>
                                     <SvgUri
-                                        width={24}
-                                        height={24}
+                                        width={22}
+                                        height={22}
                                         uri={item.iconUri}
                                         fill={iconColor}
                                         stroke={iconColor}

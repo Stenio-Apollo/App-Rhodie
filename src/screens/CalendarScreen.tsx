@@ -35,6 +35,7 @@ export function CalendarScreen({
                                }: CalendarScreenProps) {
     const [selectedDate, setSelectedDate] = useState(toLocalISODate());
     const [customGoal, setCustomGoal] = useState("");
+    const [goalSaveError, setGoalSaveError] = useState<string | null>(null);
     const bg = require("../../public/images/rh211.jpg");
 
     const markedDates = useMemo(() => {
@@ -52,6 +53,15 @@ export function CalendarScreen({
     const selectedTasks = tasks.filter((task) => task.dueDate === selectedDate).sort((a, b) => a.order - b.order);
     const customGoalReady = customGoal.trim().length > 0;
     const isGoalLocked = Boolean(weeklyGoal?.achievedAt);
+
+    async function saveWeeklyGoal(payload: { text: string; presetId?: string | null }) {
+        setGoalSaveError(null);
+        try {
+            await onSaveWeeklyGoal(payload);
+        } catch (error) {
+            setGoalSaveError(error instanceof Error ? error.message : "Weekly goal could not be saved.");
+        }
+    }
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
@@ -252,7 +262,7 @@ export function CalendarScreen({
                                             if (isGoalLocked) return;
                                             haptics.selection();
                                             setCustomGoal("");
-                                            void onSaveWeeklyGoal({text: goal.title, presetId: goal.id});
+                                            void saveWeeklyGoal({text: goal.title, presetId: goal.id});
                                         }}
                                         style={({pressed}) => [
                                             tw`w-[48%] rounded-xl border px-3 py-3`,
@@ -277,6 +287,11 @@ export function CalendarScreen({
                         </View>
 
                         <View style={tw`mt-3`}>
+                            {goalSaveError ? (
+                                <Text style={[tw`mb-2 text-xs font-bold text-red-200`, {fontFamily: fonts.body}]}>
+                                    {goalSaveError}
+                                </Text>
+                            ) : null}
                             <Input
                                 value={customGoal}
                                 onChangeText={setCustomGoal}
@@ -292,7 +307,7 @@ export function CalendarScreen({
                                     haptics.selection();
                                     const text = customGoal.trim();
                                     setCustomGoal("");
-                                    void onSaveWeeklyGoal({text, presetId: null});
+                                    void saveWeeklyGoal({text, presetId: null});
                                 }}
                                 style={({pressed}) => [
                                     tw`mt-2 rounded-xl px-3 py-2.5 items-center`,

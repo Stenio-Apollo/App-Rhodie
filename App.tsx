@@ -200,12 +200,17 @@ export default function App() {
 
     async function handleGoalCheck(achieved: boolean) {
         setGoalCheckVisible(false);
-        await weeklyGoalState.recordGoalCheck(achieved);
-        if (achieved) {
-            haptics.reachStreakMilestone();
+        try {
+            await weeklyGoalState.recordGoalCheck(achieved);
+            if (achieved) {
+                haptics.reachStreakMilestone();
+            }
+            setGoalFeedbackMessage(achieved ? "keep crushing it" : "lets not forget");
+            setGoalFeedbackVisible(true);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Weekly goal could not be saved.";
+            Alert.alert("Goal sync failed", message);
         }
-        setGoalFeedbackMessage(achieved ? "keep crushing it" : "lets not forget");
-        setGoalFeedbackVisible(true);
     }
 
     if (appLoading) {
