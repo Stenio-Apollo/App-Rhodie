@@ -4,18 +4,18 @@ import {Asset} from "expo-asset";
 import {SvgUri} from "react-native-svg";
 import tw from "../lib/tw";
 import {getDailyStoicQuote} from "../lib/quotes";
-import {useJournal} from "../state/useJournal";
+import type {JournalEntry} from "../state/useJournal";
 import type {Task} from "../types";
 import {fonts} from "../theme/fonts";
-import type {Session} from "@supabase/supabase-js";
-import {useProfile} from "../state/useProfile";
+import type {Profile} from "../state/useProfile";
 import {isToday, toLocalISODate} from "../lib/date-utils";
 import type {WeeklyGoal, WeeklyGoalProgress} from "../state/useWeeklyGoal";
 import {haptics} from "../lib/haptics";
 
 interface TodayScreenProps {
     tasks: Task[];
-    session: Session | null;
+    profile: Profile | null;
+    journalByDate: Record<string, JournalEntry[]>;
     weeklyGoal: WeeklyGoal | null;
     weeklyGoalProgress: WeeklyGoalProgress;
 }
@@ -34,13 +34,11 @@ const statusLabel: Record<Task["status"], string> = {
     completed: "Done",
 };
 
-export function TodayScreen({tasks, session, weeklyGoal, weeklyGoalProgress}: TodayScreenProps) {
-    const {byDate} = useJournal(session);
-    const {profile} = useProfile(session);
+export function TodayScreen({tasks, profile, journalByDate, weeklyGoal, weeklyGoalProgress}: TodayScreenProps) {
     const today = isoToday();
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(today), [today]);
-    const todaysEntries = byDate[today] ?? [];
+    const todaysEntries = journalByDate[today] ?? [];
     const latestGratitude = [...todaysEntries].filter(e => e.category === "gratitude").slice(-1)[0];
 
     const dueToday = useMemo(

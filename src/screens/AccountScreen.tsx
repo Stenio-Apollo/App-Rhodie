@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, ImageBackground, Linking, Pressable, ScrollView, Text, View,} from "react-native";
+import {Alert, ImageBackground, Linking, ScrollView, Text, View,} from "react-native";
 import type {Session} from "@supabase/supabase-js";
 import tw from "../lib/tw";
 import {Button} from "../components/ui/Button";
@@ -7,23 +7,7 @@ import {Input} from "../components/ui/Input";
 import {fonts} from "../theme/fonts";
 import type {Profile} from "../state/useProfile";
 import {haptics} from "../lib/haptics";
-
-const MONTH_OPTIONS = [
-    {value: "01", label: "Jan"},
-    {value: "02", label: "Feb"},
-    {value: "03", label: "Mar"},
-    {value: "04", label: "Apr"},
-    {value: "05", label: "May"},
-    {value: "06", label: "Jun"},
-    {value: "07", label: "Jul"},
-    {value: "08", label: "Aug"},
-    {value: "09", label: "Sep"},
-    {value: "10", label: "Oct"},
-    {value: "11", label: "Nov"},
-    {value: "12", label: "Dec"},
-] as const;
-
-const DAY_OPTIONS = Array.from({length: 31}, (_, index) => `${index + 1}`.padStart(2, "0"));
+import {BirthdayPicker, formatBirthday, parseBirthdayParts} from "../components/BirthdayPicker";
 
 interface AccountScreenProps {
     session: Session;
@@ -54,27 +38,6 @@ interface AccountScreenProps {
     onSignOut: () => void;
     onSaveProfile: (payload: { full_name: string; birthday: string | null }) => Promise<string | null>;
     onDeleteAccount: () => Promise<string | null>;
-}
-
-function daysInMonth(month: string): number {
-    return new Date(2000, Number(month), 0).getDate();
-}
-
-function parseBirthdayParts(value: string | null | undefined) {
-    if (!value) return {month: "", day: ""};
-    const [, month = "", day = ""] = value.split("-");
-    return {month, day};
-}
-
-function formatBirthday(month: string, day: string): string | null {
-    if (!month || !day) return null;
-    return `2000-${month}-${day}`;
-}
-
-function birthdayLabel(month: string, day: string): string {
-    if (!month || !day) return "Optional birthday";
-    const monthLabel = MONTH_OPTIONS.find((option) => option.value === month)?.label ?? month;
-    return `${monthLabel} ${Number(day)}`;
 }
 
 function formatDateLabel(value: string | null | undefined): string | null {
@@ -136,7 +99,6 @@ export function AccountScreen({
     const [name, setName] = useState(profile?.full_name ?? "");
     const [birthdayMonth, setBirthdayMonth] = useState(parseBirthdayParts(profile?.birthday).month);
     const [birthdayDay, setBirthdayDay] = useState(parseBirthdayParts(profile?.birthday).day);
-    const [showBirthdayPicker, setShowBirthdayPicker] = useState(false);
     const [saveBusy, setSaveBusy] = useState(false);
     const [deleteBusy, setDeleteBusy] = useState(false);
     const [notice, setNotice] = useState<string | null>(null);
@@ -156,22 +118,6 @@ export function AccountScreen({
         setBirthdayMonth(nextBirthday.month);
         setBirthdayDay(nextBirthday.day);
     }, [profile?.birthday, profile?.full_name]);
-
-    useEffect(() => {
-        if (!birthdayMonth) {
-            if (birthdayDay) setBirthdayDay("");
-            return;
-        }
-        const maxDays = daysInMonth(birthdayMonth);
-        if (Number(birthdayDay) > maxDays) {
-            setBirthdayDay(`${maxDays}`.padStart(2, "0"));
-        }
-    }, [birthdayDay, birthdayMonth]);
-
-    const visibleDayOptions = useMemo(
-        () => (birthdayMonth ? DAY_OPTIONS.slice(0, daysInMonth(birthdayMonth)) : []),
-        [birthdayMonth],
-    );
 
     const supportEmailUrl = useMemo(() => {
         const subject = encodeURIComponent("Rhodie Support");
@@ -312,102 +258,17 @@ export function AccountScreen({
                         />
 
                         <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f] px-4 py-3`}>
-                            <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Birthday</Text>
-                            <Pressable
-                                onPress={() => {
-                                    haptics.selection();
-                                    setShowBirthdayPicker((current) => !current);
+                            <BirthdayPicker
+                                month={birthdayMonth}
+                                day={birthdayDay}
+                                onChange={({month, day}) => {
+                                    setBirthdayMonth(month);
+                                    setBirthdayDay(day);
                                 }}
-                                style={({pressed}) => [
-                                    tw`mt-2 rounded-lg border border-[#2c2c2c] px-3 py-3`,
-                                    pressed && tw`opacity-90`,
-                                ]}
-                            >
-                                <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#fbf7f3"}]}>
-                                    {birthdayLabel(birthdayMonth, birthdayDay)}
-                                </Text>
-                            </Pressable>
-
-                            {showBirthdayPicker ? (
-                                <View style={tw`mt-3 flex-row gap-3`}>
-                                    <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/20`}>
-                                        <Text
-                                            style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Month</Text>
-                                        <ScrollView style={tw`max-h-40`} nestedScrollEnabled
-                                                    showsVerticalScrollIndicator={false}>
-                                            {MONTH_OPTIONS.map((option) => {
-                                                const active = option.value === birthdayMonth;
-                                                return (
-                                                    <Pressable
-                                                        key={option.value}
-                                                        onPress={() => {
-                                                            haptics.selection();
-                                                            setBirthdayMonth(option.value);
-                                                        }}
-                                                        style={({pressed}) => [
-                                                            tw`px-3 py-3`,
-                                                            active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
-                                                            pressed && tw`opacity-90`,
-                                                        ]}
-                                                    >
-                                                        <Text style={[tw`text-sm`, {
-                                                            fontFamily: fonts.body,
-                                                            color: active ? "#fbf7f3" : "#94a3b8",
-                                                        }]}>
-                                                            {option.label}
-                                                        </Text>
-                                                    </Pressable>
-                                                );
-                                            })}
-                                        </ScrollView>
-                                    </View>
-
-                                    <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/20`}>
-                                        <Text
-                                            style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Day</Text>
-                                        <ScrollView style={tw`max-h-40`} nestedScrollEnabled
-                                                    showsVerticalScrollIndicator={false}>
-                                            {birthdayMonth ? visibleDayOptions.map((option) => {
-                                                const active = option === birthdayDay;
-                                                return (
-                                                    <Pressable
-                                                        key={option}
-                                                        onPress={() => {
-                                                            haptics.selection();
-                                                            setBirthdayDay(option);
-                                                        }}
-                                                        style={({pressed}) => [
-                                                            tw`px-3 py-3`,
-                                                            active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
-                                                            pressed && tw`opacity-90`,
-                                                        ]}
-                                                    >
-                                                        <Text style={[tw`text-sm`, {
-                                                            fontFamily: fonts.body,
-                                                            color: active ? "#fbf7f3" : "#94a3b8",
-                                                        }]}>
-                                                            {Number(option)}
-                                                        </Text>
-                                                    </Pressable>
-                                                );
-                                            }) : (
-                                                <Text
-                                                    style={[tw`px-3 py-3 text-sm text-slate-500`, {fontFamily: fonts.body}]}>Pick
-                                                    a month first</Text>
-                                            )}
-                                        </ScrollView>
-                                    </View>
-                                </View>
-                            ) : null}
-
-                            <Pressable onPress={() => {
-                                haptics.selection();
-                                setBirthdayMonth("");
-                                setBirthdayDay("");
-                            }} style={({pressed}) => [tw`mt-3 self-start`, pressed && tw`opacity-80`]}>
-                                <Text style={[tw`text-xs text-[#B55941]`, {fontFamily: fonts.button}]}>Clear
-                                    birthday</Text>
-                            </Pressable>
+                                placeholder="Optional birthday"
+                                showClear
+                                pickerBackgroundClass="bg-black/20"
+                            />
                         </View>
 
                         <View style={tw`mt-4 flex-row justify-end`}>

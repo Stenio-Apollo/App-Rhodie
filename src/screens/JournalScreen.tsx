@@ -3,10 +3,9 @@ import {ImageBackground, Pressable, ScrollView, Text, TextInput, View} from "rea
 import tw from "../lib/tw";
 import {getDailyStoicQuote} from "../lib/quotes";
 import {getDailyJournalPrompt} from "../lib/prompts";
-import {useJournal} from "../state/useJournal";
+import type {JournalState} from "../state/useJournal";
 import {Button} from "../components/ui/Button";
 import {fonts} from "../theme/fonts";
-import type {Session} from "@supabase/supabase-js";
 import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
 
@@ -14,8 +13,12 @@ function isoToday(): string {
     return toLocalISODate();
 }
 
-export function JournalScreen({session}: { session: Session | null }) {
-    const {entries, byDate, addEntry, deleteEntry, editEntry} = useJournal(session);
+interface JournalScreenProps {
+    journal: JournalState;
+}
+
+export function JournalScreen({journal}: JournalScreenProps) {
+    const {entries, byDate, addEntry, deleteEntry, editEntry} = journal;
     const [selectedDate, setSelectedDate] = useState<string>(isoToday());
     const [text, setText] = useState("");
     const [promptText, setPromptText] = useState("");

@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {supabase} from "../lib/supabase";
 import type {Session} from "@supabase/supabase-js";
 import {toLocalISODate} from "../lib/date-utils";
+import {createId} from "../lib/id";
 
 const STORAGE_PREFIX = "rhnative.journal.v2";
 const LEGACY_STORAGE_KEY = "rhnative.journal.v1";
@@ -18,14 +19,6 @@ export interface JournalEntry {
 function normalizeJournalCategory(category: string | undefined): JournalEntry["category"] {
     if (category === "gratitude") return "gratitude";
     return "prompt";
-}
-
-function createEntryId(): string {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
-        const random = (Math.random() * 16) | 0;
-        const value = character === "x" ? random : (random & 0x3) | 0x8;
-        return value.toString(16);
-    });
 }
 
 function storageKey(userId: string | null | undefined): string {
@@ -46,7 +39,7 @@ function parseJournalEntries(raw: string | null): JournalEntry[] {
                 const createdAt =
                     typeof entry.createdAt === "string" && entry.createdAt ? entry.createdAt : new Date().toISOString();
                 return {
-                    id: typeof entry.id === "string" && entry.id ? entry.id : createEntryId(),
+                    id: typeof entry.id === "string" && entry.id ? entry.id : createId(),
                     date,
                     text: typeof entry.text === "string" ? entry.text : "",
                     createdAt,
@@ -65,6 +58,8 @@ export async function clearJournalStorage(userId?: string | null): Promise<void>
         AsyncStorage.removeItem(LEGACY_STORAGE_KEY),
     ]);
 }
+
+export type JournalState = ReturnType<typeof useJournal>;
 
 export function useJournal(session: Session | null = null) {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -104,7 +99,7 @@ export function useJournal(session: Session | null = null) {
             ]);
             const scopedLocalEntries = parseJournalEntries(scopedRaw);
             const migratedLegacyEntries = scopedLocalEntries.length === 0
-                ? parseJournalEntries(legacyRaw).map((entry) => ({...entry, id: createEntryId()}))
+                ? parseJournalEntries(legacyRaw).map((entry) => ({...entry, id: createId()}))
                 : [];
             const localEntries: JournalEntry[] = [...scopedLocalEntries, ...migratedLegacyEntries];
 
@@ -176,7 +171,7 @@ export function useJournal(session: Session | null = null) {
             if (!trimmed) return;
 
             const entry: JournalEntry = {
-                id: createEntryId(),
+                id: createId(),
                 date,
                 text: trimmed,
                 createdAt: new Date().toISOString(),

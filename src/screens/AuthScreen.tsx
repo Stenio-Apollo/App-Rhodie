@@ -3,42 +3,19 @@ import {ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, Sc
 import {Input} from "../components/ui/Input";
 import {fonts} from "../theme/fonts";
 import tw from "../lib/tw";
-import {useSupabaseAuth} from "../state/useSupabaseAuth";
+import type {SupabaseAuthState} from "../state/useSupabaseAuth";
 import {supabase} from "../lib/supabase";
 import {haptics} from "../lib/haptics";
+import {BirthdayPicker, formatBirthday} from "../components/BirthdayPicker";
 
-const MONTH_OPTIONS = [
-    {value: "01", label: "Jan"},
-    {value: "02", label: "Feb"},
-    {value: "03", label: "Mar"},
-    {value: "04", label: "Apr"},
-    {value: "05", label: "May"},
-    {value: "06", label: "Jun"},
-    {value: "07", label: "Jul"},
-    {value: "08", label: "Aug"},
-    {value: "09", label: "Sep"},
-    {value: "10", label: "Oct"},
-    {value: "11", label: "Nov"},
-    {value: "12", label: "Dec"},
-] as const;
-
-const DAY_OPTIONS = Array.from({length: 31}, (_, index) => `${index + 1}`.padStart(2, "0"));
 type AuthMode = "signIn" | "create";
 type AuthMethod = "code" | "password";
 
-function daysInMonth(month: string): number {
-    return new Date(2000, Number(month), 0).getDate();
-}
-
-function formatBirthday(month: string, day: string): string | null {
-    if (!month || !day) return null;
-    return `2000-${month}-${day}`;
-}
-
-function birthdayLabel(month: string, day: string): string {
-    if (!month || !day) return "Select birthday";
-    const monthLabel = MONTH_OPTIONS.find((option) => option.value === month)?.label ?? month;
-    return `${monthLabel} ${Number(day)}`;
+interface AuthScreenProps {
+    signInMagicLink: SupabaseAuthState["signInMagicLink"];
+    verifyEmailOtp: SupabaseAuthState["verifyEmailOtp"];
+    signInWithPassword: SupabaseAuthState["signInWithPassword"];
+    signUpWithPassword: SupabaseAuthState["signUpWithPassword"];
 }
 
 function normalizeIdentifierToEmail(raw: string): string {
@@ -48,8 +25,12 @@ function normalizeIdentifierToEmail(raw: string): string {
     return `${trimmed}@rhodie.pro`;
 }
 
-export function AuthScreen() {
-    const {signInMagicLink, verifyEmailOtp, signInWithPassword, signUpWithPassword} = useSupabaseAuth();
+export function AuthScreen({
+                               signInMagicLink,
+                               verifyEmailOtp,
+                               signInWithPassword,
+                               signUpWithPassword,
+                           }: AuthScreenProps) {
     const [mode, setMode] = useState<AuthMode>("signIn");
     const [method, setMethod] = useState<AuthMethod>("code");
     const [email, setEmail] = useState("");
@@ -58,7 +39,6 @@ export function AuthScreen() {
     const [name, setName] = useState("");
     const [birthdayMonth, setBirthdayMonth] = useState("");
     const [birthdayDay, setBirthdayDay] = useState("");
-    const [showBirthdayPicker, setShowBirthdayPicker] = useState(false);
     const [code, setCode] = useState("");
     const [sent, setSent] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
@@ -66,19 +46,6 @@ export function AuthScreen() {
     const [loading, setLoading] = useState(false);
     const [keyboardInset, setKeyboardInset] = useState(0);
     const bg = require("../../public/images/rh13.jpg");
-
-    useEffect(() => {
-        if (!birthdayMonth) {
-            if (birthdayDay) {
-                setBirthdayDay("");
-            }
-            return;
-        }
-        const maxDays = daysInMonth(birthdayMonth);
-        if (Number(birthdayDay) > maxDays) {
-            setBirthdayDay(`${maxDays}`.padStart(2, "0"));
-        }
-    }, [birthdayDay, birthdayMonth]);
 
     useEffect(() => {
         const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -98,7 +65,6 @@ export function AuthScreen() {
     }, []);
 
     const birthday = formatBirthday(birthdayMonth, birthdayDay);
-    const visibleDayOptions = birthdayMonth ? DAY_OPTIONS.slice(0, daysInMonth(birthdayMonth)) : [];
     const title = mode === "signIn" ? "Sign in" : "Create account";
     const subtitle = mode === "signIn"
         ? method === "code"
@@ -358,76 +324,15 @@ export function AuthScreen() {
                                 style={tw`mt-4 px-4 py-3`}
                             />
                             <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/70 px-4 py-3`}>
-                                <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Birthday</Text>
-                                <Pressable
-                                    onPress={() => {
-                                        haptics.selection();
-                                        setShowBirthdayPicker((current) => !current);
+                                <BirthdayPicker
+                                    month={birthdayMonth}
+                                    day={birthdayDay}
+                                    onChange={({month, day}) => {
+                                        setBirthdayMonth(month);
+                                        setBirthdayDay(day);
                                     }}
-                                    style={({pressed}) => [tw`mt-2 rounded-lg border border-[#2c2c2c] px-3 py-3`, pressed && tw`opacity-90`]}
-                                >
-                                    <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#fbf7f3"}]}>
-                                        {birthdayLabel(birthdayMonth, birthdayDay)}
-                                    </Text>
-                                </Pressable>
-                                {showBirthdayPicker ? (
-                                    <View style={tw`mt-3 flex-row gap-3`}>
-                                        <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/70`}>
-                                            <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Month</Text>
-                                            <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                                {MONTH_OPTIONS.map((option) => {
-                                                    const active = option.value === birthdayMonth;
-                                                    return (
-                                                        <Pressable
-                                                            key={option.value}
-                                                            onPress={() => {
-                                                                haptics.selection();
-                                                                setBirthdayMonth(option.value);
-                                                            }}
-                                                            style={({pressed}) => [
-                                                                tw`px-3 py-3`,
-                                                                active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
-                                                                pressed && tw`opacity-90`,
-                                                            ]}
-                                                        >
-                                                            <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: active ? "#fbf7f3" : "#94a3b8"}]}>
-                                                                {option.label}
-                                                            </Text>
-                                                        </Pressable>
-                                                    );
-                                                })}
-                                            </ScrollView>
-                                        </View>
-                                        <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] bg-black/70`}>
-                                            <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>Day</Text>
-                                            <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                                {birthdayMonth ? visibleDayOptions.map((option) => {
-                                                    const active = option === birthdayDay;
-                                                    return (
-                                                        <Pressable
-                                                            key={option}
-                                                            onPress={() => {
-                                                                haptics.selection();
-                                                                setBirthdayDay(option);
-                                                            }}
-                                                            style={({pressed}) => [
-                                                                tw`px-3 py-3`,
-                                                                active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
-                                                                pressed && tw`opacity-90`,
-                                                            ]}
-                                                        >
-                                                            <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: active ? "#fbf7f3" : "#94a3b8"}]}>
-                                                                {Number(option)}
-                                                            </Text>
-                                                        </Pressable>
-                                                    );
-                                                }) : (
-                                                    <Text style={[tw`px-3 py-3 text-sm text-slate-500`, {fontFamily: fonts.body}]}>Pick a month first</Text>
-                                                )}
-                                            </ScrollView>
-                                        </View>
-                                    </View>
-                                ) : null}
+                                    pickerBackgroundClass="bg-black/70"
+                                />
                             </View>
                         </>
                     ) : null}

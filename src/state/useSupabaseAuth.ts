@@ -30,6 +30,8 @@ async function getDeleteAccountErrorMessage(error: unknown): Promise<string> {
     return "Something went wrong while deleting the account.";
 }
 
+export type SupabaseAuthState = ReturnType<typeof useSupabaseAuth>;
+
 export function useSupabaseAuth() {
     const [session, setSession] = useState<Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"]>(null);
     const [loading, setLoading] = useState(true);

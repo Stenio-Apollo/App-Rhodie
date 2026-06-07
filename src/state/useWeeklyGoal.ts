@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {toLocalISODate} from "../lib/date-utils";
 
 export type WeeklyGoal = {
     text: string;
@@ -48,19 +49,12 @@ export const WEEKLY_GOAL_PRESETS: WeeklyGoalPreset[] = [
 const GOAL_STORAGE_PREFIX = "rhnative.weeklyGoal.v1";
 const PROGRESS_STORAGE_PREFIX = "rhnative.weeklyGoal.progress.v1";
 
-function formatLocalISODate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-}
-
 export function getCurrentWeekStartDate(date = new Date()): string {
     const start = new Date(date);
     const day = start.getDay();
     start.setDate(start.getDate() - day);
     start.setHours(0, 0, 0, 0);
-    return formatLocalISODate(start);
+    return toLocalISODate(start);
 }
 
 function goalStorageKey(userId: string | null | undefined): string {

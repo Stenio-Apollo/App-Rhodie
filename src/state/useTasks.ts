@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Alert, AppState, Platform, type AppStateStatus} from "react-native";
 import * as AuthSession from "expo-auth-session";
 import * as Google from "expo-auth-session/providers/google";
@@ -86,6 +86,11 @@ function googleTaskId(eventId: string): string {
 export function useTasks(session: Session | null) {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const tasksRef = useRef<Task[]>([]);
+
+    useEffect(() => {
+        tasksRef.current = tasks;
+    }, [tasks]);
 
     const googleConfig = (Constants.expoConfig?.extra as {
         googleOAuthClientId?: string;
@@ -514,7 +519,8 @@ export function useTasks(session: Session | null) {
             status?: TaskStatus;
         }) => {
             const status = payload.status ?? "todo";
-            const order = tasksForStatus(tasks, status).length;
+            const currentTasks = tasksRef.current;
+            const order = tasksForStatus(currentTasks, status).length;
 
             const nextTask: Task = {
                 id: createTaskId(),
@@ -530,9 +536,7 @@ export function useTasks(session: Session | null) {
                 externalUpdatedAt: null,
             };
 
-            const nextTasks = [...tasks, nextTask];
-            setTasks(nextTasks);
-            void saveTasks(nextTasks, session?.user.id);
+            setTasks((prev) => [...prev, nextTask]);
 
             if (session) {
                 const {error} = await supabase.from("tasks").insert({
@@ -555,60 +559,46 @@ export function useTasks(session: Session | null) {
                 }
             }
         },
-        [tasks, session],
+        [session],
     );
 
     const deleteTask = useCallback(
         async (taskId: string) => {
-            const target = tasks.find((task) => task.id === taskId);
-            const current = tasks.find((task) => task.id === taskId);
+            const currentTasks = tasksRef.current;
+            const current = currentTasks.find((task) => task.id === taskId);
             if (!current) return;
 
-            const without = tasks.filter((task) => task.id !== taskId);
-            const statusTasks = tasksForStatus(without, current.status).map((task, order) => ({
+            const without = currentTasks.filter((task) => task.id !== taskId);
+            const reordered = tasksForStatus(without, current.status).map((task, order) => ({
                 ...task,
                 order,
             }));
 
             const nextTasks = [
                 ...without.filter((task) => task.status !== current.status),
-                ...statusTasks,
+                ...reordered,
             ];
 
             setTasks(nextTasks);
-            void saveTasks(nextTasks, session?.user.id);
 
             if (session) {
                 await supabase.from("tasks").delete().eq("id", taskId).eq("user_id", session.user.id);
-                if (target) {
-                    const next = tasks
-                        .filter((task) => task.id !== taskId)
-                        .map((task) => ({...task}));
-                    const reordered = tasksForStatus(next, target.status).map((task, order) => ({
-                        ...task,
-                        order,
-                    }));
-                    const nextTasks = [
-                        ...next.filter((task) => task.status !== target.status),
-                        ...reordered,
-                    ];
-                    await syncTaskOrdering(
-                        session.user.id,
-                        nextTasks,
-                        reordered.map((task) => task.id),
-                    );
-                }
+                await syncTaskOrdering(
+                    session.user.id,
+                    nextTasks,
+                    reordered.map((task) => task.id),
+                );
             }
         },
-        [session, syncTaskOrdering, tasks],
+        [session, syncTaskOrdering],
     );
 
     const move = useCallback(
         async (taskId: string, toStatus: TaskStatus, toIndex: number) => {
-            const moving = tasks.find((task) => task.id === taskId);
-            const next = moveTask(tasks, taskId, toStatus, toIndex);
+            const currentTasks = tasksRef.current;
+            const moving = currentTasks.find((task) => task.id === taskId);
+            const next = moveTask(currentTasks, taskId, toStatus, toIndex);
             setTasks(next);
-            void saveTasks(next, session?.user.id);
 
             if (session && moving) {
                 const affectedIds = [
@@ -618,7 +608,7 @@ export function useTasks(session: Session | null) {
                 await syncTaskOrdering(session.user.id, next, affectedIds);
             }
         },
-        [tasks, session, syncTaskOrdering],
+        [session, syncTaskOrdering],
     );
 
     const connectGoogleCalendar = useCallback(async () => {

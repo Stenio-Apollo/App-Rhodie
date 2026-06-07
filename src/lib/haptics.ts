@@ -18,9 +18,8 @@ export type HapticAction =
     | "scroll";
 
 function runHaptic(effect: () => Promise<void>) {
-    void effect().catch(() => {
-        // Haptics can be unavailable in some simulator/dev-client states.
-    });
+    // Haptics can be unavailable in some simulator/dev-client states.
+    effect().catch(() => {});
 }
 
 function successHaptic() {
