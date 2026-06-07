@@ -30,6 +30,7 @@ import {AppHeader} from "./src/components/AppHeader";
 import {BottomTabBar, type Tab} from "./src/components/BottomTabBar";
 import {GoalCheckModal} from "./src/components/GoalCheckModal";
 import {GoalFeedbackModal} from "./src/components/GoalFeedbackModal";
+import {UpdateAvailableBanner} from "./src/components/UpdateAvailableBanner";
 
 export default function App() {
     const [tab, setTab] = useState<Tab>("today");
@@ -275,6 +276,8 @@ export default function App() {
                         void handleSignOut();
                     }}
                 />
+
+                <UpdateAvailableBanner/>
 
                 <View style={tw`relative flex-1 bg-[#0f0f0f] rounded-t-3xl overflow-hidden`}>
                     {accountOpen ? (

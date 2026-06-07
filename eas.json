@@ -7,11 +7,13 @@
     "development": {
       "environment": "development",
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "development"
     },
     "preview": {
       "environment": "preview",
       "distribution": "internal",
+      "channel": "preview",
       "android": {
         "buildType": "apk"
       }
@@ -19,6 +21,7 @@
     "production": {
       "environment": "production",
       "autoIncrement": true,
+      "channel": "production",
       "ios": {
         "image": "latest"
       }
@@ -32,6 +35,17 @@
         "ascApiKeyId": "56NV3Q5Y7B",
         "ascApiKeyIssuerId": "d93370ef-cc03-4a72-8576-c7f8682d58d3"
       }
+    }
+  },
+  "update": {
+    "production": {
+      "channel": "production"
+    },
+    "preview": {
+      "channel": "preview"
+    },
+    "development": {
+      "channel": "development"
     }
   }
 }

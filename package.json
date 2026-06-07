@@ -28,6 +28,7 @@
     "expo-linear-gradient": "~14.0.2",
     "expo-notifications": "~0.29.14",
     "expo-status-bar": "~2.0.1",
+    "expo-updates": "~0.27.5",
     "expo-video": "~2.0.6",
     "expo-web-browser": "~14.0.2",
     "react": "18.3.1",
