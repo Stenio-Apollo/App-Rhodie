@@ -236,6 +236,7 @@ export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRe
                     title: eventTitle(event),
                     description: (event.description ?? "").slice(0, 1000),
                     due_date: eventDate(event),
+                    due_time: null,
                     source: "google_calendar",
                     external_id: event.id,
                     external_updated_at: event.updated ?? null,

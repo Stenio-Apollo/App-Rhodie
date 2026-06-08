@@ -1,5 +1,6 @@
 .git
 .expo
+.expo/**
 .expo-shared
 .idea
 .DS_Store
@@ -19,3 +20,11 @@ out
 .legacy_backup_20260215-211244
 .expo-export-check
 clerk-expo
+
+# Local iOS build artifacts. EAS installs pods/builds remotely.
+ios/Pods
+ios/build
+ios/Podfile.lock
+ios/*.xcworkspace
+ios/Rhodie.xcworkspace
+ios/Rhodie/PrivacyInfo.xcprivacy

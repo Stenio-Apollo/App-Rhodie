@@ -1,27 +1,31 @@
-import {useEffect, useRef, useState} from "react";
+import {type ComponentProps, useEffect, useRef, useState} from "react";
 import {Animated, Easing, type LayoutChangeEvent, Pressable, StyleSheet, Text, View} from "react-native";
-import {Asset} from "expo-asset";
+import {Ionicons} from "@expo/vector-icons";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
-import {SvgUri} from "react-native-svg";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 
-export type Tab = "today" | "journal" | "board" | "calendar" | "insights";
+export type Tab = "today" | "journal" | "board" | "plan" | "calendar" | "insights";
 
-const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; iconUri: string }> = [
-    {key: "today", label: "Home", iconUri: Asset.fromModule(require("../../public/images/home.svg")).uri},
-    {key: "journal", label: "Journal", iconUri: Asset.fromModule(require("../../public/images/journal.svg")).uri},
-    {key: "board", label: "Tasks", iconUri: Asset.fromModule(require("../../public/images/to-do-list.svg")).uri},
-    {key: "calendar", label: "Calendar", iconUri: Asset.fromModule(require("../../public/images/calendar.svg")).uri},
-    {key: "insights", label: "Insights", iconUri: Asset.fromModule(require("../../public/images/insight (1).svg")).uri},
+type TabIconName = ComponentProps<typeof Ionicons>["name"];
+
+const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; activeIcon: TabIconName }> = [
+    {key: "today", label: "Home", icon: "home-outline", activeIcon: "home"},
+    {key: "plan", label: "Plan", icon: "time-outline", activeIcon: "time"},
+    {key: "journal", label: "Journal", icon: "book-outline", activeIcon: "book"},
+    {key: "board", label: "Tasks", icon: "checkbox-outline", activeIcon: "checkbox"},
+    {key: "calendar", label: "Calendar", icon: "calendar-outline", activeIcon: "calendar"},
+    {key: "insights", label: "Insights", icon: "bar-chart-outline", activeIcon: "bar-chart"},
 ];
 
 const ACTIVE_NAV_COLOR = "#B55941";
 const INACTIVE_COLOR = "#E4E0D4";
-const ROW_HORIZONTAL_PADDING = 8;
-const PILL_HORIZONTAL_INSET = 4;
-const PILL_VERTICAL_INSET = 4;
+const ROW_HORIZONTAL_PADDING = 3;
+const PILL_HORIZONTAL_INSET = 3;
+const PILL_VERTICAL_INSET = 3;
+const BAR_VERTICAL_OFFSET = 33;
 
 interface BottomTabBarProps {
     activeTab: Tab;
@@ -30,6 +34,7 @@ interface BottomTabBarProps {
 }
 
 export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarProps) {
+    const insets = useSafeAreaInsets();
     const [rowWidth, setRowWidth] = useState(0);
     const tabCount = TAB_ITEMS.length;
     const activeIndex = accountOpen ? -1 : TAB_ITEMS.findIndex((item) => item.key === activeTab);
@@ -51,19 +56,19 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
         Animated.sequence([
             Animated.parallel([
                 Animated.timing(barScaleX, {
-                    toValue: 1.003,
+                    toValue: 1.006,
                     duration: 110,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
                 }),
                 Animated.timing(barScaleY, {
-                    toValue: 1.008,
+                    toValue: 1.012,
                     duration: 110,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
                 }),
                 Animated.timing(barTranslateY, {
-                    toValue: -1,
+                    toValue: -2,
                     duration: 110,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
@@ -116,13 +121,13 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
         Animated.sequence([
             Animated.parallel([
                 Animated.timing(pillScaleX, {
-                    toValue: 1.14,
+                    toValue: 1.18,
                     duration: 130,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
                 }),
                 Animated.timing(pillScaleY, {
-                    toValue: 0.9,
+                    toValue: 0.88,
                     duration: 130,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
@@ -148,18 +153,18 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
 
         // Ripple ring emanates from the destination once the pill is close to settled.
         rippleScale.setValue(0.65);
-        rippleOpacity.setValue(0.55);
+        rippleOpacity.setValue(0.62);
         Animated.parallel([
             Animated.timing(rippleScale, {
-                toValue: 1.55,
-                duration: 520,
+                toValue: 1.68,
+                duration: 560,
                 delay: 140,
                 easing: Easing.out(Easing.cubic),
                 useNativeDriver: true,
             }),
             Animated.timing(rippleOpacity, {
                 toValue: 0,
-                duration: 520,
+                duration: 560,
                 delay: 140,
                 easing: Easing.out(Easing.quad),
                 useNativeDriver: true,
@@ -173,10 +178,18 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
     }
 
     return (
-        <View style={tw`absolute bottom-0 left-0 right-0 px-4 pb-3 pt-2`}>
+        <View
+            style={[
+                tw`absolute bottom-0 left-0 right-0 px-4 pt-2`,
+                {
+                    paddingBottom: Math.max(12, insets.bottom + 8),
+                    transform: [{translateY: BAR_VERTICAL_OFFSET}],
+                },
+            ]}
+        >
             <Animated.View
                 style={[
-                    tw`overflow-hidden rounded-full border border-[#B55941]/33 bg-black/10 p-1`,
+                    tw`overflow-hidden rounded-full border border-[#B55941]/23 bg-black/10 p-1`,
                     {
                         transform: [
                             {translateY: barTranslateY},
@@ -213,7 +226,7 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
                     />
 
                     {/* Tab row */}
-                    <View onLayout={handleRowLayout} style={tw`flex-row px-2 py-1.5`}>
+                    <View onLayout={handleRowLayout} style={[tw`flex-row px-2 py-1.5`, {paddingVertical: 10}]}>
                         {/* Sliding active pill — rendered behind the tabs */}
                         {tabWidth > 0 && activeIndex >= 0 ? (
                             <Animated.View
@@ -258,6 +271,7 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
                         {TAB_ITEMS.map((item) => {
                             const active = !accountOpen && activeTab === item.key;
                             const iconColor = active ? ACTIVE_NAV_COLOR : INACTIVE_COLOR;
+                            const iconName = active ? item.activeIcon : item.icon;
                             return (
                                 <Pressable
                                     key={item.key}
@@ -281,12 +295,10 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
                                     >
                                         {item.label}
                                     </Text>
-                                    <SvgUri
-                                        width={22}
-                                        height={22}
-                                        uri={item.iconUri}
-                                        fill={iconColor}
-                                        stroke={iconColor}
+                                    <Ionicons
+                                        name={iconName}
+                                        size={22}
+                                        color={iconColor}
                                     />
                                 </Pressable>
                             );

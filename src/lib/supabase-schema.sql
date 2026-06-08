@@ -20,6 +20,7 @@ create table if not exists public.tasks (
   title text not null,
   description text,
   due_date date,
+  due_time time,
   status text not null check (status in ('todo','completed')),
   priority text not null check (priority in ('low','medium','high')),
   "order" int not null default 0,
@@ -35,8 +36,10 @@ alter table public.tasks
 alter table public.tasks add column if not exists source text not null default 'manual';
 alter table public.tasks add column if not exists external_id text;
 alter table public.tasks add column if not exists external_updated_at timestamptz;
+alter table public.tasks add column if not exists due_time time;
 create index if not exists tasks_user_status_order_idx on public.tasks (user_id, status, "order");
 create index if not exists tasks_user_due_date_idx on public.tasks (user_id, due_date);
+create index if not exists tasks_user_due_date_time_idx on public.tasks (user_id, due_date, due_time);
 create index if not exists tasks_user_source_external_idx on public.tasks (user_id, source, external_id);
 create unique index if not exists tasks_google_external_unique on public.tasks (user_id, source, external_id) where external_id is not null;
 

@@ -26,7 +26,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rhnative.app",
-      "buildNumber": "65",
+      "buildNumber": "71",
       "infoPlist": {
         "CFBundleDisplayName": "Rhodie",
         "NSUserNotificationUsageDescription": "We use notifications to remind you about tasks and journal prompts.",

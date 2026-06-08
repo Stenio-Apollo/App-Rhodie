@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from "react";
 import {Alert, AppState, Platform, SafeAreaView, View} from "react-native";
+import {SafeAreaProvider} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
 import {CalendarScreen} from "./src/screens/CalendarScreen";
 import {KanbanScreen} from "./src/screens/KanbanScreen";
@@ -31,11 +32,26 @@ import {BottomTabBar, type Tab} from "./src/components/BottomTabBar";
 import {GoalCheckModal} from "./src/components/GoalCheckModal";
 import {GoalFeedbackModal} from "./src/components/GoalFeedbackModal";
 import {UpdateAvailableBanner} from "./src/components/UpdateAvailableBanner";
+import {DayPlanScreen} from "./src/screens/DayPlanScreen";
+import {usePlannerEvents} from "./src/state/usePlannerEvents";
+
+type HomeAction =
+    | { key: number; target: "journalPrompt"; entryId: string | null }
+    | { key: number; target: "gratitude"; entryId: string | null }
+    | { key: number; target: "weeklyGoal" }
+    | { key: number; target: "tasks" };
+
+type HomeActionInput =
+    | { target: "journalPrompt"; entryId: string | null }
+    | { target: "gratitude"; entryId: string | null }
+    | { target: "weeklyGoal" }
+    | { target: "tasks" };
 
 export default function App() {
     const [tab, setTab] = useState<Tab>("today");
     const [accountOpen, setAccountOpen] = useState(false);
     const [subscriptionOfferOpen, setSubscriptionOfferOpen] = useState(false);
+    const [homeAction, setHomeAction] = useState<HomeAction | null>(null);
     const [goalCheckVisible, setGoalCheckVisible] = useState(false);
     const [goalFeedbackVisible, setGoalFeedbackVisible] = useState(false);
     const [goalFeedbackMessage, setGoalFeedbackMessage] = useState("");
@@ -59,6 +75,7 @@ export default function App() {
     const tasksState = useTasks(session);
     const weeklyGoalState = useWeeklyGoal(session?.user.id);
     const journalState = useJournal(session);
+    const plannerState = usePlannerEvents(session);
     const [fontsLoaded] = useAppFonts();
     const birthdayActive = Boolean(profile?.birthday && isToday(profile.birthday));
     const appLoading = !fontsLoaded ||
@@ -171,6 +188,30 @@ export default function App() {
         setTab(nextTab);
     }
 
+    function openHomeAction(action: HomeActionInput) {
+        haptics.navigation();
+        setAccountOpen(false);
+        const key = Date.now();
+
+        if (action.target === "gratitude" || action.target === "journalPrompt") {
+            setHomeAction({key, target: action.target, entryId: action.entryId});
+        } else {
+            setHomeAction({key, target: action.target});
+        }
+
+        if (action.target === "weeklyGoal") {
+            setTab("calendar");
+            return;
+        }
+
+        if (action.target === "tasks") {
+            setTab("board");
+            return;
+        }
+
+        setTab("journal");
+    }
+
     async function handleSignOut() {
         setAccountOpen(false);
         setSubscriptionOfferOpen(false);
@@ -268,9 +309,10 @@ export default function App() {
     }
 
     return (
-        <GradientBackground>
-            <SafeAreaView style={tw`bg-black flex-1`}>
-                <StatusBar style="light"/>
+        <SafeAreaProvider>
+            <GradientBackground>
+                <SafeAreaView style={tw`bg-black flex-1`}>
+                    <StatusBar style="light"/>
 
                 <AppHeader
                     fullName={profile?.full_name}
@@ -306,10 +348,32 @@ export default function App() {
                             journalByDate={journalState.byDate}
                             weeklyGoal={weeklyGoalState.goal}
                             weeklyGoalProgress={weeklyGoalState.progress}
+                            onOpenJournalPrompt={(entryId) => openHomeAction({target: "journalPrompt", entryId})}
+                            onOpenWeeklyGoal={() => openHomeAction({target: "weeklyGoal"})}
+                            onOpenGratitude={(entryId) => openHomeAction({target: "gratitude", entryId})}
+                            onOpenTasks={() => openHomeAction({target: "tasks"})}
                         />
                     ) : null}
-                    {!accountOpen && tab === "journal" ? <JournalScreen journal={journalState}/> : null}
-                    {!accountOpen && tab === "board" ? <KanbanScreen tasksState={tasksState} session={session}/> : null}
+                    {!accountOpen && tab === "plan" ? <DayPlanScreen planner={plannerState}/> : null}
+                    {!accountOpen && tab === "journal" ? (
+                        <JournalScreen
+                            journal={journalState}
+                            homeAction={
+                                homeAction?.target === "journalPrompt"
+                                    ? {key: homeAction.key, target: "prompt", entryId: homeAction.entryId}
+                                    : homeAction?.target === "gratitude"
+                                        ? {key: homeAction.key, target: "gratitude", entryId: homeAction.entryId}
+                                        : null
+                            }
+                        />
+                    ) : null}
+                    {!accountOpen && tab === "board" ? (
+                        <KanbanScreen
+                            tasksState={tasksState}
+                            session={session}
+                            focusTaskFormKey={homeAction?.target === "tasks" ? homeAction.key : undefined}
+                        />
+                    ) : null}
                     {!accountOpen && tab === "calendar" ? (
                         <CalendarScreen
                             tasks={tasksState.tasks}
@@ -317,6 +381,7 @@ export default function App() {
                             weeklyGoal={weeklyGoalState.goal}
                             weeklyGoalPresets={weeklyGoalState.presets}
                             onSaveWeeklyGoal={weeklyGoalState.saveGoal}
+                            focusWeeklyGoalKey={homeAction?.target === "weeklyGoal" ? homeAction.key : undefined}
                         />
                     ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen/> : null}
@@ -337,7 +402,8 @@ export default function App() {
                     goal={weeklyGoalState.goal}
                     onContinue={() => setGoalFeedbackVisible(false)}
                 />
-            </SafeAreaView>
-        </GradientBackground>
+                </SafeAreaView>
+            </GradientBackground>
+        </SafeAreaProvider>
     );
 }

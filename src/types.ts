@@ -8,6 +8,7 @@ export interface Task {
   title: string;
   description: string;
   dueDate: string | null;
+  dueTime: string | null;
   priority: TaskPriority;
   status: TaskStatus;
   order: number;

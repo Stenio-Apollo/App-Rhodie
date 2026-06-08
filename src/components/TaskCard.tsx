@@ -43,7 +43,9 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                     <Badge label={task.priority.toUpperCase()}/>
                     {task.dueDate ?
                         <Text
-                            style={[tw`text-xs font-semibold text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>Due {task.dueDate}</Text> : null}
+                            style={[tw`text-xs font-semibold text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>
+                            Due {task.dueDate}{task.dueTime ? ` ${task.dueTime}` : ""}
+                        </Text> : null}
                 </View>
 
                 <View style={tw`mt-2.5 flex-row items-center justify-between gap-2`}>

@@ -1,5 +1,5 @@
 import {useMemo} from "react";
-import {Image, ImageBackground, ScrollView, Text, View} from "react-native";
+import {Image, ImageBackground, Pressable, ScrollView, Text, View} from "react-native";
 import {Asset} from "expo-asset";
 import {SvgUri} from "react-native-svg";
 import tw from "../lib/tw";
@@ -18,6 +18,10 @@ interface TodayScreenProps {
     journalByDate: Record<string, JournalEntry[]>;
     weeklyGoal: WeeklyGoal | null;
     weeklyGoalProgress: WeeklyGoalProgress;
+    onOpenJournalPrompt: (entryId: string | null) => void;
+    onOpenWeeklyGoal: () => void;
+    onOpenGratitude: (entryId: string | null) => void;
+    onOpenTasks: () => void;
 }
 
 function isoToday(): string {
@@ -34,12 +38,23 @@ const statusLabel: Record<Task["status"], string> = {
     completed: "Done",
 };
 
-export function TodayScreen({tasks, profile, journalByDate, weeklyGoal, weeklyGoalProgress}: TodayScreenProps) {
+export function TodayScreen({
+                                tasks,
+                                profile,
+                                journalByDate,
+                                weeklyGoal,
+                                weeklyGoalProgress,
+                                onOpenJournalPrompt,
+                                onOpenWeeklyGoal,
+                                onOpenGratitude,
+                                onOpenTasks,
+                            }: TodayScreenProps) {
     const today = isoToday();
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(today), [today]);
     const todaysEntries = journalByDate[today] ?? [];
     const latestGratitude = [...todaysEntries].filter(e => e.category === "gratitude").slice(-1)[0];
+    const latestPrompt = [...todaysEntries].filter(e => e.category === "prompt").slice(-1)[0];
 
     const dueToday = useMemo(
         () =>
@@ -72,7 +87,13 @@ export function TodayScreen({tasks, profile, journalByDate, weeklyGoal, weeklyGo
                     showsVerticalScrollIndicator={false}
                     onScrollBeginDrag={haptics.scroll}
                 >
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/57 p-4`}>
+                    <Pressable
+                        onPress={() => onOpenJournalPrompt(latestPrompt?.id ?? null)}
+                        style={({pressed}) => [
+                            tw`rounded-3xl border border-[#2c2c2c] bg-black/57 p-4`,
+                            pressed && tw`opacity-85`,
+                        ]}
+                    >
                         <View style={tw`flex-row items-center justify-between`}>
                             <Text style={[tw`text-xs font-semibold`, {
                                 fontFamily: fonts.body,
@@ -91,9 +112,15 @@ export function TodayScreen({tasks, profile, journalByDate, weeklyGoal, weeklyGo
                               numberOfLines={3}>
                             {todaysQuote}
                         </Text>
-                    </View>
+                    </Pressable>
 
-                    <View style={tw`rounded-3xl border border-[#B55941]/43 bg-black/43 p-4`}>
+                    <Pressable
+                        onPress={onOpenWeeklyGoal}
+                        style={({pressed}) => [
+                            tw`rounded-3xl border border-[#B55941]/43 bg-black/43 p-4`,
+                            pressed && tw`opacity-85`,
+                        ]}
+                    >
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Weekly
                             goal</Text>
                         {weeklyGoal ? (
@@ -144,9 +171,15 @@ export function TodayScreen({tasks, profile, journalByDate, weeklyGoal, weeklyGo
                                 </Text>
                             </View>
                         </View>
-                    </View>
+                    </Pressable>
 
-                    <View style={tw`rounded-3xl border border-[#B55941]/43 bg-black/43 p-4`}>
+                    <Pressable
+                        onPress={() => onOpenGratitude(latestGratitude?.id ?? null)}
+                        style={({pressed}) => [
+                            tw`rounded-3xl border border-[#B55941]/43 bg-black/43 p-4`,
+                            pressed && tw`opacity-85`,
+                        ]}
+                    >
                         <Text
                             style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Gratitude</Text>
                         {latestGratitude ? (
@@ -159,9 +192,15 @@ export function TodayScreen({tasks, profile, journalByDate, weeklyGoal, weeklyGo
                                 yet for
                                 today.</Text>
                         )}
-                    </View>
+                    </Pressable>
 
-                    <View style={tw`mb-1 rounded-3xl border border-[#2c2c2c] bg-black/39 p-4`}>
+                    <Pressable
+                        onPress={onOpenTasks}
+                        style={({pressed}) => [
+                            tw`mb-1 rounded-3xl border border-[#2c2c2c] bg-black/39 p-4`,
+                            pressed && tw`opacity-85`,
+                        ]}
+                    >
                         <View style={tw`flex-row items-center gap-2`}>
                             <SvgUri width={16} height={16} uri={tasksIconUri} fill="#E4E0D4" stroke="#E4E0D4"/>
                             <Text
@@ -188,9 +227,9 @@ export function TodayScreen({tasks, profile, journalByDate, weeklyGoal, weeklyGo
                                         </Text>
                                     ) : null}
                                     <View style={tw`mt-2 flex-row items-center justify-between`}>
-                                        <Text
-                                            style={[tw`text-[11px] font-semibold text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>
-                                            {statusLabel[task.status]}
+                                            <Text
+                                                style={[tw`text-[11px] font-semibold text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>
+                                            {statusLabel[task.status]}{task.dueTime ? ` • ${task.dueTime}` : ""}
                                         </Text>
                                         {task.priority ? (
                                             <Text
@@ -202,7 +241,7 @@ export function TodayScreen({tasks, profile, journalByDate, weeklyGoal, weeklyGo
                                 </View>
                             ))
                         )}
-                    </View>
+                    </Pressable>
                 </ScrollView>
             </View>
         </ImageBackground>

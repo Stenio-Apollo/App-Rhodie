@@ -1,13 +1,14 @@
-import type {ComponentProps} from "react";
+import {forwardRef, type ComponentProps} from "react";
 import {TextInput} from "react-native";
 import tw from "../../lib/tw";
 import {fonts} from "../../theme/fonts";
 
-export function Input(props: ComponentProps<typeof TextInput>) {
+export const Input = forwardRef<TextInput, ComponentProps<typeof TextInput>>(function Input(props, ref) {
     const {style, ...restProps} = props;
 
     return (
         <TextInput
+            ref={ref}
             keyboardAppearance="dark"
             contextMenuHidden={false}
             caretHidden={false}
@@ -16,4 +17,4 @@ export function Input(props: ComponentProps<typeof TextInput>) {
             {...restProps}
         />
     );
-}
+});

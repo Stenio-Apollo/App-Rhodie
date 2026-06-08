@@ -1,5 +1,7 @@
-import {useMemo, useState} from "react";
-import {Alert, ImageBackground, ScrollView, View} from "react-native";
+import {useEffect, useMemo, useRef, useState} from "react";
+import {Alert, ImageBackground, ScrollView, StyleSheet, TextInput, View} from "react-native";
+import {BlurView} from "expo-blur";
+import {LinearGradient} from "expo-linear-gradient";
 import tw from "../lib/tw";
 import type {Task, TaskPriority, TaskStatus} from "../types";
 import {KanbanColumn} from "../components/KanbanColumn";
@@ -8,6 +10,7 @@ import {Button} from "../components/ui/Button";
 import {Input} from "../components/ui/Input";
 import type {Session} from "@supabase/supabase-js";
 import {haptics} from "../lib/haptics";
+import {toLocalISODate} from "../lib/date-utils";
 
 interface KanbanScreenProps {
     tasksState: {
@@ -20,6 +23,7 @@ interface KanbanScreenProps {
             title: string;
             description: string;
             dueDate: string | null;
+            dueTime: string | null;
             priority: TaskPriority;
             status?: TaskStatus;
         }) => void;
@@ -27,18 +31,22 @@ interface KanbanScreenProps {
         move: (taskId: string, toStatus: TaskStatus, toIndex: number) => void;
     };
     session: Session | null;
+    focusTaskFormKey?: number;
 }
 
-export function KanbanScreen({tasksState}: KanbanScreenProps) {
+export function KanbanScreen({tasksState, focusTaskFormKey}: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
     const bg = require("../../public/images/rh28.jpg");
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [dueDate, setDueDate] = useState("");
+    const [dueTime, setDueTime] = useState("");
     const [priority, setPriority] = useState<TaskPriority>("medium");
     const [showCalendar, setShowCalendar] = useState(false);
     const [filterDate, setFilterDate] = useState<string | null>(null);
+    const scrollRef = useRef<ScrollView>(null);
+    const titleInputRef = useRef<TextInput>(null);
     const filteredGrouped = useMemo(() => {
         if (!filterDate) return grouped;
         return {
@@ -64,6 +72,17 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
         return map;
     }, [dueDate, filterDate, tasks]);
 
+    useEffect(() => {
+        if (!focusTaskFormKey) return;
+        const today = toLocalISODate();
+        setDueDate(today);
+        setFilterDate(today);
+        setTimeout(() => {
+            scrollRef.current?.scrollTo({y: 0, animated: true});
+            titleInputRef.current?.focus();
+        }, 80);
+    }, [focusTaskFormKey]);
+
     function handleAddTask() {
         if (!title.trim()) {
             Alert.alert("Title required", "Please enter a task title.");
@@ -75,74 +94,131 @@ export function KanbanScreen({tasksState}: KanbanScreenProps) {
             Alert.alert("Invalid date", "Use format YYYY-MM-DD or leave blank.");
             return;
         }
+        const time = dueTime.trim();
+        if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+            Alert.alert("Invalid time", "Use 24-hour format HH:MM or leave blank.");
+            return;
+        }
 
-        addTask({title, description, dueDate: due ? due : null, priority, status: "todo"});
+        addTask({title, description, dueDate: due ? due : null, dueTime: time ? time : null, priority, status: "todo"});
         haptics.createNewTask();
 
         setTitle("");
         setDescription("");
         setDueDate("");
+        setDueTime("");
         setPriority("medium");
     }
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-30`}>
             <View style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}>
-                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-28`} onScrollBeginDrag={haptics.scroll}>
+                <ScrollView
+                    ref={scrollRef}
+                    style={tw`flex-1`}
+                    contentContainerStyle={tw`pb-28`}
+                    onScrollBeginDrag={haptics.scroll}
+                >
                     <View style={tw`px-2 pt-2`}>
-                        <View style={tw`mt-2 gap-2 rounded-2xl border border-[#2c2c2c] bg-black/63 p-3`}>
-                            <Input value={title} onChangeText={setTitle} placeholder="Task title"
-                                   style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
-                            <Input value={description} onChangeText={setDescription} placeholder="Description"
-                                   style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
-
-                            <View style={tw`flex-row gap-2`}>
-                                <View style={tw`flex-1`}>
-                                    <Input value={dueDate} onChangeText={setDueDate} placeholder="Due date YYYY-MM-DD"
-                                           style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}/>
-                                </View>
-                                <Button
-                                    label={showCalendar ? "Hide Calendar" : "Show Calendar"}
-                                    variant="secondary"
-                                    onPress={() => {
-                                        setShowCalendar(!showCalendar);
-                                    }}
+                        <View
+                            style={tw`mt-2 overflow-hidden rounded-[28px] border border-slate-700/33 bg-black/10 p-1`}>
+                            <BlurView
+                                intensity={72}
+                                tint="dark"
+                                style={tw`overflow-hidden rounded-[24px] border border-slate-700`}
+                            >
+                                <View
+                                    pointerEvents="none"
+                                    style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.63)"}]}
                                 />
-                            </View>
+                                <LinearGradient
+                                    colors={["rgba(255,255,255,0.10)", "rgba(255,255,255,0.01)", "transparent"]}
+                                    locations={[0, 0.5, 1]}
+                                    pointerEvents="none"
+                                    style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
+                                />
+                                <LinearGradient
+                                    colors={["transparent", "rgba(0,0,0,0.35)"]}
+                                    pointerEvents="none"
+                                    style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
+                                />
 
-                            {showCalendar && (
-                                <View>
-                                    <TranslucentCalendar
-                                        markedDates={markedDates}
-                                        onDayPress={(day) => {
-                                            haptics.calendarDateSelected();
-                                            setDueDate(day.dateString);
-                                            setFilterDate(day.dateString);
-                                        }}
-                                    />
-                                    {filterDate && (
-                                        <View style={tw`p-2`}>
-                                            <Button
-                                                label={`Clear Filter (${filterDate})`}
-                                                variant="secondary"
-                                                onPress={() => setFilterDate(null)}
+                                <View style={tw`gap-2 p-3`}>
+                                    <Input ref={titleInputRef} value={title} onChangeText={setTitle}
+                                           placeholder="Task title"
+                                           style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
+                                    <Input value={description} onChangeText={setDescription} placeholder="Description"
+                                           style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
+
+                                    <View style={tw`flex-row gap-2`}>
+                                        <View style={tw`flex-1`}>
+                                            <Input value={dueDate} onChangeText={setDueDate}
+                                                   placeholder="Due date YYYY-MM-DD"
+                                                   style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}/>
+                                        </View>
+                                        <View style={tw`w-24`}>
+                                            <Input
+                                                value={dueTime}
+                                                onChangeText={setDueTime}
+                                                placeholder="HH:MM"
+                                                keyboardType="numbers-and-punctuation"
+                                                maxLength={5}
+                                                style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}
                                             />
                                         </View>
+                                        <Button
+                                            label={showCalendar ? "Hide Calendar" : "Show Calendar"}
+                                            variant="secondary"
+                                            style={tw`border-slate-600/79`}
+                                            onPress={() => {
+                                                setShowCalendar(!showCalendar);
+                                            }}
+                                        />
+                                    </View>
+
+                                    {showCalendar && (
+                                        <View>
+                                            <TranslucentCalendar
+                                                markedDates={markedDates}
+                                                onDayPress={(day) => {
+                                                    haptics.calendarDateSelected();
+                                                    setDueDate(day.dateString);
+                                                    setFilterDate(day.dateString);
+                                                }}
+                                            />
+                                            {filterDate && (
+                                                <View style={tw`p-2`}>
+                                                    <Button
+                                                        label={`Clear Filter (${filterDate})`}
+                                                        variant="secondary"
+                                                        onPress={() => setFilterDate(null)}
+                                                    />
+                                                </View>
+                                            )}
+                                        </View>
                                     )}
-                                </View>
-                            )}
 
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                <View style={tw`flex-row gap-2`}>
-                                    {(["low", "medium", "high"] as TaskPriority[]).map((item) => (
-                                        <Button key={item} label={item}
-                                                variant={priority === item ? "primary" : "secondary"}
-                                                onPress={() => setPriority(item)}/>
-                                    ))}
-                                </View>
-                            </ScrollView>
+                                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                        <View style={tw`flex-row gap-2`}>
+                                            {(["low", "medium", "high"] as TaskPriority[]).map((item) => (
+                                                <Button key={item} label={item}
+                                                        variant={priority === item ? "primary" : "secondary"}
+                                                        style={priority === item ? [tw`border border-gray-900`, {backgroundColor: "#ba885a"}] : tw`border-slate-600/70`}
+                                                        textStyle={priority === item ? tw`text-gray-950` : undefined}
+                                                        onPress={() => setPriority(item)}/>
+                                            ))}
+                                        </View>
+                                    </ScrollView>
 
-                            <Button label="Add Task" variant="outlineAccent" onPress={handleAddTask} hapticAction={false}/>
+                                    <Button
+                                        label="Add Task"
+                                        variant="primary"
+                                        style={tw`border border-slate-700/70 bg-gray-900/13`}
+                                        onPress={handleAddTask}
+                                        hapticAction={false}
+                                    />
+                                </View>
+                            </BlurView>
                         </View>
 
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`pt-3`}>

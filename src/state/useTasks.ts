@@ -6,12 +6,14 @@ import type {Task, TaskPriority, TaskSource, TaskStatus} from "../types";
 import {supabase} from "../lib/supabase";
 import type {Session} from "@supabase/supabase-js";
 import {useGoogleCalendar} from "./useGoogleCalendar";
+import {syncTaskReminderNotifications} from "../lib/notifications";
 
 type TaskRow = {
     id: string;
     title: string;
     description: string | null;
     due_date: string | null;
+    due_time: string | null;
     status: "todo" | "completed";
     priority: TaskPriority;
     order: number | null;
@@ -32,6 +34,7 @@ function mapTaskRowToTask(row: TaskRow): Task {
         title: row.title,
         description: row.description ?? "",
         dueDate: row.due_date ?? null,
+        dueTime: row.due_time ?? null,
         status: normalizeTaskStatus(row.status),
         priority: row.priority,
         order: row.order ?? 0,
@@ -91,6 +94,7 @@ export function useTasks(session: Session | null) {
             if (!mounted) return;
             setTasks(loaded.map((task) => ({
                 ...task,
+                dueTime: task.dueTime ?? null,
                 status: normalizeTaskStatus(task.status),
             })));
             setIsLoaded(true);
@@ -99,6 +103,7 @@ export function useTasks(session: Session | null) {
         async function hydrateRemote(userId: string) {
             const local = (await loadTasks(userId)).map((task) => ({
                 ...task,
+                dueTime: task.dueTime ?? null,
                 status: normalizeTaskStatus(task.status),
             }));
 
@@ -109,6 +114,7 @@ export function useTasks(session: Session | null) {
                     title: task.title,
                     description: task.description,
                     due_date: task.dueDate,
+                    due_time: task.dueTime,
                     status: task.status,
                     priority: task.priority,
                     order: task.order ?? 0,
@@ -141,6 +147,7 @@ export function useTasks(session: Session | null) {
     useEffect(() => {
         if (!isLoaded) return;
         void saveTasks(tasks, session?.user.id);
+        void syncTaskReminderNotifications(tasks);
     }, [isLoaded, session?.user.id, tasks]);
 
     const syncTaskOrdering = useCallback(
@@ -169,6 +176,7 @@ export function useTasks(session: Session | null) {
             title: string;
             description: string;
             dueDate: string | null;
+            dueTime: string | null;
             priority: TaskPriority;
             status?: TaskStatus;
         }) => {
@@ -181,6 +189,7 @@ export function useTasks(session: Session | null) {
                 title: payload.title.trim(),
                 description: payload.description.trim(),
                 dueDate: payload.dueDate,
+                dueTime: payload.dueTime,
                 priority: payload.priority,
                 status,
                 order,
@@ -199,6 +208,7 @@ export function useTasks(session: Session | null) {
                     title: nextTask.title,
                     description: nextTask.description,
                     due_date: nextTask.dueDate,
+                    due_time: nextTask.dueTime,
                     status: nextTask.status,
                     priority: nextTask.priority,
                     order: nextTask.order,

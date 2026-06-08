@@ -1,4 +1,4 @@
-import {useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {ImageBackground, Pressable, ScrollView, Text, TextInput, View} from "react-native";
 import tw from "../lib/tw";
 import {getDailyStoicQuote} from "../lib/quotes";
@@ -15,15 +15,23 @@ function isoToday(): string {
 
 interface JournalScreenProps {
     journal: JournalState;
+    homeAction?: {
+        key: number;
+        target: "prompt" | "gratitude";
+        entryId?: string | null;
+    } | null;
 }
 
-export function JournalScreen({journal}: JournalScreenProps) {
+export function JournalScreen({journal, homeAction}: JournalScreenProps) {
     const {entries, byDate, addEntry, deleteEntry, editEntry} = journal;
     const [selectedDate, setSelectedDate] = useState<string>(isoToday());
     const [text, setText] = useState("");
     const [promptText, setPromptText] = useState("");
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingText, setEditingText] = useState("");
+    const scrollRef = useRef<ScrollView>(null);
+    const promptInputRef = useRef<TextInput>(null);
+    const gratitudeInputRef = useRef<TextInput>(null);
     const bg = require("../../public/images/rh201.jpg");
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
@@ -32,10 +40,58 @@ export function JournalScreen({journal}: JournalScreenProps) {
     const gratitudeEntries = todaysEntries.filter((e) => e.category === "gratitude");
     const promptEntries = todaysEntries.filter((e) => e.category === "prompt");
 
+    useEffect(() => {
+        if (!homeAction) return;
+        const today = isoToday();
+        setSelectedDate(today);
+
+        if (homeAction.target === "prompt") {
+            if (homeAction.entryId) {
+                const entry = byDate[today]?.find((item) => item.id === homeAction.entryId);
+                if (entry) {
+                    setEditingId(entry.id);
+                    setEditingText(entry.text);
+                    setTimeout(() => {
+                        scrollRef.current?.scrollTo({y: 650, animated: true});
+                    }, 80);
+                    return;
+                }
+            }
+
+            setEditingId(null);
+            setEditingText("");
+            setTimeout(() => {
+                scrollRef.current?.scrollTo({y: 110, animated: true});
+                promptInputRef.current?.focus();
+            }, 80);
+            return;
+        }
+
+        if (homeAction.entryId) {
+            const entry = byDate[today]?.find((item) => item.id === homeAction.entryId);
+            if (entry) {
+                setEditingId(entry.id);
+                setEditingText(entry.text);
+                setTimeout(() => {
+                    scrollRef.current?.scrollTo({y: 520, animated: true});
+                }, 80);
+                return;
+            }
+        }
+
+        setEditingId(null);
+        setEditingText("");
+        setTimeout(() => {
+            scrollRef.current?.scrollTo({y: 330, animated: true});
+            gratitudeInputRef.current?.focus();
+        }, 80);
+    }, [byDate, homeAction]);
+
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-39`}>
             <View style={[tw`flex-1 bg-black/47`, {paddingHorizontal: 1}]}>
                 <ScrollView
+                    ref={scrollRef}
                     style={tw`flex-1`}
                     contentContainerStyle={tw`px-3 pt-3 pb-28`}
                     onScrollBeginDrag={haptics.scroll}
@@ -76,6 +132,7 @@ export function JournalScreen({journal}: JournalScreenProps) {
                             {todaysPrompt}
                         </Text>
                         <TextInput
+                            ref={promptInputRef}
                             value={promptText}
                             onChangeText={setPromptText}
                             keyboardAppearance="dark"
@@ -109,6 +166,7 @@ export function JournalScreen({journal}: JournalScreenProps) {
                         </Text>
                         {[0, 1, 2].map((idx) => (
                             <TextInput
+                                ref={idx === 0 ? gratitudeInputRef : undefined}
                                 key={idx}
                                 value={text.split("\n")[idx] ?? ""}
                                 onChangeText={(val) => {
