@@ -7,6 +7,7 @@ import {toLocalISODate} from "../lib/date-utils";
 import {getPlannerColor} from "../lib/planner-colors";
 import {PlannerEventSheet} from "../components/PlannerEventSheet";
 import type {PlannerEvent, PlannerEventsState} from "../state/usePlannerEvents";
+import {TutorialCard} from "../components/TutorialCard";
 
 const DAY_START_HOUR = 6;
 const DAY_END_HOUR = 23;
@@ -174,9 +175,11 @@ function shiftDate(date: string, deltaDays: number): string {
 
 interface DayPlanScreenProps {
     planner: PlannerEventsState;
+    showTutorial?: boolean;
+    onDismissTutorial?: () => void;
 }
 
-export function DayPlanScreen({planner}: DayPlanScreenProps) {
+export function DayPlanScreen({planner, showTutorial, onDismissTutorial}: DayPlanScreenProps) {
     const today = toLocalISODate();
     const [date, setDate] = useState(today);
     const [sheetVisible, setSheetVisible] = useState(false);
@@ -277,8 +280,17 @@ export function DayPlanScreen({planner}: DayPlanScreenProps) {
                     style={tw`flex-1`}
                     contentContainerStyle={tw`pb-28`}
                     showsVerticalScrollIndicator={false}
-                    onScrollBeginDrag={haptics.scroll}
                 >
+                    {showTutorial && onDismissTutorial ? (
+                        <View style={tw`px-4 pb-3`}>
+                            <TutorialCard
+                                title="Tap a time slot to plan it"
+                                body="Events live on this timeline. Every new event automatically gets a reminder 15 minutes before its start time."
+                                onDismiss={onDismissTutorial}
+                            />
+                        </View>
+                    ) : null}
+
                     <View style={{height: TIMELINE_HEIGHT, position: "relative"}}>
                         {SLOTS.map((slot) => (
                             <Pressable

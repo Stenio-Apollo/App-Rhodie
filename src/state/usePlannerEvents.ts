@@ -4,6 +4,7 @@ import type {Session} from "@supabase/supabase-js";
 import {supabase} from "../lib/supabase";
 import {createId} from "../lib/id";
 import {isPlannerEventColor, type PlannerEventColor} from "../lib/planner-colors";
+import {syncPlannerEventReminderNotifications} from "../lib/notifications";
 
 export type PlannerEvent = {
     id: string;
@@ -53,6 +54,7 @@ export type UpdatePlannerEventInput = Partial<{
 }>;
 
 const STORAGE_PREFIX = "rhnative.planner.v1";
+const DEFAULT_NOTIFY_MINUTES_BEFORE = 15;
 
 function storageKey(userId: string | null | undefined): string {
     return `${STORAGE_PREFIX}.${userId ?? "local"}`;
@@ -145,6 +147,11 @@ export function usePlannerEvents(session: Session | null) {
         eventsRef.current = events;
     }, [events]);
 
+    useEffect(() => {
+        if (!isLoaded) return;
+        void syncPlannerEventReminderNotifications(events);
+    }, [events, isLoaded]);
+
     const persistLocal = useCallback(
         async (next: PlannerEvent[]) => {
             try {
@@ -230,7 +237,7 @@ export function usePlannerEvents(session: Session | null) {
                 startAt: input.startAt,
                 endAt: input.endAt,
                 color: input.color,
-                notifyMinutesBefore: input.notifyMinutesBefore ?? null,
+                notifyMinutesBefore: input.notifyMinutesBefore ?? DEFAULT_NOTIFY_MINUTES_BEFORE,
                 recurrenceRule: null,
                 recurrenceUntil: null,
                 createdAt: now,

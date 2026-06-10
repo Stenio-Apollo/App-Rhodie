@@ -8,6 +8,7 @@ import {Button} from "../components/ui/Button";
 import {fonts} from "../theme/fonts";
 import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
+import {TutorialCard} from "../components/TutorialCard";
 
 function isoToday(): string {
     return toLocalISODate();
@@ -20,9 +21,11 @@ interface JournalScreenProps {
         target: "prompt" | "gratitude";
         entryId?: string | null;
     } | null;
+    showTutorial?: boolean;
+    onDismissTutorial?: () => void;
 }
 
-export function JournalScreen({journal, homeAction}: JournalScreenProps) {
+export function JournalScreen({journal, homeAction, showTutorial, onDismissTutorial}: JournalScreenProps) {
     const {entries, byDate, addEntry, deleteEntry, editEntry} = journal;
     const [selectedDate, setSelectedDate] = useState<string>(isoToday());
     const [text, setText] = useState("");
@@ -94,8 +97,17 @@ export function JournalScreen({journal, homeAction}: JournalScreenProps) {
                     ref={scrollRef}
                     style={tw`flex-1`}
                     contentContainerStyle={tw`px-3 pt-3 pb-28`}
-                    onScrollBeginDrag={haptics.scroll}
                 >
+                    {showTutorial && onDismissTutorial ? (
+                        <View style={tw`mb-3`}>
+                            <TutorialCard
+                                title="Journal in two quick modes"
+                                body="Use Prompt of the day for reflection, or 3 Good Things Today for gratitude. Saved entries stay dated in the memory shelf."
+                                onDismiss={onDismissTutorial}
+                            />
+                        </View>
+                    ) : null}
+
                     <View
                         style={[
                             tw`rounded-3xl bg-black/63 p-4 border flex-row gap-4 items-center, border-[#B55941]/43`,
@@ -346,6 +358,7 @@ export function JournalScreen({journal, homeAction}: JournalScreenProps) {
                                     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
                                     .map((entry) => {
                                         const isPrompt = entry.category === "prompt";
+                                        const entryPrompt = isPrompt ? getDailyJournalPrompt(entry.date) : null;
 
                                         return (
                                             <Pressable
@@ -394,6 +407,20 @@ export function JournalScreen({journal, homeAction}: JournalScreenProps) {
                                                         minute: "2-digit"
                                                     })}
                                                 </Text>
+                                                {entryPrompt ? (
+                                                    <View style={tw`mt-3 rounded-2xl border border-[#B55941]/30 bg-[#B55941]/10 p-3`}>
+                                                        <Text
+                                                            style={[tw`text-[10px] uppercase tracking-[1px] text-[#B55941]`, {fontFamily: fonts.strong}]}>
+                                                            Prompt responded to
+                                                        </Text>
+                                                        <Text
+                                                            style={[tw`mt-1 text-sm leading-5 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                                            numberOfLines={4}
+                                                        >
+                                                            {entryPrompt}
+                                                        </Text>
+                                                    </View>
+                                                ) : null}
                                                 <Text
                                                     style={[tw`mt-3 text-sm leading-5`, {
                                                         fontFamily: fonts.body,

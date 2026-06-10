@@ -11,6 +11,7 @@ import {Input} from "../components/ui/Input";
 import type {Session} from "@supabase/supabase-js";
 import {haptics} from "../lib/haptics";
 import {toLocalISODate} from "../lib/date-utils";
+import {TutorialCard} from "../components/TutorialCard";
 
 interface KanbanScreenProps {
     tasksState: {
@@ -32,9 +33,11 @@ interface KanbanScreenProps {
     };
     session: Session | null;
     focusTaskFormKey?: number;
+    showTutorial?: boolean;
+    onDismissTutorial?: () => void;
 }
 
-export function KanbanScreen({tasksState, focusTaskFormKey}: KanbanScreenProps) {
+export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDismissTutorial}: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
     const bg = require("../../public/images/rh28.jpg");
 
@@ -117,9 +120,18 @@ export function KanbanScreen({tasksState, focusTaskFormKey}: KanbanScreenProps) 
                     ref={scrollRef}
                     style={tw`flex-1`}
                     contentContainerStyle={tw`pb-28`}
-                    onScrollBeginDrag={haptics.scroll}
                 >
                     <View style={tw`px-2 pt-2`}>
+                        {showTutorial && onDismissTutorial ? (
+                            <View style={tw`mb-3`}>
+                                <TutorialCard
+                                    title="Tasks are for things you need to finish"
+                                    body="Add a due date and due time when a task needs a reminder. Use priorities to keep the important items visible."
+                                    onDismiss={onDismissTutorial}
+                                />
+                            </View>
+                        ) : null}
+
                         <View
                             style={tw`mt-2 overflow-hidden rounded-[28px] border border-slate-700/33 bg-black/10 p-1`}>
                             <BlurView
@@ -156,15 +168,10 @@ export function KanbanScreen({tasksState, focusTaskFormKey}: KanbanScreenProps) 
                                                    placeholder="Due date YYYY-MM-DD"
                                                    style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}/>
                                         </View>
-                                        <View style={tw`w-24`}>
-                                            <Input
-                                                value={dueTime}
-                                                onChangeText={setDueTime}
-                                                placeholder="HH:MM"
-                                                keyboardType="numbers-and-punctuation"
-                                                maxLength={5}
-                                                style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}
-                                            />
+                                        <View style={tw`flex-1`}>
+                                            <Input value={dueTime} onChangeText={setDueTime}
+                                                   placeholder="HH:MM"
+                                                   style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}/>
                                         </View>
                                         <Button
                                             label={showCalendar ? "Hide Calendar" : "Show Calendar"}
@@ -175,6 +182,7 @@ export function KanbanScreen({tasksState, focusTaskFormKey}: KanbanScreenProps) 
                                             }}
                                         />
                                     </View>
+
 
                                     {showCalendar && (
                                         <View>

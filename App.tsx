@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import {Alert, AppState, Platform, SafeAreaView, View} from "react-native";
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
+import * as Updates from "expo-updates";
 import {CalendarScreen} from "./src/screens/CalendarScreen";
 import {KanbanScreen} from "./src/screens/KanbanScreen";
 import {JournalScreen} from "./src/screens/JournalScreen";
@@ -34,6 +35,8 @@ import {GoalFeedbackModal} from "./src/components/GoalFeedbackModal";
 import {UpdateAvailableBanner} from "./src/components/UpdateAvailableBanner";
 import {DayPlanScreen} from "./src/screens/DayPlanScreen";
 import {usePlannerEvents} from "./src/state/usePlannerEvents";
+import {OnboardingScreen} from "./src/screens/OnboardingScreen";
+import {useOnboarding} from "./src/state/useOnboarding";
 
 type HomeAction =
     | { key: number; target: "journalPrompt"; entryId: string | null }
@@ -76,12 +79,13 @@ export default function App() {
     const weeklyGoalState = useWeeklyGoal(session?.user.id);
     const journalState = useJournal(session);
     const plannerState = usePlannerEvents(session);
+    const onboarding = useOnboarding(session?.user.id);
     const [fontsLoaded] = useAppFonts();
     const birthdayActive = Boolean(profile?.birthday && isToday(profile.birthday));
     const appLoading = !fontsLoaded ||
         authLoading ||
         (session && subscription.loading) ||
-        (session && (!tasksState.isLoaded || !weeklyGoalState.isLoaded));
+        (session && (!tasksState.isLoaded || !weeklyGoalState.isLoaded || !onboarding.isLoaded));
 
     useEffect(() => {
         if (!session) {
@@ -178,6 +182,7 @@ export default function App() {
 
     function handleTabChange(nextTab: Tab) {
         haptics.navigation();
+        setHomeAction(null);
 
         if (accountOpen) {
             setAccountOpen(false);
@@ -254,6 +259,21 @@ export default function App() {
         }
     }
 
+    async function handleCompleteOnboarding() {
+        await onboarding.completeOnboarding();
+        setTab("today");
+        setHomeAction(null);
+        setAccountOpen(false);
+
+        if (Updates.isEnabled) {
+            try {
+                await Updates.reloadAsync();
+            } catch {
+                // If reload fails, the state update above still lets the app continue.
+            }
+        }
+    }
+
     if (appLoading) {
         return (
             <GradientBackground>
@@ -308,6 +328,17 @@ export default function App() {
         );
     }
 
+    if (!onboarding.hasCompletedOnboarding) {
+        return (
+            <GradientBackground>
+                <StatusBar style="light"/>
+                <OnboardingScreen
+                    onComplete={handleCompleteOnboarding}
+                />
+            </GradientBackground>
+        );
+    }
+
     return (
         <SafeAreaProvider>
             <GradientBackground>
@@ -339,6 +370,7 @@ export default function App() {
                             onSignOut={handleSignOut}
                             onSaveProfile={handleSaveProfile}
                             onDeleteAccount={handleDeleteAccount}
+                            onResetOnboarding={onboarding.resetOnboarding}
                         />
                     ) : null}
                     {!accountOpen && tab === "today" ? (
@@ -352,9 +384,21 @@ export default function App() {
                             onOpenWeeklyGoal={() => openHomeAction({target: "weeklyGoal"})}
                             onOpenGratitude={(entryId) => openHomeAction({target: "gratitude", entryId})}
                             onOpenTasks={() => openHomeAction({target: "tasks"})}
+                            showTutorial={onboarding.visibleTutorials.home}
+                            onDismissTutorial={() => {
+                                void onboarding.dismissTutorial("home");
+                            }}
                         />
                     ) : null}
-                    {!accountOpen && tab === "plan" ? <DayPlanScreen planner={plannerState}/> : null}
+                    {!accountOpen && tab === "plan" ? (
+                        <DayPlanScreen
+                            planner={plannerState}
+                            showTutorial={onboarding.visibleTutorials.plan}
+                            onDismissTutorial={() => {
+                                void onboarding.dismissTutorial("plan");
+                            }}
+                        />
+                    ) : null}
                     {!accountOpen && tab === "journal" ? (
                         <JournalScreen
                             journal={journalState}
@@ -365,6 +409,10 @@ export default function App() {
                                         ? {key: homeAction.key, target: "gratitude", entryId: homeAction.entryId}
                                         : null
                             }
+                            showTutorial={onboarding.visibleTutorials.journal}
+                            onDismissTutorial={() => {
+                                void onboarding.dismissTutorial("journal");
+                            }}
                         />
                     ) : null}
                     {!accountOpen && tab === "board" ? (
@@ -372,6 +420,10 @@ export default function App() {
                             tasksState={tasksState}
                             session={session}
                             focusTaskFormKey={homeAction?.target === "tasks" ? homeAction.key : undefined}
+                            showTutorial={onboarding.visibleTutorials.tasks}
+                            onDismissTutorial={() => {
+                                void onboarding.dismissTutorial("tasks");
+                            }}
                         />
                     ) : null}
                     {!accountOpen && tab === "calendar" ? (
@@ -382,6 +434,10 @@ export default function App() {
                             weeklyGoalPresets={weeklyGoalState.presets}
                             onSaveWeeklyGoal={weeklyGoalState.saveGoal}
                             focusWeeklyGoalKey={homeAction?.target === "weeklyGoal" ? homeAction.key : undefined}
+                            showTutorial={onboarding.visibleTutorials.calendar}
+                            onDismissTutorial={() => {
+                                void onboarding.dismissTutorial("calendar");
+                            }}
                         />
                     ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen/> : null}

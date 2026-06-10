@@ -1,8 +1,10 @@
 import {Platform} from "react-native";
 import Constants from "expo-constants";
 import type {Task} from "../types";
+import type {PlannerEvent} from "../state/usePlannerEvents";
 
 const scheduledTaskNotificationIds = new Map<string, string>();
+const scheduledPlannerEventNotificationIds = new Map<string, string>();
 let notificationHandlerConfigured = false;
 
 function getNotificationsModule(): typeof import("expo-notifications") | null {
@@ -66,6 +68,16 @@ function buildTaskReminderDate(task: Task): Date | null {
     return remindAt.getTime() > Date.now() ? remindAt : null;
 }
 
+function buildPlannerEventReminderDate(event: PlannerEvent): Date | null {
+    if (event.notifyMinutesBefore === null) return null;
+
+    const startAt = new Date(event.startAt);
+    if (Number.isNaN(startAt.getTime())) return null;
+
+    const remindAt = new Date(startAt.getTime() - event.notifyMinutesBefore * 60 * 1000);
+    return remindAt.getTime() > Date.now() ? remindAt : null;
+}
+
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
     // Skip entirely in Expo Go to avoid native module crashes.
     if (Constants.appOwnership === "expo") {
@@ -104,7 +116,8 @@ export async function syncTaskReminderNotifications(tasks: Task[]): Promise<void
 
     await Promise.all(
         [...scheduledTaskNotificationIds.values()].map((notificationId) =>
-            Notifications.cancelScheduledNotificationAsync(notificationId).catch(() => {}),
+            Notifications.cancelScheduledNotificationAsync(notificationId).catch(() => {
+            }),
         ),
     );
     scheduledTaskNotificationIds.clear();
@@ -127,5 +140,38 @@ export async function syncTaskReminderNotifications(tasks: Task[]): Promise<void
         });
 
         scheduledTaskNotificationIds.set(task.id, notificationId);
+    }
+}
+
+export async function syncPlannerEventReminderNotifications(events: PlannerEvent[]): Promise<void> {
+    const Notifications = await ensureNotificationPermissions();
+    if (!Notifications) return;
+
+    await Promise.all(
+        [...scheduledPlannerEventNotificationIds.values()].map((notificationId) =>
+            Notifications.cancelScheduledNotificationAsync(notificationId).catch(() => {
+            }),
+        ),
+    );
+    scheduledPlannerEventNotificationIds.clear();
+
+    for (const event of events) {
+        const triggerDate = buildPlannerEventReminderDate(event);
+        if (!triggerDate || event.notifyMinutesBefore === null) continue;
+
+        const notificationId = await Notifications.scheduleNotificationAsync({
+            content: {
+                title: "Plan reminder",
+                body: `${event.title} starts in ${event.notifyMinutesBefore} minutes.`,
+                data: {plannerEventId: event.id},
+            },
+            trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.DATE,
+                date: triggerDate,
+                channelId: "default",
+            },
+        });
+
+        scheduledPlannerEventNotificationIds.set(event.id, notificationId);
     }
 }

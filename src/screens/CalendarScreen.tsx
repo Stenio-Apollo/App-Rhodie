@@ -20,6 +20,7 @@ import {Input} from "../components/ui/Input";
 import type {WeeklyGoal, WeeklyGoalPreset} from "../state/useWeeklyGoal";
 import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
+import {TutorialCard} from "../components/TutorialCard";
 
 interface CalendarScreenProps {
     tasks: Task[];
@@ -37,6 +38,8 @@ interface CalendarScreenProps {
     weeklyGoalPresets: WeeklyGoalPreset[];
     onSaveWeeklyGoal: (payload: { text: string; presetId?: string | null }) => Promise<void>;
     focusWeeklyGoalKey?: number;
+    showTutorial?: boolean;
+    onDismissTutorial?: () => void;
 }
 
 export function CalendarScreen({
@@ -46,6 +49,8 @@ export function CalendarScreen({
                                    weeklyGoalPresets,
                                    onSaveWeeklyGoal,
                                    focusWeeklyGoalKey,
+                                   showTutorial,
+                                   onDismissTutorial,
                                }: CalendarScreenProps) {
     const [selectedDate, setSelectedDate] = useState(toLocalISODate());
     const [customGoal, setCustomGoal] = useState("");
@@ -106,12 +111,21 @@ export function CalendarScreen({
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="interactive"
                     automaticallyAdjustKeyboardInsets
-                    onScrollBeginDrag={haptics.scroll}
                 >
                     <Text
                         style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
                     <Text style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Tap
                         a day to filter due tasks.</Text>
+
+                    {showTutorial && onDismissTutorial ? (
+                        <View style={tw`mt-3`}>
+                            <TutorialCard
+                                title="Calendar connects tasks and goals"
+                                body="Tap dates to see due tasks. Set your weekly goal near the bottom, then Rhodie will check in each day."
+                                onDismiss={onDismissTutorial}
+                            />
+                        </View>
+                    ) : null}
 
                     <View style={tw`mt-3 rounded-2xl border border-orange-50/19 bg-black/47 p-3`}>
                         <Text style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Google

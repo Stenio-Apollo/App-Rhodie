@@ -38,6 +38,7 @@ interface AccountScreenProps {
     onSignOut: () => void;
     onSaveProfile: (payload: { full_name: string; birthday: string | null }) => Promise<string | null>;
     onDeleteAccount: () => Promise<string | null>;
+    onResetOnboarding: () => Promise<void>;
 }
 
 function formatDateLabel(value: string | null | undefined): string | null {
@@ -94,6 +95,7 @@ export function AccountScreen({
                                   onSignOut,
                                   onSaveProfile,
                                   onDeleteAccount,
+                                  onResetOnboarding,
                               }: AccountScreenProps) {
     const mountedRef = useRef(true);
     const [name, setName] = useState(profile?.full_name ?? "");
@@ -212,6 +214,22 @@ export function AccountScreen({
         );
     }
 
+    function confirmResetOnboarding() {
+        Alert.alert(
+            "Replay onboarding?",
+            "This will show the onboarding flow and tutorial cards again on this device.",
+            [
+                {text: "Cancel", style: "cancel"},
+                {
+                    text: "Replay",
+                    onPress: () => {
+                        void onResetOnboarding();
+                    },
+                },
+            ],
+        );
+    }
+
     const subscriptionWarning = subscription.activeSubscription?.billingIssueDetectedAt
         ? "There is a billing issue on this subscription."
         : subscription.activeSubscription?.unsubscribeDetectedAt
@@ -223,9 +241,8 @@ export function AccountScreen({
             <View style={[tw`flex-1 bg-black/35`, {paddingHorizontal: 1}]}>
                 <ScrollView
                     style={tw`flex-1`}
-                    contentContainerStyle={tw`px-4 pb-8 pt-4 gap-4`}
+                    contentContainerStyle={tw`px-4 pb-32 pt-4 gap-4`}
                     showsVerticalScrollIndicator={false}
-                    onScrollBeginDrag={haptics.scroll}
                 >
                     <View
                         style={tw`flex-row items-start justify-between rounded-3xl border border-[#2c2c2c] bg-black/30 p-4`}>
@@ -376,6 +393,16 @@ export function AccountScreen({
                             <Button label="Email support" onPress={() => {
                                 void handleOpenSupportEmail();
                             }} variant="outlineAccent"/>
+                        </View>
+                    </View>
+
+                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>
+                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>App guide</Text>
+                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                            Replay the first-run onboarding and restore the in-app tutorial cards.
+                        </Text>
+                        <View style={tw`mt-4 flex-row justify-end`}>
+                            <Button label="Replay guide" onPress={confirmResetOnboarding} variant="outlineAccent"/>
                         </View>
                     </View>
 

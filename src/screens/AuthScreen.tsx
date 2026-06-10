@@ -230,7 +230,6 @@ export function AuthScreen({
                     keyboardDismissMode="interactive"
                     automaticallyAdjustKeyboardInsets
                     showsVerticalScrollIndicator={false}
-                    onScrollBeginDrag={haptics.scroll}
                 >
                     <Text style={[tw`text-center text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{title}</Text>
                     <Text style={[tw`mt-2 text-center text-sm text-slate-300`, {fontFamily: fonts.body}]}>

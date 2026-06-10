@@ -96,7 +96,7 @@ export function InsightsScreen() {
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-58`}>
             <View style={[tw`flex-1 bg-black/8`, {paddingHorizontal: 1}]}>
-                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-5 pb-28`} onScrollBeginDrag={haptics.scroll}>
+                <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-5 pb-28`}>
                     <View
                         style={[
                             tw`rounded-3xl border p-4`,

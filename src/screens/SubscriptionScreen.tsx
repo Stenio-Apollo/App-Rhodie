@@ -58,7 +58,6 @@ export function SubscriptionScreen({
             <ScrollView
                 style={[tw`flex-1 bg-black/35`, {paddingHorizontal: 1}]}
                 contentContainerStyle={tw`flex-grow justify-center px-6 py-8`}
-                onScrollBeginDrag={haptics.scroll}
             >
                 <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/55 p-6`}>
                     <Text style={[tw`text-3xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>

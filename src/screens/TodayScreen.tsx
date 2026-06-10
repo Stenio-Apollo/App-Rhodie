@@ -11,6 +11,7 @@ import type {Profile} from "../state/useProfile";
 import {isToday, toLocalISODate} from "../lib/date-utils";
 import type {WeeklyGoal, WeeklyGoalProgress} from "../state/useWeeklyGoal";
 import {haptics} from "../lib/haptics";
+import {TutorialCard} from "../components/TutorialCard";
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -22,6 +23,8 @@ interface TodayScreenProps {
     onOpenWeeklyGoal: () => void;
     onOpenGratitude: (entryId: string | null) => void;
     onOpenTasks: () => void;
+    showTutorial?: boolean;
+    onDismissTutorial?: () => void;
 }
 
 function isoToday(): string {
@@ -48,6 +51,8 @@ export function TodayScreen({
                                 onOpenWeeklyGoal,
                                 onOpenGratitude,
                                 onOpenTasks,
+                                showTutorial,
+                                onDismissTutorial,
                             }: TodayScreenProps) {
     const today = isoToday();
 
@@ -85,8 +90,15 @@ export function TodayScreen({
                     style={tw`flex-1`}
                     contentContainerStyle={tw`flex-grow justify-end px-4 pb-28 pt-4 gap-4`}
                     showsVerticalScrollIndicator={false}
-                    onScrollBeginDrag={haptics.scroll}
                 >
+                    {showTutorial && onDismissTutorial ? (
+                        <TutorialCard
+                            title="Home is your launch pad"
+                            body="Tap the quote card for the daily prompt, Weekly goal for Calendar, Gratitude for today's good things, or Tasks to jump straight into your list."
+                            onDismiss={onDismissTutorial}
+                        />
+                    ) : null}
+
                     <Pressable
                         onPress={() => onOpenJournalPrompt(latestPrompt?.id ?? null)}
                         style={({pressed}) => [

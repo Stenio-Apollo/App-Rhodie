@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
-import {Modal, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
+import {Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 import tw from "../lib/tw";
@@ -182,6 +182,7 @@ export function PlannerEventSheet({
             setError("Title is required");
             return;
         }
+        Keyboard.dismiss();
         setBusy(true);
         setError(null);
         try {
@@ -212,6 +213,7 @@ export function PlannerEventSheet({
 
     async function handleDelete() {
         if (!initialEvent) return;
+        Keyboard.dismiss();
         setBusy(true);
         try {
             await onDelete(initialEvent.id);
@@ -225,7 +227,7 @@ export function PlannerEventSheet({
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-            <View style={tw`flex-1 justify-center bg-black/72 px-5`}>
+            <Pressable style={tw`flex-1 justify-center bg-black/72 px-5`} onPress={Keyboard.dismiss}>
                 <View style={tw`overflow-hidden rounded-[28px] border border-slate-200/11 bg-black/10 p-1`}>
                     <BlurView
                         intensity={72}
@@ -432,7 +434,14 @@ export function PlannerEventSheet({
                             ) : null}
 
                             <View style={tw`mt-5 flex-row justify-between gap-2`}>
-                                <Button label="Cancel" variant="secondary" onPress={onClose}/>
+                                <Button
+                                    label="Cancel"
+                                    variant="secondary"
+                                    onPress={() => {
+                                        Keyboard.dismiss();
+                                        onClose();
+                                    }}
+                                />
                                 <View style={tw`flex-row gap-2`}>
                                     {mode === "edit" && initialEvent ? (
                                         <Button
@@ -457,7 +466,7 @@ export function PlannerEventSheet({
                         </View>
                     </BlurView>
                 </View>
-            </View>
+            </Pressable>
         </Modal>
     );
 }
