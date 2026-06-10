@@ -133,11 +133,11 @@ export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDism
                         ) : null}
 
                         <View
-                            style={tw`mt-2 overflow-hidden rounded-[28px] border border-slate-700/33 bg-black/10 p-1`}>
+                            style={tw`mt-2 overflow-hidden rounded-[28px] border border-black/11 bg-black/10 p-1`}>
                             <BlurView
                                 intensity={72}
                                 tint="dark"
-                                style={tw`overflow-hidden rounded-[24px] border border-slate-700`}
+                                style={tw`overflow-hidden rounded-[24px] border border-black/49`}
                             >
                                 <View
                                     pointerEvents="none"
@@ -177,6 +177,7 @@ export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDism
                                             label={showCalendar ? "Hide Calendar" : "Show Calendar"}
                                             variant="secondary"
                                             style={tw`border-slate-600/79`}
+                                            shine
                                             onPress={() => {
                                                 setShowCalendar(!showCalendar);
                                             }}
@@ -199,6 +200,7 @@ export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDism
                                                     <Button
                                                         label={`Clear Filter (${filterDate})`}
                                                         variant="secondary"
+                                                        shine
                                                         onPress={() => setFilterDate(null)}
                                                     />
                                                 </View>
@@ -213,6 +215,7 @@ export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDism
                                                         variant={priority === item ? "primary" : "secondary"}
                                                         style={priority === item ? [tw`border border-gray-900`, {backgroundColor: "#ba885a"}] : tw`border-slate-600/70`}
                                                         textStyle={priority === item ? tw`text-gray-950` : undefined}
+                                                        shine
                                                         onPress={() => setPriority(item)}/>
                                             ))}
                                         </View>
@@ -222,6 +225,7 @@ export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDism
                                         label="Add Task"
                                         variant="primary"
                                         style={tw`border border-slate-700/70 bg-gray-900/13`}
+                                        shine
                                         onPress={handleAddTask}
                                         hapticAction={false}
                                     />

@@ -1,5 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import {ImageBackground, Linking, Pressable, ScrollView, Text, View} from "react-native";
+import {LinearGradient} from "expo-linear-gradient";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {
@@ -52,6 +53,26 @@ const buttonShadow = {
     shadowOffset: {width: 0, height: 4},
     elevation: 5,
 };
+
+function ButtonShine() {
+    return (
+        <>
+            <LinearGradient
+                colors={["rgba(255,255,255,0.28)", "rgba(255,255,255,0.06)", "rgba(0,0,0,0.22)"]}
+                locations={[0, 0.48, 1]}
+                pointerEvents="none"
+                style={tw`absolute inset-0`}
+            />
+            <View
+                pointerEvents="none"
+                style={[
+                    tw`absolute left-1 right-1 top-0.5 h-2 rounded-full`,
+                    {backgroundColor: "rgba(255,255,255,0.16)"},
+                ]}
+            />
+        </>
+    );
+}
 
 export function InsightsScreen() {
     const [articles, setArticles] = useState<ExternalArticle[]>([]);
@@ -151,11 +172,12 @@ export function InsightsScreen() {
                                         haptics.selection();
                                         void openExternal(stat.sourceUrl);
                                     }}
-                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {
+                                    style={({pressed}) => [tw`mt-2 overflow-hidden rounded-lg px-3 py-2`, {
                                         backgroundColor: "#B55941",
                                         ...buttonShadow
-                                    }, pressed && tw`opacity-80`]}
+                                    }, pressed && {opacity: 0.78, transform: [{translateY: 1}]}]}
                                 >
+                                    <ButtonShine/>
                                     <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                         Source: {stat.sourceName}
                                     </Text>
@@ -192,11 +214,12 @@ export function InsightsScreen() {
                                         haptics.selection();
                                         void openExternal(resource.sourceUrl);
                                     }}
-                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {
+                                    style={({pressed}) => [tw`mt-2 overflow-hidden rounded-lg px-3 py-2`, {
                                         backgroundColor: "#B55941",
                                         ...buttonShadow
-                                    }, pressed && tw`opacity-80`]}
+                                    }, pressed && {opacity: 0.78, transform: [{translateY: 1}]}]}
                                 >
+                                    <ButtonShine/>
                                     <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                         Open {resource.sourceName}
                                     </Text>
@@ -261,11 +284,12 @@ export function InsightsScreen() {
                                         haptics.selection();
                                         void openExternal(item.url);
                                     }}
-                                    style={({pressed}) => [tw`mt-2 rounded-lg px-3 py-2`, {
+                                    style={({pressed}) => [tw`mt-2 overflow-hidden rounded-lg px-3 py-2`, {
                                         backgroundColor: "#B55941",
                                         ...buttonShadow
-                                    }, pressed && tw`opacity-80`]}
+                                    }, pressed && {opacity: 0.78, transform: [{translateY: 1}]}]}
                                 >
+                                    <ButtonShine/>
                                     <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                         Read original source
                                     </Text>

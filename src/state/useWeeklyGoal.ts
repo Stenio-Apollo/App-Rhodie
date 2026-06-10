@@ -368,7 +368,9 @@ export function useWeeklyGoal(userId: string | null | undefined) {
             await AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(nextGoal));
             if (userId) {
                 console.log("[weeklyGoal] saveGoal: pushing to remote", {userId});
-                await pushGoalToRemote(userId, nextGoal);
+                void pushGoalToRemote(userId, nextGoal).catch((error) => {
+                    console.warn("Weekly goal background push error", error.message);
+                });
             } else {
                 console.warn("[weeklyGoal] saveGoal: no userId, remote push SKIPPED");
             }

@@ -22,6 +22,34 @@ import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
 import {TutorialCard} from "../components/TutorialCard";
 
+const buttonDepthStyle = {
+    shadowColor: "#000000",
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.28,
+    shadowRadius: 7,
+    elevation: 5,
+};
+
+function ButtonShine() {
+    return (
+        <>
+            <LinearGradient
+                colors={["rgba(255,255,255,0.28)", "rgba(255,255,255,0.06)", "rgba(0,0,0,0.22)"]}
+                locations={[0, 0.48, 1]}
+                pointerEvents="none"
+                style={tw`absolute inset-0`}
+            />
+            <View
+                pointerEvents="none"
+                style={[
+                    tw`absolute left-1 right-1 top-0.5 h-2 rounded-full`,
+                    {backgroundColor: "rgba(255,255,255,0.16)"},
+                ]}
+            />
+        </>
+    );
+}
+
 interface CalendarScreenProps {
     tasks: Task[];
     googleCalendar: {
@@ -156,11 +184,12 @@ export function CalendarScreen({
                                                 void googleCalendar.connect();
                                             }}
                                             style={({pressed}) => [
-                                                tw`rounded-lg border px-3 py-2`,
-                                                {borderColor: "#B55941", backgroundColor: "transparent"},
-                                                (pressed || googleCalendar.busy) && tw`opacity-80`,
+                                                tw`overflow-hidden rounded-lg border px-3 py-2`,
+                                                {borderColor: "#B55941", backgroundColor: "transparent", ...buttonDepthStyle},
+                                                (pressed || googleCalendar.busy) && {opacity: 0.78, transform: [{translateY: 1}]},
                                             ]}
                                         >
+                                            <ButtonShine/>
                                             <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                                 {googleCalendar.busy ? "Connecting..." : "Connect"}
                                             </Text>
@@ -173,11 +202,12 @@ export function CalendarScreen({
                                                     void googleCalendar.syncNow();
                                                 }}
                                                 style={({pressed}) => [
-                                                    tw`rounded-lg px-3 py-2`,
-                                                    {backgroundColor: "#2B2B2B"},
-                                                    (pressed || googleCalendar.busy) && tw`opacity-80`,
+                                                    tw`overflow-hidden rounded-lg px-3 py-2`,
+                                                    {backgroundColor: "#2B2B2B", ...buttonDepthStyle},
+                                                    (pressed || googleCalendar.busy) && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
+                                                <ButtonShine/>
                                                 <Text style={[tw`text-xs`, {
                                                     fontFamily: fonts.heading,
                                                     color: "#E4E0D4"
@@ -191,10 +221,12 @@ export function CalendarScreen({
                                                     void googleCalendar.disconnect();
                                                 }}
                                                 style={({pressed}) => [
-                                                    tw`rounded-lg border border-slate-300 px-3 py-2`,
-                                                    (pressed || googleCalendar.busy) && tw`opacity-80`,
+                                                    tw`overflow-hidden rounded-lg border border-slate-300 px-3 py-2`,
+                                                    {...buttonDepthStyle},
+                                                    (pressed || googleCalendar.busy) && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
+                                                <ButtonShine/>
                                                 <Text style={[tw`text-xs`, {
                                                     fontFamily: fonts.heading,
                                                     color: "#E4E0D4"
@@ -334,17 +366,19 @@ export function CalendarScreen({
                                                     void saveWeeklyGoal({text: goal.title, presetId: goal.id});
                                                 }}
                                                 style={({pressed}) => [
-                                                    tw`w-[48%] rounded-xl border px-3 py-3`,
+                                                    tw`w-[48%] overflow-hidden rounded-xl border px-3 py-3`,
                                                     selected
                                                         ? {
                                                             borderColor: "#B55941",
                                                             backgroundColor: "rgba(181,89,65,0.18)"
                                                         }
                                                         : {borderColor: "#2c2c2c", backgroundColor: "rgba(0,0,0,0.35)"},
+                                                    buttonDepthStyle,
                                                     isGoalLocked && tw`opacity-45`,
-                                                    pressed && tw`opacity-80`,
+                                                    pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
+                                                <ButtonShine/>
                                                 <Text
                                                     style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
                                                     {goal.title}
@@ -384,12 +418,13 @@ export function CalendarScreen({
                                             void saveWeeklyGoal({text, presetId: null});
                                         }}
                                         style={({pressed}) => [
-                                            tw`mt-2 rounded-xl px-3 py-2.5 items-center`,
-                                            {backgroundColor: "#B55941"},
+                                            tw`mt-2 overflow-hidden rounded-xl px-3 py-2.5 items-center`,
+                                            {backgroundColor: "#B55941", ...buttonDepthStyle},
                                             (!customGoalReady || isGoalLocked) && tw`opacity-50`,
-                                            pressed && customGoalReady ? tw`opacity-80` : null,
+                                            pressed && customGoalReady ? {opacity: 0.78, transform: [{translateY: 1}]} : null,
                                         ]}
                                     >
+                                        <ButtonShine/>
                                         <Text
                                             style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
                                             Use custom goal

@@ -156,7 +156,7 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                         <View style={tw`mt-3 flex-row justify-end gap-2`}>
                             <Button
                                 label="Add Response"
-                                variant="primary"
+                                variant="glossy"
                                 hapticAction={false}
                                 onPress={() => {
                                     if (promptText.trim()) {
@@ -195,7 +195,7 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                         <View style={tw`mt-3 flex-row justify-end`}>
                             <Button
                                 label="Add Gratitude"
-                                variant="primary"
+                                variant="glossy"
                                 hapticAction={false}
                                 onPress={() => {
                                     const items = text
@@ -245,12 +245,12 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                                             })}</Text>
                                             {isEditing ? (
                                                 <View style={tw`flex-row gap-2`}>
-                                                    <Button label="Cancel" variant="secondary"
+                                                    <Button label="Cancel" variant="glossy"
                                                             onPress={() => {
                                                                 setEditingId(null);
                                                                 setEditingText("");
                                                             }}/>
-                                                    <Button label="Save" variant="primary"
+                                                    <Button label="Save" variant="glossy"
                                                             onPress={() => {
                                                                 if (!editingId) return;
                                                                 editEntry(editingId, editingText);
@@ -260,12 +260,12 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                                                 </View>
                                             ) : (
                                                 <View style={tw`flex-row gap-2`}>
-                                                    <Button label="Edit" variant="secondary"
+                                                    <Button label="Edit" variant="glossy"
                                                             onPress={() => {
                                                                 setEditingId(entry.id);
                                                                 setEditingText(entry.text);
                                                             }}/>
-                                                    <Button label="Delete" variant="secondary"
+                                                    <Button label="Delete" variant="glossy"
                                                             onPress={() => deleteEntry(entry.id)}/>
                                                 </View>
                                             )}
@@ -309,12 +309,12 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                                             })}</Text>
                                             {isEditing ? (
                                                 <View style={tw`flex-row gap-2`}>
-                                                    <Button label="Cancel" variant="secondary"
+                                                    <Button label="Cancel" variant="glossy"
                                                             onPress={() => {
                                                                 setEditingId(null);
                                                                 setEditingText("");
                                                             }}/>
-                                                    <Button label="Save" variant="primary"
+                                                    <Button label="Save" variant="glossy"
                                                             onPress={() => {
                                                                 if (!editingId) return;
                                                                 editEntry(editingId, editingText);
@@ -324,12 +324,12 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                                                 </View>
                                             ) : (
                                                 <View style={tw`flex-row gap-2`}>
-                                                    <Button label="Edit" variant="secondary"
+                                                    <Button label="Edit" variant="glossy"
                                                             onPress={() => {
                                                                 setEditingId(entry.id);
                                                                 setEditingText(entry.text);
                                                             }}/>
-                                                    <Button label="Delete" variant="secondary"
+                                                    <Button label="Delete" variant="glossy"
                                                             onPress={() => deleteEntry(entry.id)}/>
                                                 </View>
                                             )}
@@ -445,7 +445,7 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                                 .sort((a, b) => (a > b ? -1 : 1))
                                 .slice(0, 7)
                                 .map((d) => (
-                                    <Button key={d} label={d} variant={d === selectedDate ? "primary" : "secondary"}
+                                    <Button key={d} label={d} variant="glossy"
                                             onPress={() => setSelectedDate(d)}/>
                                 ))}
                         </View>
