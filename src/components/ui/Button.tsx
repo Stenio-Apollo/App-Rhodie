@@ -28,16 +28,16 @@ export function Button({
     const glossy = variant === "glossy";
     const hasShine = glossy || shine;
     const bgStyle =
-        glossy
+                glossy
             ? {
                 borderWidth: 1,
                 borderColor: "#171717",
                 backgroundColor: "#171717",
                 shadowColor: "#000000",
-                shadowOffset: {width: 0, height: 4},
-                shadowOpacity: 0.32,
-                shadowRadius: 7,
-                elevation: 5,
+                shadowOffset: {width: 0, height: 1},
+                shadowOpacity: 0.12,
+                shadowRadius: 3,
+                elevation: 2,
             }
             : variant === "secondary"
             ? tw`bg-transparent border border-zinc-200`
@@ -70,10 +70,10 @@ export function Button({
                 hasShine && !glossy
                     ? {
                         shadowColor: "#000000",
-                        shadowOffset: {width: 0, height: 4},
-                        shadowOpacity: 0.28,
-                        shadowRadius: 7,
-                        elevation: 5,
+                        shadowOffset: {width: 0, height: 1},
+                        shadowOpacity: 0.11,
+                        shadowRadius: 3,
+                        elevation: 2,
                     }
                     : null,
                 style,
@@ -86,7 +86,7 @@ export function Button({
                     {hasShine ? (
                         <>
                             <LinearGradient
-                                colors={["rgba(255,255,255,0.28)", "rgba(255,255,255,0.06)", "rgba(0,0,0,0.22)"]}
+                                colors={["rgba(255,255,255,0.10)", "rgba(255,255,255,0.02)", "rgba(0,0,0,0.08)"]}
                                 locations={[0, 0.48, 1]}
                                 pointerEvents="none"
                                 style={tw`absolute inset-0`}
@@ -94,8 +94,8 @@ export function Button({
                             <View
                                 pointerEvents="none"
                                 style={[
-                                    tw`absolute left-1 right-1 top-0.5 h-2 rounded-full`,
-                                    {backgroundColor: "rgba(255,255,255,0.16)"},
+                                    tw`absolute left-2 right-2 top-0.5 h-1 rounded-full`,
+                                    {backgroundColor: "rgba(255,255,255,0.05)"},
                                 ]}
                             />
                         </>

@@ -2,12 +2,12 @@
   "expo": {
     "name": "Rhodie",
     "slug": "rhnative",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "icon": "./assets/iconNew.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "runtimeVersion": "1.0.5",
+    "runtimeVersion": "1.0.6",
     "updates": {
       "url": "https://u.expo.dev/5e17b0ba-d52b-4981-899a-474d905e6180",
       "fallbackToCacheTimeout": 0,
@@ -26,7 +26,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rhnative.app",
-      "buildNumber": "77",
+      "buildNumber": "78",
       "infoPlist": {
         "CFBundleDisplayName": "Rhodie",
         "NSUserNotificationUsageDescription": "We use notifications to remind you about tasks and journal prompts.",
