@@ -86,7 +86,7 @@ export function Button({
                     {hasShine ? (
                         <>
                             <LinearGradient
-                                colors={["rgba(255,255,255,0.10)", "rgba(255,255,255,0.02)", "rgba(0,0,0,0.08)"]}
+                                colors={["rgba(255,255,255,0.07)", "rgba(255,255,255,0.01)", "rgba(0,0,0,0.14)"]}
                                 locations={[0, 0.48, 1]}
                                 pointerEvents="none"
                                 style={tw`absolute inset-0`}
@@ -95,7 +95,7 @@ export function Button({
                                 pointerEvents="none"
                                 style={[
                                     tw`absolute left-2 right-2 top-0.5 h-1 rounded-full`,
-                                    {backgroundColor: "rgba(255,255,255,0.05)"},
+                                    {backgroundColor: "rgba(255,255,255,0.035)"},
                                 ]}
                             />
                         </>
