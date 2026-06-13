@@ -21,30 +21,30 @@ const STEPS: OnboardingStep[] = [
     {
         eyebrow: "Start here",
         title: "Run the day from Home",
-        body: "Home gives you the quote, weekly goal, gratitude, and today's tasks. Tap a card when you want to jump directly into that part of the app.",
+        body: "Home is where your badge is... or however that saying goes",
     },
     {
         eyebrow: "Plan",
-        title: "Block time before the day gets loud",
-        body: "Use Plan like a timeline. Tap any time slot, name the event, and Rhodie schedules a reminder 15 minutes before it starts.",
+        title: "Beat the Burn-out",
+        body: "Plan your day here! Create a block and we'll remind you 15 mins before it starts.",
         video: require("../../public/videos/plan.mov"),
     },
     {
         eyebrow: "Journal",
-        title: "Capture what matters",
-        body: "Journal has a daily prompt and 3 Good Things Today. Use it quickly, then come back later from the memory shelf.",
+        title: "Let's Talk about it, robot to man!",
+        body: "I'll give you the prompts and you give me your thoughts! Deal? Oh and don't forget your '3 good things' ",
         video: require("../../public/videos/journal.mov"),
     },
     {
         eyebrow: "Tasks",
-        title: "Keep the loose ends visible",
-        body: "Tasks are for things you need to finish. Add due dates, due times, and priorities so reminders and the calendar can keep you honest.",
+        title: "get shit done here",
+        body: "Create... Complete... Delete... Repeat",
         video: require("../../public/videos/tasks.mov"),
     },
     {
         eyebrow: "Calendar",
         title: "Set the weekly target",
-        body: "Calendar shows due tasks and holds your weekly goal. Rhodie checks in daily so the goal does not disappear after Monday.",
+        body: "Rhodie keeps you accountable here, set a goal and we'll check in daily. Every completed goal is 1pt, every 3pts is a badge for your home screen.",
         video: require("../../public/videos/calendar.mov"),
     },
     {
@@ -142,70 +142,72 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
                     </Text>
                 </View>
             ) : (
-            <ScrollView
-                style={tw`flex-1 bg-black/55`}
-                contentContainerStyle={tw`flex-grow justify-end px-5 pb-10 pt-8`}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={tw`mb-8`}>
-                    <Text style={[tw`text-[11px] uppercase tracking-[5px] text-[#B55941]`, {fontFamily: fonts.strong}]}>
-                        Rhodie
-                    </Text>
-                    <Text style={[tw`mt-3 text-4xl leading-tight text-[#E4E0D4]`, {fontFamily: fonts.display}]}>
-                        A calmer way to hold the day together.
-                    </Text>
-                </View>
+                <ScrollView
+                    style={tw`flex-1 bg-black/55`}
+                    contentContainerStyle={tw`flex-grow justify-end px-5 pb-10 pt-8`}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={tw`mb-8`}>
+                        <Text
+                            style={[tw`text-[11px] uppercase tracking-[5px] text-[#B55941]`, {fontFamily: fonts.strong}]}>
+                            Rhodie
+                        </Text>
+                        <Text style={[tw`mt-3 text-4xl leading-tight text-[#E4E0D4]`, {fontFamily: fonts.display}]}>
+                            A calmer way to hold the day together.
+                        </Text>
+                    </View>
 
-                <View style={tw`rounded-[32px] border border-[#B55941]/50 bg-black/70 p-5`}>
-                    <Text style={[tw`text-[10px] uppercase tracking-[3px] text-[#B55941]`, {fontFamily: fonts.strong}]}>
-                        {step.eyebrow}
-                    </Text>
-                    <Text style={[tw`mt-2 text-2xl leading-8 text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                        {step.title}
-                    </Text>
-                    <Text style={[tw`mt-3 text-base leading-6 text-slate-300`, {fontFamily: fonts.body}]}>
-                        {step.body}
-                    </Text>
+                    <View style={tw`rounded-[32px] border border-[#B55941]/50 bg-black/70 p-5`}>
+                        <Text
+                            style={[tw`text-[10px] uppercase tracking-[3px] text-[#B55941]`, {fontFamily: fonts.strong}]}>
+                            {step.eyebrow}
+                        </Text>
+                        <Text style={[tw`mt-2 text-2xl leading-8 text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                            {step.title}
+                        </Text>
+                        <Text style={[tw`mt-3 text-base leading-6 text-slate-300`, {fontFamily: fonts.body}]}>
+                            {step.body}
+                        </Text>
 
-                    {step.video && !isCompleting ? <OnboardingVideo key={index} source={step.video}/> : null}
+                        {step.video && !isCompleting ? <OnboardingVideo key={index} source={step.video}/> : null}
 
-                    <View style={tw`mt-6 flex-row gap-2`}>
-                        {progress.map((active, itemIndex) => (
-                            <View
-                                key={itemIndex}
-                                style={[
-                                    tw`h-1.5 flex-1 rounded-full`,
-                                    {backgroundColor: active ? "#B55941" : "rgba(228,224,212,0.18)"},
+                        <View style={tw`mt-6 flex-row gap-2`}>
+                            {progress.map((active, itemIndex) => (
+                                <View
+                                    key={itemIndex}
+                                    style={[
+                                        tw`h-1.5 flex-1 rounded-full`,
+                                        {backgroundColor: active ? "#B55941" : "rgba(228,224,212,0.18)"},
+                                    ]}
+                                />
+                            ))}
+                        </View>
+
+                        <View style={tw`mt-6 flex-row items-center justify-between gap-3`}>
+                            <Pressable
+                                onPress={isLast ? onComplete : goBack}
+                                disabled={index === 0 && !isLast}
+                                style={({pressed}) => [
+                                    tw`rounded-xl px-3 py-2`,
+                                    (index === 0 && !isLast) && tw`opacity-0`,
+                                    pressed && tw`opacity-70`,
                                 ]}
+                            >
+                                <Text style={[tw`text-sm text-slate-300`, {fontFamily: fonts.button}]}>
+                                    {isLast ? "Skip" : "Back"}
+                                </Text>
+                            </Pressable>
+
+                            <Button
+                                label={isCompleting ? "Starting..." : isLast ? "Get started" : "Next"}
+                                variant="outlineAccent"
+                                onPress={goNext}
+                                disabled={isCompleting}
+                                style={tw`px-6`}
                             />
-                        ))}
+                        </View>
                     </View>
-
-                    <View style={tw`mt-6 flex-row items-center justify-between gap-3`}>
-                        <Pressable
-                            onPress={isLast ? onComplete : goBack}
-                            disabled={index === 0 && !isLast}
-                            style={({pressed}) => [
-                                tw`rounded-xl px-3 py-2`,
-                                (index === 0 && !isLast) && tw`opacity-0`,
-                                pressed && tw`opacity-70`,
-                            ]}
-                        >
-                            <Text style={[tw`text-sm text-slate-300`, {fontFamily: fonts.button}]}>
-                                {isLast ? "Skip" : "Back"}
-                            </Text>
-                        </Pressable>
-
-                        <Button
-                            label={isCompleting ? "Starting..." : isLast ? "Get started" : "Next"}
-                            variant="outlineAccent"
-                            onPress={goNext}
-                            disabled={isCompleting}
-                            style={tw`px-6`}
-                        />
-                    </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
             )}
         </ImageBackground>
     );

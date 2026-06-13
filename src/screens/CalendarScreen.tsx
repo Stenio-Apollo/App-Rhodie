@@ -148,8 +148,8 @@ export function CalendarScreen({
                     {showTutorial && onDismissTutorial ? (
                         <View style={tw`mt-3`}>
                             <TutorialCard
-                                title="Calendar connects tasks and goals"
-                                body="Tap dates to see due tasks. Set your weekly goal near the bottom, then Rhodie will check in each day."
+                                title="Calendar"
+                                body="Set your weekly goal here and I'll hold you accountable. Completed goals earns you 1pt. Every 3pts earns you a badge"
                                 onDismiss={onDismissTutorial}
                             />
                         </View>
@@ -185,8 +185,14 @@ export function CalendarScreen({
                                             }}
                                             style={({pressed}) => [
                                                 tw`overflow-hidden rounded-lg border px-3 py-2`,
-                                                {borderColor: "#B55941", backgroundColor: "transparent", ...buttonDepthStyle},
-                                                (pressed || googleCalendar.busy) && {opacity: 0.78, transform: [{translateY: 1}]},
+                                                {
+                                                    borderColor: "#B55941",
+                                                    backgroundColor: "transparent", ...buttonDepthStyle
+                                                },
+                                                (pressed || googleCalendar.busy) && {
+                                                    opacity: 0.78,
+                                                    transform: [{translateY: 1}]
+                                                },
                                             ]}
                                         >
                                             <ButtonShine/>
@@ -204,7 +210,10 @@ export function CalendarScreen({
                                                 style={({pressed}) => [
                                                     tw`overflow-hidden rounded-lg px-3 py-2`,
                                                     {backgroundColor: "#2B2B2B", ...buttonDepthStyle},
-                                                    (pressed || googleCalendar.busy) && {opacity: 0.78, transform: [{translateY: 1}]},
+                                                    (pressed || googleCalendar.busy) && {
+                                                        opacity: 0.78,
+                                                        transform: [{translateY: 1}]
+                                                    },
                                                 ]}
                                             >
                                                 <ButtonShine/>
@@ -223,7 +232,10 @@ export function CalendarScreen({
                                                 style={({pressed}) => [
                                                     tw`overflow-hidden rounded-lg border border-slate-300 px-3 py-2`,
                                                     {...buttonDepthStyle},
-                                                    (pressed || googleCalendar.busy) && {opacity: 0.78, transform: [{translateY: 1}]},
+                                                    (pressed || googleCalendar.busy) && {
+                                                        opacity: 0.78,
+                                                        transform: [{translateY: 1}]
+                                                    },
                                                 ]}
                                             >
                                                 <ButtonShine/>
@@ -421,7 +433,10 @@ export function CalendarScreen({
                                             tw`mt-2 overflow-hidden rounded-xl px-3 py-2.5 items-center`,
                                             {backgroundColor: "#B55941", ...buttonDepthStyle},
                                             (!customGoalReady || isGoalLocked) && tw`opacity-50`,
-                                            pressed && customGoalReady ? {opacity: 0.78, transform: [{translateY: 1}]} : null,
+                                            pressed && customGoalReady ? {
+                                                opacity: 0.78,
+                                                transform: [{translateY: 1}]
+                                            } : null,
                                         ]}
                                     >
                                         <ButtonShine/>

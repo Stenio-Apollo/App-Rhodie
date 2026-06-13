@@ -284,8 +284,8 @@ export function DayPlanScreen({planner, showTutorial, onDismissTutorial}: DayPla
                     {showTutorial && onDismissTutorial ? (
                         <View style={tw`px-4 pb-3`}>
                             <TutorialCard
-                                title="Tap a time slot to plan it"
-                                body="Events live on this timeline. Every new event automatically gets a reminder 15 minutes before its start time."
+                                title="Beat the Burn-out"
+                                body="Tap a time slot to plan it, I'll remind you 15 minutes before it starts."
                                 onDismiss={onDismissTutorial}
                             />
                         </View>

@@ -125,8 +125,8 @@ export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDism
                         {showTutorial && onDismissTutorial ? (
                             <View style={tw`mb-3`}>
                                 <TutorialCard
-                                    title="Tasks are for things you need to finish"
-                                    body="Add a due date and due time when a task needs a reminder. Use priorities to keep the important items visible."
+                                    title="Get shit done here!"
+                                    body="Create.. Complete... Delete.. Repeat."
                                     onDismiss={onDismissTutorial}
                                 />
                             </View>

@@ -101,8 +101,8 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                     {showTutorial && onDismissTutorial ? (
                         <View style={tw`mb-3`}>
                             <TutorialCard
-                                title="Journal in two quick modes"
-                                body="Use Prompt of the day for reflection, or 3 Good Things Today for gratitude. Saved entries stay dated in the memory shelf."
+                                title="Let's talk about it"
+                                body="I'll give you a prompt you give me your thoughts. Let's get started!"
                                 onDismiss={onDismissTutorial}
                             />
                         </View>
@@ -408,7 +408,8 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
                                                     })}
                                                 </Text>
                                                 {entryPrompt ? (
-                                                    <View style={tw`mt-3 rounded-2xl border border-[#B55941]/30 bg-[#B55941]/10 p-3`}>
+                                                    <View
+                                                        style={tw`mt-3 rounded-2xl border border-[#B55941]/30 bg-[#B55941]/10 p-3`}>
                                                         <Text
                                                             style={[tw`text-[10px] uppercase tracking-[1px] text-[#B55941]`, {fontFamily: fonts.strong}]}>
                                                             Prompt responded to

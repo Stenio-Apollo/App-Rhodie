@@ -10,7 +10,6 @@ import {fonts} from "../theme/fonts";
 import type {Profile} from "../state/useProfile";
 import {isToday, toLocalISODate} from "../lib/date-utils";
 import type {WeeklyGoal, WeeklyGoalProgress} from "../state/useWeeklyGoal";
-import {haptics} from "../lib/haptics";
 import {TutorialCard} from "../components/TutorialCard";
 
 interface TodayScreenProps {
@@ -75,7 +74,7 @@ export function TodayScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-40`}>
-            <View style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}>
+            <View style={[tw`flex-1 bg-black/3 3`, {paddingHorizontal: 1}]}>
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
                         style={[
@@ -93,8 +92,8 @@ export function TodayScreen({
                 >
                     {showTutorial && onDismissTutorial ? (
                         <TutorialCard
-                            title="Home is your launch pad"
-                            body="Tap the quote card for the daily prompt, Weekly goal for Calendar, Gratitude for today's good things, or Tasks to jump straight into your list."
+                            title="Home is where your badge is"
+                            body="tap any card to jump straight into that part of the app."
                             onDismiss={onDismissTutorial}
                         />
                     ) : null}
@@ -239,8 +238,8 @@ export function TodayScreen({
                                         </Text>
                                     ) : null}
                                     <View style={tw`mt-2 flex-row items-center justify-between`}>
-                                            <Text
-                                                style={[tw`text-[11px] font-semibold text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>
+                                        <Text
+                                            style={[tw`text-[11px] font-semibold text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>
                                             {statusLabel[task.status]}{task.dueTime ? ` • ${task.dueTime}` : ""}
                                         </Text>
                                         {task.priority ? (
