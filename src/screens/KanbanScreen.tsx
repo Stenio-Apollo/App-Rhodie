@@ -145,7 +145,7 @@ export function KanbanScreen({
                         <View
                             style={[
                                 tw`mt-2 overflow-hidden rounded-[28px] border bg-[black/10] p-1`,
-                                {borderColor: visualMode === "warm" ? "rgba(223,196,170,0.33)" : "rgba(0,0,0,0.33)"},
+                                {borderColor: visualMode === "warm" ? "rgba(223,196,170,0.11)" : "rgba(0,0,0,0.19)"},
                             ]}>
                             <BlurView
                                 intensity={72}
