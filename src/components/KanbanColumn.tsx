@@ -21,7 +21,7 @@ export function KanbanColumn({status, tasks, onDelete, onComplete, visualMode}: 
             <View
                 style={[
                     tw`min-h-[340px] rounded-2xl border bg-black/23 p-3`,
-                    {borderColor: visualMode === "warm" ? "rgba(223,196,170,0.19)" : "rgba(181,89,65,0.33)"},
+                    {borderColor: visualMode === "warm" ? "rgba(223,196,170,0.19)" : "rgba(181,89,65,0.19)"},
                 ]}
             >
                 <View style={tw`mb-3 flex-row items-center justify-between`}>
