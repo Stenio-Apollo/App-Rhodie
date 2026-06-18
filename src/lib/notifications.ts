@@ -2,8 +2,10 @@ import {Platform} from "react-native";
 import Constants from "expo-constants";
 import type {Task} from "../types";
 import type {PlannerEvent} from "../state/usePlannerEvents";
-import {getDailyJournalPrompt} from "./prompts";
+import {journalPrompts} from "./prompts";
 import {toLocalISODate} from "./date-utils";
+import {stoicQuotes} from "./quotes";
+import {getDailyRotationIndexes} from "./daily-rotation";
 
 const scheduledTaskNotificationIds = new Map<string, string>();
 const scheduledPlannerEventNotificationIds = new Map<string, string>();
@@ -11,9 +13,12 @@ let notificationHandlerConfigured = false;
 const DAILY_REMINDER_WINDOW_DAYS = 30;
 const DAILY_PROMPT_HOUR = 9;
 const DAILY_PROMPT_MINUTE = 0;
+const DAILY_QUOTE_HOUR = 8;
+const DAILY_QUOTE_MINUTE = 0;
 const JOURNAL_REMINDER_HOUR = 20;
 const JOURNAL_REMINDER_MINUTE = 0;
 const DAILY_PROMPT_REMINDER_KIND = "dailyPromptReminder";
+const DAILY_QUOTE_REMINDER_KIND = "dailyQuoteReminder";
 const JOURNAL_REMINDER_KIND = "journalReminder";
 
 function getNotificationsModule(): typeof import("expo-notifications") | null {
@@ -213,23 +218,57 @@ export async function syncPlannerEventReminderNotifications(events: PlannerEvent
     }
 }
 
-export async function syncJournalAndPromptReminderNotifications(): Promise<void> {
+export async function syncDailyReflectionReminderNotifications(): Promise<void> {
     const Notifications = await ensureNotificationPermissions();
     if (!Notifications) return;
 
     await cancelScheduledNotificationsByKind(Notifications, [
         DAILY_PROMPT_REMINDER_KIND,
+        DAILY_QUOTE_REMINDER_KIND,
         JOURNAL_REMINDER_KIND,
     ]);
 
+    const dateKeys: string[] = [];
     for (let dayOffset = 0; dayOffset < DAILY_REMINDER_WINDOW_DAYS; dayOffset++) {
+        const reminderDate = buildReminderDate(dayOffset, 12, 0);
+        if (reminderDate) {
+            dateKeys.push(toLocalISODate(reminderDate));
+        }
+    }
+
+    const [quoteIndexes, promptIndexes] = await Promise.all([
+        getDailyRotationIndexes("quote", dateKeys, stoicQuotes.length),
+        getDailyRotationIndexes("journalPrompt", dateKeys, journalPrompts.length),
+    ]);
+
+    for (let dayOffset = 0; dayOffset < DAILY_REMINDER_WINDOW_DAYS; dayOffset++) {
+        const quoteDate = buildReminderDate(dayOffset, DAILY_QUOTE_HOUR, DAILY_QUOTE_MINUTE);
+        if (quoteDate) {
+            const dateKey = toLocalISODate(quoteDate);
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: "Quote of the Day",
+                    body: stoicQuotes[quoteIndexes[dateKey] ?? 0] ?? "Start today with intention.",
+                    data: {
+                        kind: DAILY_QUOTE_REMINDER_KIND,
+                        date: dateKey,
+                    },
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: quoteDate,
+                    channelId: "default",
+                },
+            });
+        }
+
         const promptDate = buildReminderDate(dayOffset, DAILY_PROMPT_HOUR, DAILY_PROMPT_MINUTE);
         if (promptDate) {
             const dateKey = toLocalISODate(promptDate);
             await Notifications.scheduleNotificationAsync({
                 content: {
                     title: "Daily prompt",
-                    body: getDailyJournalPrompt(dateKey),
+                    body: journalPrompts[promptIndexes[dateKey] ?? 0] ?? "What do you want to reflect on today?",
                     data: {
                         kind: DAILY_PROMPT_REMINDER_KIND,
                         date: dateKey,
@@ -264,3 +303,5 @@ export async function syncJournalAndPromptReminderNotifications(): Promise<void>
         }
     }
 }
+
+export const syncJournalAndPromptReminderNotifications = syncDailyReflectionReminderNotifications;

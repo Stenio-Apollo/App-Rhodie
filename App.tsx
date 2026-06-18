@@ -18,7 +18,7 @@ import {useAppFonts} from "./src/theme/fonts";
 import {useSupabaseAuth} from "./src/state/useSupabaseAuth";
 import {useProfile} from "./src/state/useProfile";
 import {isToday, toLocalISODate} from "./src/lib/date-utils";
-import {registerForPushNotificationsAsync, syncJournalAndPromptReminderNotifications} from "./src/lib/notifications";
+import {registerForPushNotificationsAsync, syncDailyReflectionReminderNotifications} from "./src/lib/notifications";
 import {supabase} from "./src/lib/supabase";
 import {useSubscription} from "./src/state/useSubscription";
 import {LoadingVideoOverlay} from "./src/components/LoadingVideoOverlay";
@@ -155,7 +155,7 @@ export default function App() {
 
     useEffect(() => {
         if (!session || appLoading) return;
-        void syncJournalAndPromptReminderNotifications();
+        void syncDailyReflectionReminderNotifications();
     }, [appLoading, session]);
 
     useEffect(() => {

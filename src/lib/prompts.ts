@@ -1,4 +1,4 @@
-const PROMPTS = [
+export const journalPrompts = [
     "What is one thing you did recently that makes you proud? How can you build on it?",
     "Which challenge are you avoiding, and what tiny first step could you take today?",
     "Who relied on you this week, and how did you show up for them?",
@@ -130,6 +130,6 @@ function seededIndex(seed: string, max: number) {
 }
 
 export function getDailyJournalPrompt(date: string) {
-    const idx = seededIndex(date, PROMPTS.length);
-    return PROMPTS[idx];
+    const idx = seededIndex(date, journalPrompts.length);
+    return journalPrompts[idx];
 }
