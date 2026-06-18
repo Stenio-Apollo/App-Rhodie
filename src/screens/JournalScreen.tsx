@@ -9,6 +9,7 @@ import {fonts} from "../theme/fonts";
 import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
 import {TutorialCard} from "../components/TutorialCard";
+import type {VisualMode} from "../state/useVisualMode";
 
 function isoToday(): string {
     return toLocalISODate();
@@ -21,11 +22,12 @@ interface JournalScreenProps {
         target: "prompt" | "gratitude";
         entryId?: string | null;
     } | null;
+    visualMode: VisualMode;
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
 }
 
-export function JournalScreen({journal, homeAction, showTutorial, onDismissTutorial}: JournalScreenProps) {
+export function JournalScreen({journal, homeAction, visualMode, showTutorial, onDismissTutorial}: JournalScreenProps) {
     const {entries, byDate, addEntry, deleteEntry, editEntry} = journal;
     const [selectedDate, setSelectedDate] = useState<string>(isoToday());
     const [text, setText] = useState("");
@@ -35,7 +37,9 @@ export function JournalScreen({journal, homeAction, showTutorial, onDismissTutor
     const scrollRef = useRef<ScrollView>(null);
     const promptInputRef = useRef<TextInput>(null);
     const gratitudeInputRef = useRef<TextInput>(null);
-    const bg = require("../../public/images/rh201.jpg");
+    const bg = visualMode === "warm"
+        ? require("../../public/images/rhbear1.jpg")
+        : require("../../public/images/rh201.jpg");
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(selectedDate), [selectedDate]);

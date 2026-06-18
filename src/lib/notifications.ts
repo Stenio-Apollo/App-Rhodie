@@ -2,10 +2,19 @@ import {Platform} from "react-native";
 import Constants from "expo-constants";
 import type {Task} from "../types";
 import type {PlannerEvent} from "../state/usePlannerEvents";
+import {getDailyJournalPrompt} from "./prompts";
+import {toLocalISODate} from "./date-utils";
 
 const scheduledTaskNotificationIds = new Map<string, string>();
 const scheduledPlannerEventNotificationIds = new Map<string, string>();
 let notificationHandlerConfigured = false;
+const DAILY_REMINDER_WINDOW_DAYS = 30;
+const DAILY_PROMPT_HOUR = 9;
+const DAILY_PROMPT_MINUTE = 0;
+const JOURNAL_REMINDER_HOUR = 20;
+const JOURNAL_REMINDER_MINUTE = 0;
+const DAILY_PROMPT_REMINDER_KIND = "dailyPromptReminder";
+const JOURNAL_REMINDER_KIND = "journalReminder";
 
 function getNotificationsModule(): typeof import("expo-notifications") | null {
     if (Constants.appOwnership === "expo") {
@@ -76,6 +85,34 @@ function buildPlannerEventReminderDate(event: PlannerEvent): Date | null {
 
     const remindAt = new Date(startAt.getTime() - event.notifyMinutesBefore * 60 * 1000);
     return remindAt.getTime() > Date.now() ? remindAt : null;
+}
+
+function buildReminderDate(dayOffset: number, hour: number, minute: number): Date | null {
+    const reminderDate = new Date();
+    reminderDate.setDate(reminderDate.getDate() + dayOffset);
+    reminderDate.setHours(hour, minute, 0, 0);
+
+    return reminderDate.getTime() > Date.now() ? reminderDate : null;
+}
+
+async function cancelScheduledNotificationsByKind(
+    Notifications: typeof import("expo-notifications"),
+    kinds: string[],
+) {
+    const kindSet = new Set(kinds);
+    const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+
+    await Promise.all(
+        scheduledNotifications
+            .filter((notification) => {
+                const kind = notification.content.data?.kind;
+                return typeof kind === "string" && kindSet.has(kind);
+            })
+            .map((notification) =>
+                Notifications.cancelScheduledNotificationAsync(notification.identifier).catch(() => {
+                }),
+            ),
+    );
 }
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
@@ -173,5 +210,57 @@ export async function syncPlannerEventReminderNotifications(events: PlannerEvent
         });
 
         scheduledPlannerEventNotificationIds.set(event.id, notificationId);
+    }
+}
+
+export async function syncJournalAndPromptReminderNotifications(): Promise<void> {
+    const Notifications = await ensureNotificationPermissions();
+    if (!Notifications) return;
+
+    await cancelScheduledNotificationsByKind(Notifications, [
+        DAILY_PROMPT_REMINDER_KIND,
+        JOURNAL_REMINDER_KIND,
+    ]);
+
+    for (let dayOffset = 0; dayOffset < DAILY_REMINDER_WINDOW_DAYS; dayOffset++) {
+        const promptDate = buildReminderDate(dayOffset, DAILY_PROMPT_HOUR, DAILY_PROMPT_MINUTE);
+        if (promptDate) {
+            const dateKey = toLocalISODate(promptDate);
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: "Daily prompt",
+                    body: getDailyJournalPrompt(dateKey),
+                    data: {
+                        kind: DAILY_PROMPT_REMINDER_KIND,
+                        date: dateKey,
+                    },
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: promptDate,
+                    channelId: "default",
+                },
+            });
+        }
+
+        const journalDate = buildReminderDate(dayOffset, JOURNAL_REMINDER_HOUR, JOURNAL_REMINDER_MINUTE);
+        if (journalDate) {
+            const dateKey = toLocalISODate(journalDate);
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: "Journal check-in",
+                    body: "Take a minute to write what stood out today.",
+                    data: {
+                        kind: JOURNAL_REMINDER_KIND,
+                        date: dateKey,
+                    },
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: journalDate,
+                    channelId: "default",
+                },
+            });
+        }
     }
 }

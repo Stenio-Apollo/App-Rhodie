@@ -12,6 +12,7 @@ import type {Session} from "@supabase/supabase-js";
 import {haptics} from "../lib/haptics";
 import {toLocalISODate} from "../lib/date-utils";
 import {TutorialCard} from "../components/TutorialCard";
+import type {VisualMode} from "../state/useVisualMode";
 
 interface KanbanScreenProps {
     tasksState: {
@@ -33,13 +34,22 @@ interface KanbanScreenProps {
     };
     session: Session | null;
     focusTaskFormKey?: number;
+    visualMode: VisualMode;
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
 }
 
-export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDismissTutorial}: KanbanScreenProps) {
+export function KanbanScreen({
+                                 tasksState,
+                                 focusTaskFormKey,
+                                 visualMode,
+                                 showTutorial,
+                                 onDismissTutorial
+                             }: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
-    const bg = require("../../public/images/rh28.jpg");
+    const bg = visualMode === "warm"
+        ? require("../../public/images/rhox.jpg")
+        : require("../../public/images/rh28.jpg");
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -125,7 +135,7 @@ export function KanbanScreen({tasksState, focusTaskFormKey, showTutorial, onDism
                         {showTutorial && onDismissTutorial ? (
                             <View style={tw`mb-3`}>
                                 <TutorialCard
-                                    title="Get shit done here!"
+                                    title="get things done here!"
                                     body="Create.. Complete... Delete.. Repeat."
                                     onDismiss={onDismissTutorial}
                                 />

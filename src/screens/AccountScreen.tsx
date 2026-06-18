@@ -8,6 +8,7 @@ import {fonts} from "../theme/fonts";
 import type {Profile} from "../state/useProfile";
 import {haptics} from "../lib/haptics";
 import {BirthdayPicker, formatBirthday, parseBirthdayParts} from "../components/BirthdayPicker";
+import type {VisualMode} from "../state/useVisualMode";
 
 interface AccountScreenProps {
     session: Session;
@@ -39,6 +40,8 @@ interface AccountScreenProps {
     onSaveProfile: (payload: { full_name: string; birthday: string | null }) => Promise<string | null>;
     onDeleteAccount: () => Promise<string | null>;
     onResetOnboarding: () => Promise<void>;
+    visualMode: VisualMode;
+    onChangeVisualMode: (mode: VisualMode) => void;
 }
 
 function formatDateLabel(value: string | null | undefined): string | null {
@@ -96,6 +99,8 @@ export function AccountScreen({
                                   onSaveProfile,
                                   onDeleteAccount,
                                   onResetOnboarding,
+                                  visualMode,
+                                  onChangeVisualMode,
                               }: AccountScreenProps) {
     const mountedRef = useRef(true);
     const [name, setName] = useState(profile?.full_name ?? "");
@@ -393,6 +398,30 @@ export function AccountScreen({
                             <Button label="Email support" onPress={() => {
                                 void handleOpenSupportEmail();
                             }} variant="outlineAccent"/>
+                        </View>
+                    </View>
+
+                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>
+                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Visual mode</Text>
+                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                            Cool keeps the current background set. Warm switches Home, Plan, Journal, Tasks, and Calendar
+                            to the warmer animal set.
+                        </Text>
+                        <View style={tw`mt-4 flex-row gap-2`}>
+                            <Button
+                                label="Cool"
+                                onPress={() => onChangeVisualMode("cool")}
+                                variant={visualMode === "cool" ? "glossy" : "secondary"}
+                                style={visualMode === "cool" ? undefined : tw`border-slate-600/70`}
+                                shine={visualMode !== "cool"}
+                            />
+                            <Button
+                                label="Warm"
+                                onPress={() => onChangeVisualMode("warm")}
+                                variant={visualMode === "warm" ? "glossy" : "secondary"}
+                                style={visualMode === "warm" ? undefined : tw`border-slate-600/70`}
+                                shine={visualMode !== "warm"}
+                            />
                         </View>
                     </View>
 

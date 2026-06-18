@@ -21,6 +21,7 @@ import type {WeeklyGoal, WeeklyGoalPreset} from "../state/useWeeklyGoal";
 import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
 import {TutorialCard} from "../components/TutorialCard";
+import type {VisualMode} from "../state/useVisualMode";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -66,6 +67,7 @@ interface CalendarScreenProps {
     weeklyGoalPresets: WeeklyGoalPreset[];
     onSaveWeeklyGoal: (payload: { text: string; presetId?: string | null }) => Promise<void>;
     focusWeeklyGoalKey?: number;
+    visualMode: VisualMode;
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
 }
@@ -77,6 +79,7 @@ export function CalendarScreen({
                                    weeklyGoalPresets,
                                    onSaveWeeklyGoal,
                                    focusWeeklyGoalKey,
+                                   visualMode,
                                    showTutorial,
                                    onDismissTutorial,
                                }: CalendarScreenProps) {
@@ -85,7 +88,9 @@ export function CalendarScreen({
     const [goalSaveError, setGoalSaveError] = useState<string | null>(null);
     const scrollRef = useRef<ScrollView>(null);
     const customGoalInputRef = useRef<TextInput>(null);
-    const bg = require("../../public/images/rh211.jpg");
+    const bg = visualMode === "warm"
+        ? require("../../public/images/rhram1.jpg")
+        : require("../../public/images/rh211.jpg");
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};

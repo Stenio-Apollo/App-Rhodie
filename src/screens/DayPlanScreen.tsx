@@ -8,6 +8,7 @@ import {getPlannerColor} from "../lib/planner-colors";
 import {PlannerEventSheet} from "../components/PlannerEventSheet";
 import type {PlannerEvent, PlannerEventsState} from "../state/usePlannerEvents";
 import {TutorialCard} from "../components/TutorialCard";
+import type {VisualMode} from "../state/useVisualMode";
 
 const DAY_START_HOUR = 6;
 const DAY_END_HOUR = 23;
@@ -175,18 +176,21 @@ function shiftDate(date: string, deltaDays: number): string {
 
 interface DayPlanScreenProps {
     planner: PlannerEventsState;
+    visualMode: VisualMode;
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
 }
 
-export function DayPlanScreen({planner, showTutorial, onDismissTutorial}: DayPlanScreenProps) {
+export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutorial}: DayPlanScreenProps) {
     const today = toLocalISODate();
     const [date, setDate] = useState(today);
     const [sheetVisible, setSheetVisible] = useState(false);
     const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
     const [sheetStartAt, setSheetStartAt] = useState<string | undefined>(undefined);
     const [sheetEvent, setSheetEvent] = useState<PlannerEvent | undefined>(undefined);
-    const bg = require("../../public/images/rh16.jpg");
+    const bg = visualMode === "warm"
+        ? require("../../public/images/rh27.jpg")
+        : require("../../public/images/rh16.jpg");
 
     const dayEvents = useMemo(
         () =>

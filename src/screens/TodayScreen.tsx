@@ -1,4 +1,4 @@
-import {useMemo} from "react";
+import {useMemo, useState} from "react";
 import {Image, ImageBackground, Pressable, ScrollView, Text, View} from "react-native";
 import {Asset} from "expo-asset";
 import {SvgUri} from "react-native-svg";
@@ -11,6 +11,9 @@ import type {Profile} from "../state/useProfile";
 import {isToday, toLocalISODate} from "../lib/date-utils";
 import type {WeeklyGoal, WeeklyGoalProgress} from "../state/useWeeklyGoal";
 import {TutorialCard} from "../components/TutorialCard";
+import type {StickyNote} from "../state/useStickyNote";
+import {StickyNoteModal} from "../components/StickyNoteModal";
+import type {VisualMode} from "../state/useVisualMode";
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -22,6 +25,11 @@ interface TodayScreenProps {
     onOpenWeeklyGoal: () => void;
     onOpenGratitude: (entryId: string | null) => void;
     onOpenTasks: () => void;
+    stickyNote: StickyNote;
+    onChangeStickyNote: (text: string) => void;
+    onAddStickyNoteToTask: () => void;
+    onClearStickyNote: () => void;
+    visualMode: VisualMode;
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
 }
@@ -50,9 +58,15 @@ export function TodayScreen({
                                 onOpenWeeklyGoal,
                                 onOpenGratitude,
                                 onOpenTasks,
+                                stickyNote,
+                                onChangeStickyNote,
+                                onAddStickyNoteToTask,
+                                onClearStickyNote,
+                                visualMode,
                                 showTutorial,
                                 onDismissTutorial,
                             }: TodayScreenProps) {
+    const [stickyNoteOpen, setStickyNoteOpen] = useState(false);
     const today = isoToday();
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(today), [today]);
@@ -68,12 +82,16 @@ export function TodayScreen({
         [tasks, today],
     );
 
-    const bg = require("../../public/images/rh19.jpg");
+    const bg = visualMode === "warm"
+        ? require("../../public/images/rhelk1.jpg")
+        : require("../../public/images/rh19.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
+    const stickyPreview = stickyNote.text.trim();
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-40`}>
+        <ImageBackground source={bg} style={tw`flex-1`}
+                         imageStyle={visualMode === "warm" ? tw`opacity-27` : tw`opacity-40`}>
             <View style={[tw`flex-1 bg-black/3 3`, {paddingHorizontal: 1}]}>
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
@@ -85,15 +103,41 @@ export function TodayScreen({
                         RHODIE
                     </Text>
                 </View>
+                <Pressable
+                    onPress={() => setStickyNoteOpen(true)}
+                    style={({pressed}) => [
+                        tw`absolute right-4 top-4 z-20 w-36 rounded-2xl border border-[#6E4C2F] bg-[#DFC4AA] px-3 py-2.5`,
+                        {
+                            shadowColor: "#000000",
+                            shadowOffset: {width: 0, height: 8},
+                            shadowOpacity: 0.24,
+                            shadowRadius: 12,
+                            elevation: 8,
+                            transform: [{rotate: "1.5deg"}],
+                        },
+                        pressed && {opacity: 0.86, transform: [{rotate: "1.5deg"}, {translateY: 1}]},
+                    ]}
+                >
+                    <Text
+                        style={[tw`text-[10px] uppercase tracking-[1.5px] text-[#2B2B2B]/65`, {fontFamily: fonts.body}]}>
+                        Sticky note
+                    </Text>
+                    <Text
+                        numberOfLines={2}
+                        style={[tw`mt-1 text-sm leading-4 text-[#2B2B2B]`, {fontFamily: fonts.heading}]}
+                    >
+                        {stickyPreview || "tap here to add notes..."}
+                    </Text>
+                </Pressable>
                 <ScrollView
                     style={tw`flex-1`}
-                    contentContainerStyle={tw`flex-grow justify-end px-4 pb-28 pt-4 gap-4`}
+                    contentContainerStyle={tw`flex-grow justify-end px-4 pb-28 pt-24 gap-4`}
                     showsVerticalScrollIndicator={false}
                 >
                     {showTutorial && onDismissTutorial ? (
                         <TutorialCard
-                            title="Home is where your badge is"
-                            body="tap any card to jump straight into that part of the app."
+                            title="Home is command center"
+                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Warm/Cool to change the mode."
                             onDismiss={onDismissTutorial}
                         />
                     ) : null}
@@ -254,6 +298,17 @@ export function TodayScreen({
                         )}
                     </Pressable>
                 </ScrollView>
+                <StickyNoteModal
+                    visible={stickyNoteOpen}
+                    text={stickyNote.text}
+                    onChangeText={onChangeStickyNote}
+                    onAddToTask={() => {
+                        onAddStickyNoteToTask();
+                        setStickyNoteOpen(false);
+                    }}
+                    onClear={onClearStickyNote}
+                    onClose={() => setStickyNoteOpen(false)}
+                />
             </View>
         </ImageBackground>
     );

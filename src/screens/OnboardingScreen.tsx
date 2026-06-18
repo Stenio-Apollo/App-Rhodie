@@ -21,7 +21,7 @@ const STEPS: OnboardingStep[] = [
     {
         eyebrow: "Start here",
         title: "Run the day from Home",
-        body: "Home is where your badge is... or however that saying goes",
+        body: "Home keeps the essentials close: tap the sticky note to add quick notes, add it to Tasks when it becomes action, and use Warm/Cool in the header to switch the app's background mood.",
     },
     {
         eyebrow: "Plan",
@@ -37,7 +37,7 @@ const STEPS: OnboardingStep[] = [
     },
     {
         eyebrow: "Tasks",
-        title: "get shit done here",
+        title: "get things done here",
         body: "Create... Complete... Delete... Repeat",
         video: require("../../public/videos/tasks.mov"),
     },
@@ -50,7 +50,7 @@ const STEPS: OnboardingStep[] = [
     {
         eyebrow: "Ready",
         title: "You are set.",
-        body: "You can replay this guide from Account any time. Start on Home, then use the cards to jump into the part of Rhodie you need.",
+        body: "You can replay this guide from Account any time. Start on Home, use the sticky note for quick capture, and tap the Warm/Cool pill beside Sign out whenever you want a different visual feel.",
     },
 ];
 

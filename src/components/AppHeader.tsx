@@ -2,6 +2,7 @@ import {Image, Pressable, Text, View} from "react-native";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
+import type {VisualMode} from "../state/useVisualMode";
 
 const PROFILE_ICON = require("../../public/images/profile.png");
 
@@ -9,11 +10,21 @@ interface AppHeaderProps {
     fullName: string | null | undefined;
     accountOpen: boolean;
     birthdayActive: boolean;
+    visualMode: VisualMode;
+    onToggleVisualMode: () => void;
     onToggleAccount: () => void;
     onSignOut: () => void;
 }
 
-export function AppHeader({fullName, accountOpen, birthdayActive, onToggleAccount, onSignOut}: AppHeaderProps) {
+export function AppHeader({
+                              fullName,
+                              accountOpen,
+                              birthdayActive,
+                              visualMode,
+                              onToggleVisualMode,
+                              onToggleAccount,
+                              onSignOut,
+                          }: AppHeaderProps) {
     const headerSubtitle = accountOpen
         ? "Account settings"
         : birthdayActive
@@ -66,18 +77,35 @@ export function AppHeader({fullName, accountOpen, birthdayActive, onToggleAccoun
                     </View>
                 </Pressable>
             </View>
-            <Pressable
-                onPress={() => {
-                    haptics.selection();
-                    onSignOut();
-                }}
-                style={({pressed}) => [
-                    tw`px-3 py-1 rounded-xl border border-white/30`,
-                    pressed && tw`bg-white/10`,
-                ]}
-            >
-                <Text style={[tw`text-xs`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>Sign out</Text>
-            </Pressable>
+            <View style={tw`flex-row items-center gap-2`}>
+                <Pressable
+                    onPress={() => {
+                        haptics.selection();
+                        onToggleVisualMode();
+                    }}
+                    style={({pressed}) => [
+                        tw`px-3 py-1 rounded-xl border border-white/30`,
+                        visualMode === "warm" ? {backgroundColor: "rgba(186,136,90,0.22)", borderColor: "#ba885a"} : null,
+                        pressed && tw`bg-white/10`,
+                    ]}
+                >
+                    <Text style={[tw`text-xs`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>
+                        {visualMode === "warm" ? "Warm" : "Cool"}
+                    </Text>
+                </Pressable>
+                <Pressable
+                    onPress={() => {
+                        haptics.selection();
+                        onSignOut();
+                    }}
+                    style={({pressed}) => [
+                        tw`px-3 py-1 rounded-xl border border-white/30`,
+                        pressed && tw`bg-white/10`,
+                    ]}
+                >
+                    <Text style={[tw`text-xs`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>Sign out</Text>
+                </Pressable>
+            </View>
         </View>
     );
 }

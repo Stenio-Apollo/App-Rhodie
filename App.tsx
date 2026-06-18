@@ -18,7 +18,7 @@ import {useAppFonts} from "./src/theme/fonts";
 import {useSupabaseAuth} from "./src/state/useSupabaseAuth";
 import {useProfile} from "./src/state/useProfile";
 import {isToday, toLocalISODate} from "./src/lib/date-utils";
-import {registerForPushNotificationsAsync} from "./src/lib/notifications";
+import {registerForPushNotificationsAsync, syncJournalAndPromptReminderNotifications} from "./src/lib/notifications";
 import {supabase} from "./src/lib/supabase";
 import {useSubscription} from "./src/state/useSubscription";
 import {LoadingVideoOverlay} from "./src/components/LoadingVideoOverlay";
@@ -37,6 +37,8 @@ import {DayPlanScreen} from "./src/screens/DayPlanScreen";
 import {usePlannerEvents} from "./src/state/usePlannerEvents";
 import {OnboardingScreen} from "./src/screens/OnboardingScreen";
 import {useOnboarding} from "./src/state/useOnboarding";
+import {clearStickyNoteStorage, useStickyNote} from "./src/state/useStickyNote";
+import {clearVisualModeStorage, useVisualMode} from "./src/state/useVisualMode";
 
 type HomeAction =
     | { key: number; target: "journalPrompt"; entryId: string | null }
@@ -80,12 +82,14 @@ export default function App() {
     const journalState = useJournal(session);
     const plannerState = usePlannerEvents(session);
     const onboarding = useOnboarding(session?.user.id);
+    const stickyNoteState = useStickyNote(session?.user.id);
+    const visualModeState = useVisualMode(session?.user.id);
     const [fontsLoaded] = useAppFonts();
     const birthdayActive = Boolean(profile?.birthday && isToday(profile.birthday));
     const appLoading = !fontsLoaded ||
         authLoading ||
         (session && subscription.loading) ||
-        (session && (!tasksState.isLoaded || !weeklyGoalState.isLoaded || !onboarding.isLoaded));
+        (session && (!tasksState.isLoaded || !weeklyGoalState.isLoaded || !onboarding.isLoaded || !stickyNoteState.isLoaded || !visualModeState.isLoaded));
 
     useEffect(() => {
         if (!session) {
@@ -148,6 +152,11 @@ export default function App() {
             cancelled = true;
         };
     }, [session]);
+
+    useEffect(() => {
+        if (!session || appLoading) return;
+        void syncJournalAndPromptReminderNotifications();
+    }, [appLoading, session]);
 
     useEffect(() => {
         return () => {
@@ -239,6 +248,8 @@ export default function App() {
             clearTasksStorage(session?.user.id),
             clearJournalStorage(session?.user.id),
             clearWeeklyGoalStorage(session?.user.id),
+            clearStickyNoteStorage(session?.user.id),
+            clearVisualModeStorage(session?.user.id),
         ]);
         setAccountOpen(false);
         return null;
@@ -257,6 +268,21 @@ export default function App() {
             const message = error instanceof Error ? error.message : "Weekly goal could not be saved.";
             Alert.alert("Goal sync failed", message);
         }
+    }
+
+    async function handleAddStickyNoteToTask() {
+        const trimmed = stickyNoteState.note.text.trim();
+        if (!trimmed) return;
+
+        await tasksState.addTask({
+            title: trimmed.split(/\r?\n/)[0],
+            description: trimmed.split(/\r?\n/).slice(1).join("\n"),
+            dueDate: null,
+            dueTime: null,
+            priority: "medium",
+            status: "todo",
+        });
+        haptics.createNewTask();
     }
 
     async function handleCompleteOnboarding() {
@@ -349,6 +375,10 @@ export default function App() {
                     fullName={profile?.full_name}
                     accountOpen={accountOpen}
                     birthdayActive={birthdayActive}
+                    visualMode={visualModeState.mode}
+                    onToggleVisualMode={() => {
+                        visualModeState.setMode(visualModeState.mode === "warm" ? "cool" : "warm");
+                    }}
                     onToggleAccount={() => setAccountOpen((current) => !current)}
                     onSignOut={() => {
                         void handleSignOut();
@@ -371,6 +401,8 @@ export default function App() {
                             onSaveProfile={handleSaveProfile}
                             onDeleteAccount={handleDeleteAccount}
                             onResetOnboarding={onboarding.resetOnboarding}
+                            visualMode={visualModeState.mode}
+                            onChangeVisualMode={visualModeState.setMode}
                         />
                     ) : null}
                     {!accountOpen && tab === "today" ? (
@@ -384,6 +416,13 @@ export default function App() {
                             onOpenWeeklyGoal={() => openHomeAction({target: "weeklyGoal"})}
                             onOpenGratitude={(entryId) => openHomeAction({target: "gratitude", entryId})}
                             onOpenTasks={() => openHomeAction({target: "tasks"})}
+                            stickyNote={stickyNoteState.note}
+                            onChangeStickyNote={stickyNoteState.setText}
+                            onAddStickyNoteToTask={() => {
+                                void handleAddStickyNoteToTask();
+                            }}
+                            onClearStickyNote={stickyNoteState.clear}
+                            visualMode={visualModeState.mode}
                             showTutorial={onboarding.visibleTutorials.home}
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("home");
@@ -393,6 +432,7 @@ export default function App() {
                     {!accountOpen && tab === "plan" ? (
                         <DayPlanScreen
                             planner={plannerState}
+                            visualMode={visualModeState.mode}
                             showTutorial={onboarding.visibleTutorials.plan}
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("plan");
@@ -409,6 +449,7 @@ export default function App() {
                                         ? {key: homeAction.key, target: "gratitude", entryId: homeAction.entryId}
                                         : null
                             }
+                            visualMode={visualModeState.mode}
                             showTutorial={onboarding.visibleTutorials.journal}
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("journal");
@@ -420,6 +461,7 @@ export default function App() {
                             tasksState={tasksState}
                             session={session}
                             focusTaskFormKey={homeAction?.target === "tasks" ? homeAction.key : undefined}
+                            visualMode={visualModeState.mode}
                             showTutorial={onboarding.visibleTutorials.tasks}
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("tasks");
@@ -434,6 +476,7 @@ export default function App() {
                             weeklyGoalPresets={weeklyGoalState.presets}
                             onSaveWeeklyGoal={weeklyGoalState.saveGoal}
                             focusWeeklyGoalKey={homeAction?.target === "weeklyGoal" ? homeAction.key : undefined}
+                            visualMode={visualModeState.mode}
                             showTutorial={onboarding.visibleTutorials.calendar}
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("calendar");
