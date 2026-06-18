@@ -67,6 +67,7 @@ export function StickyNoteModal({
                         onChangeText={onChangeText}
                         multiline
                         autoFocus
+                        keyboardAppearance="dark"
                         textAlignVertical="top"
                         placeholder="add notes here"
                         placeholderTextColor="rgba(43,43,43,0.45)"
