@@ -16,7 +16,7 @@ interface KanbanColumnProps {
 export function KanbanColumn({status, tasks, onDelete, onComplete}: KanbanColumnProps) {
     return (
         <View style={tw`w-80`}>
-            <View style={tw`min-h-[340px] rounded-2xl border border-[#2c2c2c] bg-black/23 p-3`}>
+            <View style={tw`min-h-[340px] rounded-2xl border border-[#DFC4AA]/33 bg-black/23 p-3`}>
                 <View style={tw`mb-3 flex-row items-center justify-between`}>
                     <Text style={[tw`text-lg font-extrabold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
                         {statusLabel(status)}

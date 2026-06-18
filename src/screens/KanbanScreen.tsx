@@ -143,7 +143,7 @@ export function KanbanScreen({
                         ) : null}
 
                         <View
-                            style={tw`mt-2 overflow-hidden rounded-[28px] border border-black/11 bg-black/10 p-1`}>
+                            style={tw`mt-2 overflow-hidden rounded-[28px] border border-[#dfc4aa]/33 bg-[black/10] p-1`}>
                             <BlurView
                                 intensity={72}
                                 tint="dark"
