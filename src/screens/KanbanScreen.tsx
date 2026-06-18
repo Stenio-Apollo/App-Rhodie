@@ -143,7 +143,10 @@ export function KanbanScreen({
                         ) : null}
 
                         <View
-                            style={tw`mt-2 overflow-hidden rounded-[28px] border border-[#dfc4aa]/33 bg-[black/10] p-1`}>
+                            style={[
+                                tw`mt-2 overflow-hidden rounded-[28px] border bg-[black/10] p-1`,
+                                {borderColor: visualMode === "warm" ? "rgba(223,196,170,0.33)" : "rgba(0,0,0,0.33)"},
+                            ]}>
                             <BlurView
                                 intensity={72}
                                 tint="dark"
@@ -250,11 +253,13 @@ export function KanbanScreen({
                                     tasks={filteredGrouped.todo}
                                     onDelete={deleteTask}
                                     onComplete={(taskId) => move(taskId, "completed", Number.MAX_SAFE_INTEGER)}
+                                    visualMode={visualMode}
                                 />
                                 <KanbanColumn
                                     status="completed"
                                     tasks={filteredGrouped.completed}
                                     onDelete={deleteTask}
+                                    visualMode={visualMode}
                                 />
                             </View>
                         </ScrollView>
