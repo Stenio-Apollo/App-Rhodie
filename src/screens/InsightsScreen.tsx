@@ -47,11 +47,11 @@ const innerCardShadow = {
 };
 
 const buttonShadow = {
-    shadowColor: "#B55941",
-    shadowOpacity: 0.11,
-    shadowRadius: 3,
-    shadowOffset: {width: 0, height: 1},
-    elevation: 2,
+    shadowColor: "#000000",
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    shadowOffset: {width: 0, height: 5},
+    elevation: 6,
 };
 
 function ButtonShine() {

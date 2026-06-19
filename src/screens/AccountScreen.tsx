@@ -113,6 +113,45 @@ export function AccountScreen({
     const bg = visualMode === "warm"
         ? require("../../public/images/rhelk1.jpg")
         : require("../../public/images/rh11.jpg");
+    const accountButtonDepthStyle = {
+        shadowColor: "#000000",
+        shadowOffset: {width: 0, height: 5},
+        shadowOpacity: 0.24,
+        shadowRadius: 8,
+        elevation: 6,
+    };
+    const burntOrangeButtonStyle = {
+        ...accountButtonDepthStyle,
+        backgroundColor: "#B55941",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.18)",
+    };
+    const warmButtonStyle = {
+        ...accountButtonDepthStyle,
+        backgroundColor: "#E1B996",
+        borderWidth: 1,
+        borderColor: "rgba(43,43,43,0.22)",
+    };
+    const coolButtonStyle = {
+        ...accountButtonDepthStyle,
+        backgroundColor: "#225D7D",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.18)",
+    };
+    const blackButtonStyle = {
+        ...accountButtonDepthStyle,
+        backgroundColor: "#111111",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.16)",
+    };
+    const deleteButtonStyle = {
+        ...accountButtonDepthStyle,
+        backgroundColor: "#f43f5e",
+        borderWidth: 1,
+        borderColor: "rgba(43,43,43,0.18)",
+    };
+    const lightButtonTextStyle = {color: "#FFF6E8"};
+    const darkButtonTextStyle = {color: "#111111"};
 
     useEffect(() => {
         mountedRef.current = true;
@@ -259,7 +298,14 @@ export function AccountScreen({
                                 Manage your Rhodie profile, subscription, and support from one place.
                             </Text>
                         </View>
-                        <Button label="Done" onPress={onClose} variant="outlineAccent"/>
+                        <Button
+                            label="Done"
+                            onPress={onClose}
+                            variant="outlineAccent"
+                            shine
+                            style={warmButtonStyle}
+                            textStyle={darkButtonTextStyle}
+                        />
                     </View>
 
                     <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>
@@ -303,6 +349,9 @@ export function AccountScreen({
                                 }}
                                 variant="outlineAccent"
                                 disabled={saveBusy}
+                                shine
+                                style={warmButtonStyle}
+                                textStyle={darkButtonTextStyle}
                             />
                         </View>
 
@@ -346,15 +395,22 @@ export function AccountScreen({
                                 label="View plans"
                                 onPress={onOpenSubscriptionOffers}
                                 variant="secondary"
+                                shine
+                                style={burntOrangeButtonStyle}
+                                textStyle={darkButtonTextStyle}
                             />
                             <Button label="Manage subscription" onPress={() => {
                                 void handleManageSubscription();
-                            }} variant="outlineAccent" disabled={subscription.manageBusy}/>
+                            }} variant="outlineAccent" disabled={subscription.manageBusy} shine
+                                    style={burntOrangeButtonStyle} textStyle={darkButtonTextStyle}/>
                             <Button
                                 label={subscription.restoreBusy ? "Restoring..." : "Restore purchases"}
                                 onPress={subscription.restore}
                                 variant="secondary"
                                 disabled={subscription.restoreBusy}
+                                shine
+                                style={warmButtonStyle}
+                                textStyle={darkButtonTextStyle}
                             />
                         </View>
                         <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
@@ -397,9 +453,16 @@ export function AccountScreen({
                         <Text
                             style={[tw`mt-3 text-xs text-slate-400`, {fontFamily: fonts.body}]}>s3.gerlin@gmail.com</Text>
                         <View style={tw`mt-4 flex-row justify-end`}>
-                            <Button label="Email support" onPress={() => {
-                                void handleOpenSupportEmail();
-                            }} variant="outlineAccent"/>
+                            <Button
+                                label="Email support"
+                                onPress={() => {
+                                    void handleOpenSupportEmail();
+                                }}
+                                variant="outlineAccent"
+                                shine
+                                style={warmButtonStyle}
+                                textStyle={darkButtonTextStyle}
+                            />
                         </View>
                     </View>
 
@@ -413,16 +476,18 @@ export function AccountScreen({
                             <Button
                                 label="Cool"
                                 onPress={() => onChangeVisualMode("cool")}
-                                variant={visualMode === "cool" ? "glossy" : "secondary"}
-                                style={visualMode === "cool" ? undefined : tw`border-slate-600/70`}
-                                shine={visualMode !== "cool"}
+                                variant="primary"
+                                style={coolButtonStyle}
+                                textStyle={lightButtonTextStyle}
+                                shine
                             />
                             <Button
                                 label="Warm"
                                 onPress={() => onChangeVisualMode("warm")}
-                                variant={visualMode === "warm" ? "glossy" : "secondary"}
-                                style={visualMode === "warm" ? undefined : tw`border-slate-600/70`}
-                                shine={visualMode !== "warm"}
+                                variant="primary"
+                                style={warmButtonStyle}
+                                textStyle={darkButtonTextStyle}
+                                shine
                             />
                         </View>
                     </View>
@@ -433,7 +498,14 @@ export function AccountScreen({
                             Replay the first-run onboarding and restore the in-app tutorial cards.
                         </Text>
                         <View style={tw`mt-4 flex-row justify-end`}>
-                            <Button label="Replay guide" onPress={confirmResetOnboarding} variant="outlineAccent"/>
+                            <Button
+                                label="Replay guide"
+                                onPress={confirmResetOnboarding}
+                                variant="outlineAccent"
+                                shine
+                                style={warmButtonStyle}
+                                textStyle={darkButtonTextStyle}
+                            />
                         </View>
                     </View>
 
@@ -444,12 +516,22 @@ export function AccountScreen({
                             is permanent. It removes your app data, but store subscriptions still need to be managed in
                             the App Store if they are active.</Text>
                         <View style={tw`mt-4 flex-row flex-wrap gap-2`}>
-                            <Button label="Sign out" onPress={onSignOut} variant="secondary"/>
+                            <Button
+                                label="Sign out"
+                                onPress={onSignOut}
+                                variant="secondary"
+                                shine
+                                style={blackButtonStyle}
+                                textStyle={lightButtonTextStyle}
+                            />
                             <Button
                                 label={deleteBusy ? "Deleting..." : "Delete account"}
                                 onPress={confirmDeleteAccount}
                                 variant="danger"
                                 disabled={deleteBusy}
+                                shine
+                                style={deleteButtonStyle}
+                                textStyle={darkButtonTextStyle}
                             />
                         </View>
                     </View>

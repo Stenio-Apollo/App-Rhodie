@@ -5,6 +5,7 @@ import {Badge} from "./ui/Badge";
 import {Card} from "./ui/Card";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
+import {Button} from "./ui/Button";
 
 interface TaskCardProps {
     task: Task;
@@ -51,26 +52,32 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                 <View style={tw`mt-2.5 flex-row items-center justify-between gap-2`}>
                     <View style={tw`flex-row items-center gap-1.5`}>
                         {status !== "completed" && onComplete ? (
-                            <Pressable
-                                style={({pressed}) => [tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}, pressed && tw`opacity-80`]}
+                            <Button
+                                label="Complete"
+                                hapticAction={false}
                                 onPress={() => {
                                     haptics.completeTask();
                                     onComplete(task.id);
-                                }}>
-                                <Text
-                                    style={[tw`text-xs font-bold`, {fontFamily: fonts.button, color: "#E4E0D4"}]}>Complete</Text>
-                            </Pressable>
+                                }}
+                                shine
+                                style={[tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}]}
+                                textStyle={[tw`text-xs`, {color: "#E4E0D4"}]}
+                            />
                         ) : null}
                     </View>
 
                     <View style={tw`flex-row items-center gap-1.5`}>
-                        <Pressable onPress={() => {
-                            haptics.deleteTask();
-                            onDelete(task.id);
-                        }}
-                                   style={({pressed}) => [tw`rounded-lg bg-[#282828] px-2.5 py-1`, pressed && tw`bg-[#282828]/80`]}>
-                            <Text style={[tw`text-xs font-bold`, {fontFamily: fonts.body, color: "#E4E0D4"}]}>Delete</Text>
-                        </Pressable>
+                        <Button
+                            label="Delete"
+                            hapticAction={false}
+                            onPress={() => {
+                                haptics.deleteTask();
+                                onDelete(task.id);
+                            }}
+                            shine
+                            style={[tw`rounded-lg bg-[#282828] px-2.5 py-1`]}
+                            textStyle={[tw`text-xs`, {color: "#E4E0D4"}]}
+                        />
                     </View>
                 </View>
             </Card>

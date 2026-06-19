@@ -34,10 +34,10 @@ export function Button({
                 borderColor: "#171717",
                 backgroundColor: "#171717",
                 shadowColor: "#000000",
-                shadowOffset: {width: 0, height: 1},
-                shadowOpacity: 0.12,
-                shadowRadius: 3,
-                elevation: 2,
+                shadowOffset: {width: 0, height: 5},
+                shadowOpacity: 0.24,
+                shadowRadius: 8,
+                elevation: 6,
             }
             : variant === "secondary"
             ? tw`bg-transparent border border-zinc-200`
@@ -70,10 +70,10 @@ export function Button({
                 hasShine && !glossy
                     ? {
                         shadowColor: "#000000",
-                        shadowOffset: {width: 0, height: 1},
-                        shadowOpacity: 0.11,
-                        shadowRadius: 3,
-                        elevation: 2,
+                        shadowOffset: {width: 0, height: 5},
+                        shadowOpacity: 0.24,
+                        shadowRadius: 8,
+                        elevation: 6,
                     }
                     : null,
                 style,

@@ -14,6 +14,7 @@ import {TutorialCard} from "../components/TutorialCard";
 import type {StickyNote} from "../state/useStickyNote";
 import {StickyNoteModal} from "../components/StickyNoteModal";
 import type {VisualMode} from "../state/useVisualMode";
+import {Button} from "../components/ui/Button";
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -87,6 +88,16 @@ export function TodayScreen({
         : require("../../public/images/rh19.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
+    const stickyNoteButtonStyle = {
+        backgroundColor: "#E1B996",
+        borderWidth: 1,
+        borderColor: "rgba(43,43,43,0.22)",
+        shadowColor: "#000000",
+        shadowOffset: {width: 0, height: 5},
+        shadowOpacity: 0.24,
+        shadowRadius: 8,
+        elevation: 6,
+    };
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`}
@@ -103,24 +114,13 @@ export function TodayScreen({
                     </Text>
                 </View>
                 <View style={tw`absolute right-4 top-4 z-20 items-end gap-2`}>
-                    <Pressable
+                    <Button
+                        label="Sticky note"
                         onPress={() => setStickyNoteOpen(true)}
-                        style={({pressed}) => [
-                            tw`rounded-full border border-[#6E4C2F]/60 bg-[#DFC4AA] px-3 py-1.5`,
-                            {
-                                shadowColor: "#000000",
-                                shadowOffset: {width: 0, height: 4},
-                                shadowOpacity: 0.18,
-                                shadowRadius: 8,
-                                elevation: 5,
-                            },
-                            pressed && tw`opacity-85`,
-                        ]}
-                    >
-                        <Text style={[tw`text-[11px] text-[#2B2B2B]`, {fontFamily: fonts.heading}]}>
-                            Sticky note
-                        </Text>
-                    </Pressable>
+                        shine
+                        style={[tw`rounded-full px-3 py-1.5`, stickyNoteButtonStyle]}
+                        textStyle={[tw`text-[11px]`, {color: "#111111"}]}
+                    />
                 </View>
                 <ScrollView
                     style={tw`flex-1`}

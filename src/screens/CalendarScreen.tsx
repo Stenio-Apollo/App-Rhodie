@@ -25,10 +25,10 @@ import type {VisualMode} from "../state/useVisualMode";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.11,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: {width: 0, height: 5},
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    elevation: 6,
 };
 
 function ButtonShine() {
