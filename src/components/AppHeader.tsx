@@ -41,7 +41,7 @@ export function AppHeader({
     };
     const headerModeButtonStyle = {
         ...headerButtonDepthStyle,
-        backgroundColor: visualMode === "warm" ? "rgba(225,185,150,0.10)" : "rgba(34,93,125,0.12)",
+        backgroundColor: visualMode === "warm" ? "rgba(225,185,150,0.18)" : "rgba(34,93,125,0.20)",
         borderWidth: 1,
         borderColor: visualMode === "warm" ? "#E1B996" : "#225D7D",
         shadowColor: visualMode === "warm" ? "#E1B996" : "#225D7D",
@@ -106,6 +106,7 @@ export function AppHeader({
                 <Button
                     label={visualMode === "warm" ? "Warm" : "Cool"}
                     onPress={onToggleVisualMode}
+                    shine
                     style={[tw`px-3 py-1`, headerModeButtonStyle]}
                     textStyle={[tw`text-xs`, {color: "#E4E0D4"}]}
                 />
