@@ -62,7 +62,18 @@ export function SubscriptionScreen({
         shadowRadius: 8,
         elevation: 6,
     };
+    const burntOrangeButtonStyle = {
+        ...buttonStyle,
+        backgroundColor: "#B55941",
+        borderColor: "rgba(255,255,255,0.18)",
+    };
+    const blackButtonStyle = {
+        ...buttonStyle,
+        backgroundColor: "#111111",
+        borderColor: "rgba(255,255,255,0.16)",
+    };
     const buttonTextStyle = {color: "#111111"};
+    const lightButtonTextStyle = {color: "#FFF6E8"};
 
     return (
         <ImageBackground source={paywallBackground} style={tw`flex-1`} imageStyle={tw`opacity-70`}>
@@ -192,7 +203,7 @@ export function SubscriptionScreen({
                             label={restoreBusy ? "Restoring..." : "Restore purchases"}
                             onPress={onRestore}
                             shine
-                            style={buttonStyle}
+                            style={burntOrangeButtonStyle}
                             textStyle={buttonTextStyle}
                         />
                     </View>
@@ -244,8 +255,8 @@ export function SubscriptionScreen({
                             onPress={onSignOut}
                             disabled={loading}
                             shine
-                            style={buttonStyle}
-                            textStyle={buttonTextStyle}
+                            style={blackButtonStyle}
+                            textStyle={lightButtonTextStyle}
                         />
                     </View>
                 </View>

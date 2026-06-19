@@ -46,9 +46,9 @@ export function AppHeader({
         borderColor: visualMode === "warm" ? "#E1B996" : "#225D7D",
         shadowColor: visualMode === "warm" ? "#E1B996" : "#225D7D",
         shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 0.34,
-        shadowRadius: 7,
-        elevation: 4,
+        shadowOpacity: 0.18,
+        shadowRadius: 4,
+        elevation: 2,
     };
     const headerSignOutButtonStyle = {
         ...headerButtonDepthStyle,
