@@ -58,14 +58,24 @@ create table if not exists public.push_tokens (
   user_id text not null,
   token text not null,
   platform text,
+  timezone text,
   updated_at timestamptz not null default now(),
   primary key (user_id, token)
+);
+
+create table if not exists public.push_notification_deliveries (
+  token text not null,
+  kind text not null check (kind in ('daily_quote', 'daily_prompt')),
+  local_date date not null,
+  delivered_at timestamptz not null default now(),
+  primary key (token, kind, local_date)
 );
 
 -- Enable RLS
 alter table public.journal_entries enable row level security;
 alter table public.tasks enable row level security;
 alter table public.push_tokens enable row level security;
+alter table public.push_notification_deliveries enable row level security;
 alter table public.google_calendar_connections enable row level security;
 
 -- Ownership policies
@@ -106,6 +116,7 @@ create policy "insert google calendar connection" on public.google_calendar_conn
 revoke all on public.journal_entries from anon;
 revoke all on public.tasks from anon;
 revoke all on public.push_tokens from anon;
+revoke all on public.push_notification_deliveries from anon, authenticated;
 revoke all on public.google_calendar_connections from anon;
 
 -- Profiles

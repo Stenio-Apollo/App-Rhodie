@@ -86,13 +86,6 @@ export function StickyNoteModal({
                             textStyle={[tw`text-[10px]`, {color: "#2B2B2B"}]}
                         />
                         <Button
-                            label="Stick to home"
-                            variant="glossy"
-                            onPress={onClose}
-                            style={tw`flex-1 px-2`}
-                            textStyle={tw`text-[10px]`}
-                        />
-                        <Button
                             label="Add to task"
                             variant="glossy"
                             onPress={onAddToTask}

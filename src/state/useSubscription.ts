@@ -11,11 +11,13 @@ export function useSubscription(session: Session | null) {
         verificationPayload: billing.verificationPayload,
         storeConnected: billing.storeConnected,
         billingConfigured: billing.billingConfigured,
+        billingLoading: billing.loading,
     });
     const bypassSubscriptions = shouldBypassSubscriptions();
+    const loading = billing.loading || access.loading;
 
     return {
-        loading: billing.loading,
+        loading,
         billingConfigured: billing.billingConfigured,
         runtimeSupportsBilling: billing.runtimeSupportsBilling,
         storeConnected: billing.storeConnected,
@@ -29,7 +31,7 @@ export function useSubscription(session: Session | null) {
         trialStartedAt: access.trialStartedAt,
         trialEndsAt: access.trialEndsAt,
         trialDaysRemaining: access.trialDaysRemaining,
-        requiresPaywall: !bypassSubscriptions && billing.runtimeSupportsBilling && access.accessSource === "none",
+        requiresPaywall: !bypassSubscriptions && !loading && billing.runtimeSupportsBilling && access.accessSource === "none",
         purchaseBusy: billing.purchaseBusy,
         restoreBusy: billing.restoreBusy,
         manageBusy: billing.manageBusy,

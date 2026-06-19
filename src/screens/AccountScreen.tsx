@@ -110,7 +110,9 @@ export function AccountScreen({
     const [deleteBusy, setDeleteBusy] = useState(false);
     const [notice, setNotice] = useState<string | null>(null);
     const [noticeTone, setNoticeTone] = useState<"success" | "error">("success");
-    const bg = require("../../public/images/rh11.jpg");
+    const bg = visualMode === "warm"
+        ? require("../../public/images/rhelk1.jpg")
+        : require("../../public/images/rh11.jpg");
 
     useEffect(() => {
         mountedRef.current = true;

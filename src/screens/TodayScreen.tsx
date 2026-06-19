@@ -87,7 +87,6 @@ export function TodayScreen({
         : require("../../public/images/rh19.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
-    const stickyPreview = stickyNote.text.trim();
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`}
@@ -103,32 +102,26 @@ export function TodayScreen({
                         RHODIE
                     </Text>
                 </View>
-                <Pressable
-                    onPress={() => setStickyNoteOpen(true)}
-                    style={({pressed}) => [
-                        tw`absolute right-4 top-4 z-20 w-36 rounded-2xl border border-[#6E4C2F] bg-[#DFC4AA] px-3 py-2.5`,
-                        {
-                            shadowColor: "#000000",
-                            shadowOffset: {width: 0, height: 8},
-                            shadowOpacity: 0.24,
-                            shadowRadius: 12,
-                            elevation: 8,
-                            transform: [{rotate: "1.5deg"}],
-                        },
-                        pressed && {opacity: 0.86, transform: [{rotate: "1.5deg"}, {translateY: 1}]},
-                    ]}
-                >
-                    <Text
-                        style={[tw`text-[10px] uppercase tracking-[1.5px] text-[#2B2B2B]/65`, {fontFamily: fonts.body}]}>
-                        Sticky note
-                    </Text>
-                    <Text
-                        numberOfLines={2}
-                        style={[tw`mt-1 text-sm leading-4 text-[#2B2B2B]`, {fontFamily: fonts.heading}]}
+                <View style={tw`absolute right-4 top-4 z-20 items-end gap-2`}>
+                    <Pressable
+                        onPress={() => setStickyNoteOpen(true)}
+                        style={({pressed}) => [
+                            tw`rounded-full border border-[#6E4C2F]/60 bg-[#DFC4AA] px-3 py-1.5`,
+                            {
+                                shadowColor: "#000000",
+                                shadowOffset: {width: 0, height: 4},
+                                shadowOpacity: 0.18,
+                                shadowRadius: 8,
+                                elevation: 5,
+                            },
+                            pressed && tw`opacity-85`,
+                        ]}
                     >
-                        {stickyPreview || "tap here to add notes..."}
-                    </Text>
-                </Pressable>
+                        <Text style={[tw`text-[11px] text-[#2B2B2B]`, {fontFamily: fonts.heading}]}>
+                            Sticky note
+                        </Text>
+                    </Pressable>
+                </View>
                 <ScrollView
                     style={tw`flex-1`}
                     contentContainerStyle={tw`flex-grow justify-end px-4 pb-28 pt-24 gap-4`}

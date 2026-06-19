@@ -1,5 +1,5 @@
-import {useEffect, useRef, useState} from "react";
-import {Alert, AppState, Platform, SafeAreaView, View} from "react-native";
+import {useEffect, useMemo, useRef, useState} from "react";
+import {Alert, AppState, PanResponder, Platform, SafeAreaView, View} from "react-native";
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -51,6 +51,10 @@ type HomeActionInput =
     | { target: "gratitude"; entryId: string | null }
     | { target: "weeklyGoal" }
     | { target: "tasks" };
+
+const TAB_ORDER: Tab[] = ["today", "plan", "journal", "board", "calendar", "insights"];
+const SWIPE_DISTANCE_THRESHOLD = 70;
+const SWIPE_VERTICAL_LIMIT = 55;
 
 export default function App() {
     const [tab, setTab] = useState<Tab>("today");
@@ -142,10 +146,13 @@ export default function App() {
         (async () => {
             const token = await registerForPushNotificationsAsync();
             if (!token || cancelled) return;
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? null;
             await supabase.from("push_tokens").upsert({
                 user_id: session.user.id,
                 token,
                 platform: Platform.OS,
+                timezone,
+                updated_at: new Date().toISOString(),
             });
         })();
         return () => {
@@ -201,6 +208,35 @@ export default function App() {
 
         setTab(nextTab);
     }
+
+    const screenSwipeResponder = useMemo(
+        () =>
+            PanResponder.create({
+                onMoveShouldSetPanResponder: (_event, gestureState) => {
+                    if (accountOpen) return false;
+                    const horizontalMovement = Math.abs(gestureState.dx);
+                    const verticalMovement = Math.abs(gestureState.dy);
+                    return horizontalMovement > 18 && horizontalMovement > verticalMovement * 1.4;
+                },
+                onPanResponderRelease: (_event, gestureState) => {
+                    if (accountOpen) return;
+                    const horizontalMovement = Math.abs(gestureState.dx);
+                    const verticalMovement = Math.abs(gestureState.dy);
+                    if (horizontalMovement < SWIPE_DISTANCE_THRESHOLD || verticalMovement > SWIPE_VERTICAL_LIMIT) return;
+
+                    const currentIndex = TAB_ORDER.indexOf(tab);
+                    if (currentIndex < 0) return;
+
+                    const nextIndex = gestureState.dx < 0 ? currentIndex + 1 : currentIndex - 1;
+                    const nextTab = TAB_ORDER[nextIndex];
+                    if (!nextTab) return;
+
+                    handleTabChange(nextTab);
+                },
+                onPanResponderTerminationRequest: () => true,
+            }),
+        [accountOpen, tab],
+    );
 
     function openHomeAction(action: HomeActionInput) {
         haptics.navigation();
@@ -387,7 +423,10 @@ export default function App() {
 
                 <UpdateAvailableBanner/>
 
-                <View style={tw`relative flex-1 bg-[#0f0f0f] rounded-t-3xl overflow-hidden`}>
+                <View
+                    style={tw`relative flex-1 bg-[#0f0f0f] rounded-t-3xl overflow-hidden`}
+                    {...screenSwipeResponder.panHandlers}
+                >
                     {accountOpen ? (
                         <AccountScreen
                             session={session}
