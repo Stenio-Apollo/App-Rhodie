@@ -1,5 +1,14 @@
-import {useEffect, useMemo, useState} from "react";
-import {ImageBackground, type ImageRequireSource, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
+import {useEffect, useMemo, useRef, useState} from "react";
+import {
+    Animated,
+    ImageBackground,
+    type ImageRequireSource,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import {useVideoPlayer, VideoView} from "expo-video";
 import tw from "../lib/tw";
 import {Button} from "../components/ui/Button";
@@ -54,6 +63,92 @@ const STEPS: OnboardingStep[] = [
     },
 ];
 
+function IntroVideo({onDone}: { onDone: () => void }) {
+    const [hasError, setHasError] = useState(false);
+    const [isDismissing, setIsDismissing] = useState(false);
+    const dismissingRef = useRef(false);
+    const opacity = useRef(new Animated.Value(1)).current;
+    const player = useVideoPlayer(require("../../public/videos/rh.rhodie.mp4"), (instance) => {
+        instance.loop = false;
+        instance.muted = false;
+        instance.volume = 1;
+        instance.play();
+    });
+
+    function finishIntro() {
+        if (dismissingRef.current) return;
+        dismissingRef.current = true;
+        setIsDismissing(true);
+        player.pause();
+        Animated.timing(opacity, {
+            toValue: 0,
+            duration: 360,
+            useNativeDriver: true,
+        }).start(() => {
+            onDone();
+        });
+    }
+
+    useEffect(() => {
+        const statusSubscription = player.addListener("statusChange", ({status}) => {
+            if (status === "error") {
+                setHasError(true);
+            }
+        });
+        const endSubscription = player.addListener("playToEnd", finishIntro);
+        player.replay();
+
+        return () => {
+            statusSubscription.remove();
+            endSubscription.remove();
+        };
+    }, [player]);
+
+    return (
+        <Animated.View style={[styles.intro, {opacity}]}>
+            {hasError ? (
+                <View style={tw`flex-1 items-center justify-center bg-black px-8`}>
+                    <Text style={[tw`text-center text-3xl text-[#E4E0D4]`, {fontFamily: fonts.display}]}>
+                        Rhodie
+                    </Text>
+                    <Text style={[tw`mt-3 text-center text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
+                        Opening your first guide.
+                    </Text>
+                </View>
+            ) : (
+                <VideoView
+                    player={player}
+                    style={styles.introVideo}
+                    contentFit="cover"
+                    nativeControls={false}
+                    allowsFullscreen={false}
+                    allowsPictureInPicture={false}
+                />
+            )}
+
+            <View style={tw`absolute inset-x-0 bottom-0 px-5 pb-10`}>
+                <View style={tw`items-end`}>
+                    <Pressable
+                        onPress={() => {
+                            haptics.selection();
+                            finishIntro();
+                        }}
+                        disabled={isDismissing}
+                        style={({pressed}) => [
+                            tw`rounded-xl border border-[#E4E0D4]/25 bg-black/45 px-4 py-2`,
+                            pressed && tw`opacity-70`,
+                        ]}
+                    >
+                        <Text style={[tw`text-sm text-[#E4E0D4]`, {fontFamily: fonts.button}]}>
+                            Skip
+                        </Text>
+                    </Pressable>
+                </View>
+            </View>
+        </Animated.View>
+    );
+}
+
 function OnboardingVideo({source}: { source: ImageRequireSource }) {
     const [hasError, setHasError] = useState(false);
     const player = useVideoPlayer(source, (instance) => {
@@ -99,6 +194,7 @@ function OnboardingVideo({source}: { source: ImageRequireSource }) {
 }
 
 export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
+    const [showIntro, setShowIntro] = useState(true);
     const [index, setIndex] = useState(0);
     const [isCompleting, setIsCompleting] = useState(false);
     const step = STEPS[index];
@@ -125,6 +221,10 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
     function goBack() {
         haptics.selection();
         setIndex((current) => Math.max(0, current - 1));
+    }
+
+    if (showIntro) {
+        return <IntroVideo onDone={() => setShowIntro(false)}/>;
     }
 
     return (
@@ -214,6 +314,15 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
 }
 
 const styles = StyleSheet.create({
+    intro: {
+        flex: 1,
+        backgroundColor: "#000000",
+    },
+    introVideo: {
+        ...StyleSheet.absoluteFillObject,
+        width: "100%",
+        height: "100%",
+    },
     video: {
         width: "100%",
         height: 320,
