@@ -4,6 +4,8 @@ import {supabase} from "../lib/supabase";
 import type {Session} from "@supabase/supabase-js";
 import {toLocalISODate} from "../lib/date-utils";
 import {createId} from "../lib/id";
+import {decryptString, encryptString, encryptedPlaceholder, type EncryptionKey, looksEncrypted} from "../lib/e2ee";
+import type {EncryptionState} from "./useEncryption";
 
 const STORAGE_PREFIX = "rhnative.journal.v2";
 const LEGACY_STORAGE_KEY = "rhnative.journal.v1";
@@ -16,6 +18,10 @@ export interface JournalEntry {
     category: "gratitude" | "prompt";
 }
 
+type StoredJournalEntry = JournalEntry & {
+    textEncrypted?: string | null;
+};
+
 function normalizeJournalCategory(category: string | undefined): JournalEntry["category"] {
     if (category === "gratitude") return "gratitude";
     return "prompt";
@@ -25,7 +31,29 @@ function storageKey(userId: string | null | undefined): string {
     return `${STORAGE_PREFIX}.${userId ?? "local"}`;
 }
 
-function parseJournalEntries(raw: string | null): JournalEntry[] {
+function decryptText(key: EncryptionKey | null, encrypted: string | null | undefined, fallback: string): string {
+    if (key && encrypted && looksEncrypted(encrypted)) {
+        try {
+            return decryptString(key, encrypted);
+        } catch (error) {
+            console.warn("Journal decrypt error", error);
+        }
+    }
+    return fallback;
+}
+
+function serializeJournalEntries(key: EncryptionKey | null, entries: JournalEntry[]): StoredJournalEntry[] {
+    return entries.map((entry) => {
+        const textEncrypted = key && entry.text.trim() ? encryptString(key, entry.text) : null;
+        return {
+            ...entry,
+            text: textEncrypted ? encryptedPlaceholder("encrypted journal entry") : entry.text,
+            textEncrypted,
+        };
+    });
+}
+
+function parseJournalEntries(raw: string | null, key: EncryptionKey | null = null): JournalEntry[] {
     if (!raw) return [];
 
     try {
@@ -33,15 +61,16 @@ function parseJournalEntries(raw: string | null): JournalEntry[] {
         if (!Array.isArray(parsed)) return [];
 
         return parsed
-            .filter((entry): entry is Partial<JournalEntry> => Boolean(entry) && typeof entry === "object")
+            .filter((entry): entry is Partial<StoredJournalEntry> => Boolean(entry) && typeof entry === "object")
             .map((entry) => {
                 const date = typeof entry.date === "string" && entry.date ? entry.date : toLocalISODate();
                 const createdAt =
                     typeof entry.createdAt === "string" && entry.createdAt ? entry.createdAt : new Date().toISOString();
+                const fallbackText = typeof entry.text === "string" ? entry.text : "";
                 return {
                     id: typeof entry.id === "string" && entry.id ? entry.id : createId(),
                     date,
-                    text: typeof entry.text === "string" ? entry.text : "",
+                    text: decryptText(key, entry.textEncrypted, fallbackText),
                     createdAt,
                     category: normalizeJournalCategory((entry as { category?: string }).category),
                 };
@@ -61,9 +90,10 @@ export async function clearJournalStorage(userId?: string | null): Promise<void>
 
 export type JournalState = ReturnType<typeof useJournal>;
 
-export function useJournal(session: Session | null = null) {
+export function useJournal(session: Session | null = null, encryption?: EncryptionState) {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const encryptionKey = encryption?.key ?? null;
 
     useEffect(() => {
         let mounted = true;
@@ -93,59 +123,86 @@ export function useJournal(session: Session | null = null) {
         }
 
         async function hydrateRemote(userId: string) {
-            const [scopedRaw, legacyRaw] = await Promise.all([
-                AsyncStorage.getItem(currentStorageKey),
-                AsyncStorage.getItem(LEGACY_STORAGE_KEY),
-            ]);
-            const scopedLocalEntries = parseJournalEntries(scopedRaw);
-            const migratedLegacyEntries = scopedLocalEntries.length === 0
-                ? parseJournalEntries(legacyRaw).map((entry) => ({...entry, id: createId()}))
-                : [];
-            const localEntries: JournalEntry[] = [...scopedLocalEntries, ...migratedLegacyEntries];
+            try {
+                if (!encryptionKey) {
+                    setEntries([]);
+                    return;
+                }
 
-            if (localEntries.length > 0) {
-                const toUpsert = localEntries.map((entry) => ({
-                    id: entry.id,
-                    user_id: userId,
-                    date: entry.date,
-                    text: entry.text,
-                    category: entry.category,
-                    created_at: entry.createdAt,
-                }));
-                const {error: upsertError} = await supabase.from("journal_entries").upsert(toUpsert);
-                if (upsertError) console.warn("Supabase journal upsert error", upsertError.message);
-                await Promise.all([
-                    AsyncStorage.setItem(currentStorageKey, JSON.stringify(localEntries)),
-                    AsyncStorage.removeItem(LEGACY_STORAGE_KEY),
+                const [scopedRaw, legacyRaw] = await Promise.all([
+                    AsyncStorage.getItem(currentStorageKey),
+                    AsyncStorage.getItem(LEGACY_STORAGE_KEY),
                 ]);
+                const scopedLocalEntries = parseJournalEntries(scopedRaw, encryptionKey);
+                const migratedLegacyEntries = scopedLocalEntries.length === 0
+                    ? parseJournalEntries(legacyRaw, encryptionKey).map((entry) => ({...entry, id: createId()}))
+                    : [];
+                const localEntries: JournalEntry[] = [...scopedLocalEntries, ...migratedLegacyEntries];
+
+                if (localEntries.length > 0) {
+                    const toUpsert = localEntries.map((entry) => ({
+                        id: entry.id,
+                        user_id: userId,
+                        date: entry.date,
+                        text: encryptedPlaceholder("encrypted journal entry"),
+                        text_encrypted: encryptString(encryptionKey, entry.text),
+                        category: entry.category,
+                        created_at: entry.createdAt,
+                    }));
+                    const {error: upsertError} = await supabase.from("journal_entries").upsert(toUpsert);
+                    if (upsertError) console.warn("Supabase journal upsert error", upsertError.message);
+                    await Promise.all([
+                        AsyncStorage.setItem(currentStorageKey, JSON.stringify(serializeJournalEntries(encryptionKey, localEntries))),
+                        AsyncStorage.removeItem(LEGACY_STORAGE_KEY),
+                    ]);
+                }
+
+                const {data, error} = await supabase
+                    .from("journal_entries")
+                    .select("*")
+                    .eq("user_id", userId)
+                    .order("date", {ascending: false})
+                    .order("created_at", {ascending: false});
+
+                if (!mounted) return;
+                if (error) {
+                    console.warn("Supabase journal load error", error.message);
+                    await hydrateLocal();
+                    return;
+                }
+
+                const mapped =
+                    data?.map((entry) => ({
+                        id: entry.id,
+                        date: entry.date,
+                        text: decryptText(
+                            encryptionKey,
+                            typeof entry.text_encrypted === "string" ? entry.text_encrypted : null,
+                            typeof entry.text === "string" ? entry.text : "",
+                        ),
+                        category: normalizeJournalCategory(entry.category as string | undefined),
+                        createdAt: entry.created_at,
+                    })) ?? [];
+
+                setEntries(mapped);
+                await AsyncStorage.setItem(currentStorageKey, JSON.stringify(serializeJournalEntries(encryptionKey, mapped)));
+                const plaintextRowsToMigrate = (data ?? []).filter((entry) => entry.text && !entry.text_encrypted);
+                if (plaintextRowsToMigrate.length > 0) {
+                    void supabase.from("journal_entries").upsert(plaintextRowsToMigrate.map((entry) => ({
+                        id: entry.id,
+                        user_id: userId,
+                        date: entry.date,
+                        text: encryptedPlaceholder("encrypted journal entry"),
+                        text_encrypted: encryptString(encryptionKey, String(entry.text)),
+                        category: normalizeJournalCategory(entry.category as string | undefined),
+                        created_at: entry.created_at,
+                    })));
+                }
+            } catch (error) {
+                console.warn("Journal remote hydrate error", error);
+            } finally {
+                if (mounted) setIsLoaded(true);
             }
-
-            const {data, error} = await supabase
-                .from("journal_entries")
-                .select("*")
-                .eq("user_id", userId)
-                .order("date", {ascending: false})
-                .order("created_at", {ascending: false});
-
-            if (!mounted) return;
-            if (error) {
-                console.warn("Supabase journal load error", error.message);
-                await hydrateLocal();
-                return;
-            }
-
-            const mapped =
-                data?.map((entry) => ({
-                    id: entry.id,
-                    date: entry.date,
-                    text: entry.text,
-                    category: normalizeJournalCategory(entry.category as string | undefined),
-                    createdAt: entry.created_at,
-                })) ?? [];
-
-            setEntries(mapped);
-            await AsyncStorage.setItem(currentStorageKey, JSON.stringify(mapped));
-            setIsLoaded(true);
         }
 
         if (session) {
@@ -157,13 +214,14 @@ export function useJournal(session: Session | null = null) {
         return () => {
             mounted = false;
         };
-    }, [session, session?.user.id]);
+    }, [encryptionKey, session, session?.user.id]);
 
     useEffect(() => {
         if (!isLoaded) return;
-        AsyncStorage.setItem(storageKey(session?.user.id), JSON.stringify(entries)).catch(() => {
+        if (session && !encryptionKey) return;
+        AsyncStorage.setItem(storageKey(session?.user.id), JSON.stringify(serializeJournalEntries(encryptionKey, entries))).catch(() => {
         });
-    }, [entries, isLoaded, session, session?.user.id]);
+    }, [encryptionKey, entries, isLoaded, session, session?.user.id]);
 
     const addEntry = useCallback(
         async (text: string, date: string, category: JournalEntry["category"] = "gratitude") => {
@@ -185,13 +243,14 @@ export function useJournal(session: Session | null = null) {
                     id: entry.id,
                     user_id: session.user.id,
                     date: entry.date,
-                    text: entry.text,
+                    text: encryptionKey ? encryptedPlaceholder("encrypted journal entry") : entry.text,
+                    text_encrypted: encryptionKey ? encryptString(encryptionKey, entry.text) : null,
                     category: entry.category,
                     created_at: entry.createdAt,
                 });
             }
         },
-        [session],
+        [encryptionKey, session],
     );
 
     const deleteEntry = useCallback(
@@ -210,10 +269,13 @@ export function useJournal(session: Session | null = null) {
             if (!trimmed) return;
             setEntries((previous) => previous.map((entry) => (entry.id === id ? {...entry, text: trimmed} : entry)));
             if (session) {
-                await supabase.from("journal_entries").update({text: trimmed}).eq("id", id).eq("user_id", session.user.id);
+                await supabase.from("journal_entries").update({
+                    text: encryptionKey ? encryptedPlaceholder("encrypted journal entry") : trimmed,
+                    text_encrypted: encryptionKey ? encryptString(encryptionKey, trimmed) : null,
+                }).eq("id", id).eq("user_id", session.user.id);
             }
         },
-        [session],
+        [encryptionKey, session],
     );
 
     const byDate = useMemo(() => {

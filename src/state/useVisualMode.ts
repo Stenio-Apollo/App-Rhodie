@@ -25,10 +25,15 @@ export function useVisualMode(userId?: string | null) {
         let mounted = true;
 
         async function hydrate() {
-            const raw = await AsyncStorage.getItem(storageKey(userId ?? null));
-            if (!mounted) return;
-            setModeState(normalizeVisualMode(raw));
-            setIsLoaded(true);
+            try {
+                const raw = await AsyncStorage.getItem(storageKey(userId ?? null));
+                if (!mounted) return;
+                setModeState(normalizeVisualMode(raw));
+            } catch (error) {
+                console.warn("Visual mode hydrate error", error);
+            } finally {
+                if (mounted) setIsLoaded(true);
+            }
         }
 
         setIsLoaded(false);

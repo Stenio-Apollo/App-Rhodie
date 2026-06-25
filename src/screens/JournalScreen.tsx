@@ -114,7 +114,7 @@ export function JournalScreen({journal, homeAction, visualMode, showTutorial, on
 
                     <View
                         style={[
-                            tw`rounded-3xl bg-black/63 p-4 border flex-row gap-4 items-center, border-[#B55941]/43`,
+                            tw`rounded-3xl bg-black/63 p-4 border flex-row gap-4 items-center, border-[#F5DBC9]/33`,
                             ,
                         ]}>
                         <View style={tw`flex-1`}>
@@ -344,7 +344,7 @@ export function JournalScreen({journal, homeAction, visualMode, showTutorial, on
                         )}
                     </View>
 
-                    <View style={tw`mt-6 rounded-[28px] border border-[#B55941]/55 bg-black/48 p-4`}>
+                    <View style={tw`mt-6 rounded-[28px] border border-[#F5DBC9]/33 bg-black/79 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                             Memory shelf
                         </Text>
@@ -372,9 +372,8 @@ export function JournalScreen({journal, homeAction, visualMode, showTutorial, on
                                                     setSelectedDate(entry.date);
                                                 }}
                                                 style={({pressed}) => [
-                                                    tw`rounded-[24px] border p-4`,
+                                                    tw`rounded-[24px] border border-[#F5DBC9]/33 p-4`,
                                                     {
-                                                        borderColor: entry.date === selectedDate ? "#B55941" : "rgba(228,224,212,0.12)",
                                                         backgroundColor: pressed ? "rgba(181,89,65,0.12)" : "rgba(10,10,10,0.4)",
                                                     },
                                                 ]}
@@ -413,9 +412,9 @@ export function JournalScreen({journal, homeAction, visualMode, showTutorial, on
                                                 </Text>
                                                 {entryPrompt ? (
                                                     <View
-                                                        style={tw`mt-3 rounded-2xl border border-[#B55941]/30 bg-[#B55941]/10 p-3`}>
+                                                        style={tw`mt-3 rounded-2xl border border-[#B55941]/10 bg-[#F5DBC9]/39 p-3`}>
                                                         <Text
-                                                            style={[tw`text-[10px] uppercase tracking-[1px] text-[#B55941]`, {fontFamily: fonts.strong}]}>
+                                                            style={[tw`text-[10px] uppercase tracking-[1px] text-[#000000]`, {fontFamily: fonts.strong}]}>
                                                             Prompt responded to
                                                         </Text>
                                                         <Text
@@ -442,7 +441,7 @@ export function JournalScreen({journal, homeAction, visualMode, showTutorial, on
                         )}
                     </View>
 
-                    <View style={tw`mt-6 rounded-2xl border border-orange-50/19 bg-black/33 p-3`}>
+                    <View style={tw`mt-6 rounded-2xl border border-orange-50/13 bg-black/33 p-3`}>
                         <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Recent
                             days</Text>
                         <View style={tw`mt-2 flex-row flex-wrap gap-2`}>

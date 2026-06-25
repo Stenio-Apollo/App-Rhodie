@@ -2,6 +2,8 @@ import {useCallback, useEffect, useRef, useState} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {toLocalISODate} from "../lib/date-utils";
 import {supabase} from "../lib/supabase";
+import {decryptString, encryptString, encryptedPlaceholder, type EncryptionKey, looksEncrypted} from "../lib/e2ee";
+import type {EncryptionState} from "./useEncryption";
 
 export type WeeklyGoal = {
     text: string;
@@ -27,6 +29,7 @@ export type WeeklyGoalPreset = {
 type WeeklyGoalRow = {
     user_id: string;
     text: string;
+    text_encrypted: string | null;
     preset_id: string | null;
     week_start_date: string;
     updated_at: string;
@@ -38,6 +41,10 @@ type WeeklyGoalProgressRow = {
     user_id: string;
     points: number;
     updated_at: string;
+};
+
+type StoredWeeklyGoal = WeeklyGoal & {
+    textEncrypted?: string | null;
 };
 
 export const WEEKLY_GOAL_PRESETS: WeeklyGoalPreset[] = [
@@ -99,20 +106,28 @@ function normalizeGoalForWeek(goal: WeeklyGoal, weekStartDate: string): {goal: W
     };
 }
 
-function parseWeeklyGoal(raw: string | null, weekStartDate: string): {goal: WeeklyGoal | null; didNormalize: boolean} {
+function serializeWeeklyGoal(goal: WeeklyGoal, key: EncryptionKey | null): StoredWeeklyGoal {
+    const textEncrypted = key ? encryptString(key, goal.text) : null;
+    return {
+        ...goal,
+        text: textEncrypted ? encryptedPlaceholder("encrypted weekly goal") : goal.text,
+        textEncrypted,
+    };
+}
+
+function parseWeeklyGoal(raw: string | null, weekStartDate: string, key: EncryptionKey | null = null): {goal: WeeklyGoal | null; didNormalize: boolean} {
     if (!raw) return {goal: null, didNormalize: false};
 
     try {
-        const parsed = JSON.parse(raw) as WeeklyGoal;
-        if (
-            typeof parsed.text !== "string" ||
-            parsed.text.trim().length === 0
-        ) {
+        const parsed = JSON.parse(raw) as StoredWeeklyGoal;
+        const fallbackText = typeof parsed.text === "string" ? parsed.text : "";
+        const text = decryptGoalText(key, parsed.textEncrypted, fallbackText);
+        if (text.trim().length === 0) {
             return {goal: null, didNormalize: false};
         }
 
         const candidate: WeeklyGoal = {
-            text: parsed.text,
+            text,
             presetId: typeof parsed.presetId === "string" ? parsed.presetId : null,
             weekStartDate: typeof parsed.weekStartDate === "string" ? parsed.weekStartDate : weekStartDate,
             updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : new Date().toISOString(),
@@ -125,9 +140,20 @@ function parseWeeklyGoal(raw: string | null, weekStartDate: string): {goal: Week
     }
 }
 
-function mapGoalRow(row: WeeklyGoalRow): WeeklyGoal {
+function decryptGoalText(key: EncryptionKey | null, encrypted: string | null | undefined, fallback: string): string {
+    if (key && encrypted && looksEncrypted(encrypted)) {
+        try {
+            return decryptString(key, encrypted);
+        } catch (error) {
+            console.warn("[weeklyGoal] decrypt error", error);
+        }
+    }
+    return fallback;
+}
+
+function mapGoalRow(row: WeeklyGoalRow, key: EncryptionKey | null = null): WeeklyGoal {
     return {
-        text: row.text,
+        text: decryptGoalText(key, row.text_encrypted, row.text),
         presetId: row.preset_id,
         weekStartDate: row.week_start_date,
         updatedAt: row.updated_at,
@@ -136,10 +162,12 @@ function mapGoalRow(row: WeeklyGoalRow): WeeklyGoal {
     };
 }
 
-function goalToRow(userId: string, goal: WeeklyGoal): WeeklyGoalRow {
+function goalToRow(userId: string, goal: WeeklyGoal, key: EncryptionKey | null = null): WeeklyGoalRow {
+    const encryptedText = key ? encryptString(key, goal.text) : null;
     return {
         user_id: userId,
-        text: goal.text,
+        text: encryptedText ? encryptedPlaceholder("encrypted weekly goal") : goal.text,
+        text_encrypted: encryptedText,
         preset_id: goal.presetId,
         week_start_date: goal.weekStartDate,
         updated_at: goal.updatedAt,
@@ -182,8 +210,8 @@ function makeProgress(points: number): WeeklyGoalProgress {
     };
 }
 
-async function pushGoalToRemote(userId: string, goal: WeeklyGoal): Promise<void> {
-    const row = goalToRow(userId, goal);
+async function pushGoalToRemote(userId: string, goal: WeeklyGoal, key: EncryptionKey | null): Promise<void> {
+    const row = goalToRow(userId, goal, key);
     console.log("[weeklyGoal] pushGoalToRemote start", JSON.stringify(row));
     const {error} = await supabase
         .from("weekly_goals")
@@ -212,13 +240,14 @@ async function pushProgressToRemote(userId: string, progress: WeeklyGoalProgress
     }
 }
 
-export function useWeeklyGoal(userId: string | null | undefined) {
+export function useWeeklyGoal(userId: string | null | undefined, encryption?: EncryptionState) {
     const [weekStartDate, setWeekStartDate] = useState(() => getCurrentWeekStartDate());
     const [goal, setGoal] = useState<WeeklyGoal | null>(null);
     const [progress, setProgress] = useState<WeeklyGoalProgress>({points: 0, badges: 0, updatedAt: new Date().toISOString()});
     const [isLoaded, setIsLoaded] = useState(false);
     const goalRef = useRef<WeeklyGoal | null>(null);
     const progressRef = useRef<WeeklyGoalProgress>(progress);
+    const encryptionKey = encryption?.key ?? null;
 
     useEffect(() => {
         goalRef.current = goal;
@@ -243,104 +272,113 @@ export function useWeeklyGoal(userId: string | null | undefined) {
         async function hydrate() {
             console.log("[weeklyGoal] hydrate start", {userId, weekStartDate});
             setIsLoaded(false);
+            try {
 
-            // 1. Load local immediately (offline-first)
-            const [goalRaw, progressRaw] = await Promise.all([
-                AsyncStorage.getItem(goalStorageKey(userId)),
-                AsyncStorage.getItem(progressStorageKey(userId)),
-            ]);
-            if (!mounted) return;
-            const parsedGoal = parseWeeklyGoal(goalRaw, weekStartDate);
-            const localProgress = parseWeeklyGoalProgress(progressRaw);
-            console.log("[weeklyGoal] hydrate: local loaded", {
-                hasGoal: Boolean(parsedGoal.goal),
-                localPoints: localProgress.points,
-            });
-            setGoal(parsedGoal.goal);
-            setProgress(localProgress);
-            if (parsedGoal.goal && parsedGoal.didNormalize) {
-                await AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(parsedGoal.goal));
-            }
+                // 1. Load local immediately (offline-first)
+                if (userId && !encryptionKey) {
+                    setGoal(null);
+                    setProgress({points: 0, badges: 0, updatedAt: new Date().toISOString()});
+                    return;
+                }
 
-            // 2. If signed out, nothing to sync
-            if (!userId) {
-                console.log("[weeklyGoal] hydrate: no userId, skipping remote sync");
+                const [goalRaw, progressRaw] = await Promise.all([
+                    AsyncStorage.getItem(goalStorageKey(userId)),
+                    AsyncStorage.getItem(progressStorageKey(userId)),
+                ]);
                 if (!mounted) return;
-                setIsLoaded(true);
-                return;
-            }
+                const parsedGoal = parseWeeklyGoal(goalRaw, weekStartDate, encryptionKey);
+                const localProgress = parseWeeklyGoalProgress(progressRaw);
+                console.log("[weeklyGoal] hydrate: local loaded", {
+                    hasGoal: Boolean(parsedGoal.goal),
+                    localPoints: localProgress.points,
+                });
+                setGoal(parsedGoal.goal);
+                setProgress(localProgress);
+                if (parsedGoal.goal && parsedGoal.didNormalize) {
+                    await AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(serializeWeeklyGoal(parsedGoal.goal, encryptionKey)));
+                }
 
-            // 3. Pull from Supabase
-            console.log("[weeklyGoal] hydrate: pulling from Supabase");
-            const [goalResult, progressResult] = await Promise.all([
-                supabase
-                    .from("weekly_goals")
-                    .select("*")
-                    .eq("user_id", userId)
-                    .eq("week_start_date", weekStartDate)
-                    .maybeSingle(),
-                supabase.from("weekly_goal_progress").select("*").eq("user_id", userId).maybeSingle(),
-            ]);
-            if (!mounted) return;
+                // 2. If signed out, nothing to sync
+                if (!userId) {
+                    console.log("[weeklyGoal] hydrate: no userId, skipping remote sync");
+                    return;
+                }
 
-            // 4. Reconcile goal — most-recently-updated wins
-            const remoteGoal = goalResult.error
-                ? null
-                : (goalResult.data as WeeklyGoalRow | null);
-            if (goalResult.error) {
-                console.warn("Weekly goal load error", goalResult.error.message);
-            }
+                // 3. Pull from Supabase
+                console.log("[weeklyGoal] hydrate: pulling from Supabase");
+                const [goalResult, progressResult] = await Promise.all([
+                    supabase
+                        .from("weekly_goals")
+                        .select("*")
+                        .eq("user_id", userId)
+                        .eq("week_start_date", weekStartDate)
+                        .maybeSingle(),
+                    supabase.from("weekly_goal_progress").select("*").eq("user_id", userId).maybeSingle(),
+                ]);
+                if (!mounted) return;
 
-            if (remoteGoal) {
-                const remoteParsed = normalizeGoalForWeek(mapGoalRow(remoteGoal), weekStartDate);
-                const remoteUpdatedAt = remoteParsed.goal.updatedAt;
-                const localUpdatedAt = parsedGoal.goal?.updatedAt ?? "";
+                // 4. Reconcile goal — most-recently-updated wins
+                const remoteGoal = goalResult.error
+                    ? null
+                    : (goalResult.data as WeeklyGoalRow | null);
+                if (goalResult.error) {
+                    console.warn("Weekly goal load error", goalResult.error.message);
+                }
 
-                if (parsedGoal.goal && localUpdatedAt > remoteUpdatedAt) {
-                    // Local is newer — push up
-                    void pushGoalToRemote(userId, parsedGoal.goal).catch((error) => {
-                        console.warn("Weekly goal push error", error.message);
+                if (remoteGoal) {
+                    const remoteParsed = normalizeGoalForWeek(mapGoalRow(remoteGoal, encryptionKey), weekStartDate);
+                    const remoteUpdatedAt = remoteParsed.goal.updatedAt;
+                    const localUpdatedAt = parsedGoal.goal?.updatedAt ?? "";
+
+                    if (parsedGoal.goal && localUpdatedAt > remoteUpdatedAt) {
+                        // Local is newer — push up
+                        void pushGoalToRemote(userId, parsedGoal.goal, encryptionKey).catch((error) => {
+                            console.warn("Weekly goal push error", error.message);
+                        });
+                    } else {
+                        // Remote wins (or local missing) — adopt it
+                        setGoal(remoteParsed.goal);
+                        await AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(serializeWeeklyGoal(remoteParsed.goal, encryptionKey)));
+                        if (remoteParsed.didNormalize || !remoteGoal.text_encrypted) {
+                            // We normalized a stale-week goal; persist the normalized form remotely too
+                            void pushGoalToRemote(userId, remoteParsed.goal, encryptionKey).catch((error) => {
+                                console.warn("Weekly goal normalized push error", error.message);
+                            });
+                        }
+                    }
+                } else if (parsedGoal.goal) {
+                    // No remote yet — migrate local up
+                    void pushGoalToRemote(userId, parsedGoal.goal, encryptionKey).catch((error) => {
+                        console.warn("Weekly goal migration push error", error.message);
                     });
-                } else {
-                    // Remote wins (or local missing) — adopt it
-                    setGoal(remoteParsed.goal);
-                    await AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(remoteParsed.goal));
-                    if (remoteParsed.didNormalize) {
-                        // We normalized a stale-week goal; persist the normalized form remotely too
-                        void pushGoalToRemote(userId, remoteParsed.goal).catch((error) => {
-                            console.warn("Weekly goal normalized push error", error.message);
+                }
+
+                // 5. Reconcile progress — max points wins (prevents losing badges)
+                const remoteProgressRow = progressResult.error
+                    ? null
+                    : (progressResult.data as WeeklyGoalProgressRow | null);
+                if (progressResult.error) {
+                    console.warn("Weekly goal progress load error", progressResult.error.message);
+                }
+                const remotePoints = remoteProgressRow?.points ?? 0;
+                const winningPoints = Math.max(localProgress.points, remotePoints);
+                if (winningPoints !== localProgress.points || winningPoints !== remotePoints || !remoteProgressRow) {
+                    const winningProgress = makeProgress(winningPoints);
+                    setProgress(winningProgress);
+                    await AsyncStorage.setItem(progressStorageKey(userId), JSON.stringify(winningProgress));
+                    if (winningPoints !== remotePoints || !remoteProgressRow) {
+                        void pushProgressToRemote(userId, winningProgress).catch((error) => {
+                            console.warn("Weekly goal progress push error", error.message);
                         });
                     }
                 }
-            } else if (parsedGoal.goal) {
-                // No remote yet — migrate local up
-                void pushGoalToRemote(userId, parsedGoal.goal).catch((error) => {
-                    console.warn("Weekly goal migration push error", error.message);
-                });
-            }
 
-            // 5. Reconcile progress — max points wins (prevents losing badges)
-            const remoteProgressRow = progressResult.error
-                ? null
-                : (progressResult.data as WeeklyGoalProgressRow | null);
-            if (progressResult.error) {
-                console.warn("Weekly goal progress load error", progressResult.error.message);
+                if (!mounted) return;
+            } catch (error) {
+                console.warn("[weeklyGoal] hydrate error", error);
+            } finally {
+                if (mounted) setIsLoaded(true);
             }
-            const remotePoints = remoteProgressRow?.points ?? 0;
-            const winningPoints = Math.max(localProgress.points, remotePoints);
-            if (winningPoints !== localProgress.points || winningPoints !== remotePoints || !remoteProgressRow) {
-                const winningProgress = makeProgress(winningPoints);
-                setProgress(winningProgress);
-                await AsyncStorage.setItem(progressStorageKey(userId), JSON.stringify(winningProgress));
-                if (winningPoints !== remotePoints || !remoteProgressRow) {
-                    void pushProgressToRemote(userId, winningProgress).catch((error) => {
-                        console.warn("Weekly goal progress push error", error.message);
-                    });
-                }
-            }
-
-            if (!mounted) return;
-            setIsLoaded(true);
         }
 
         void hydrate();
@@ -348,7 +386,7 @@ export function useWeeklyGoal(userId: string | null | undefined) {
         return () => {
             mounted = false;
         };
-    }, [userId, weekStartDate]);
+    }, [encryptionKey, userId, weekStartDate]);
 
     const saveGoal = useCallback(
         async (payload: {text: string; presetId?: string | null}) => {
@@ -365,17 +403,17 @@ export function useWeeklyGoal(userId: string | null | undefined) {
             };
 
             setGoal(nextGoal);
-            await AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(nextGoal));
+            await AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(serializeWeeklyGoal(nextGoal, encryptionKey)));
             if (userId) {
                 console.log("[weeklyGoal] saveGoal: pushing to remote", {userId});
-                void pushGoalToRemote(userId, nextGoal).catch((error) => {
+                void pushGoalToRemote(userId, nextGoal, encryptionKey).catch((error) => {
                     console.warn("Weekly goal background push error", error.message);
                 });
             } else {
                 console.warn("[weeklyGoal] saveGoal: no userId, remote push SKIPPED");
             }
         },
-        [userId, weekStartDate],
+        [encryptionKey, userId, weekStartDate],
     );
 
     const recordGoalCheck = useCallback(
@@ -405,20 +443,20 @@ export function useWeeklyGoal(userId: string | null | undefined) {
             progressRef.current = nextProgress;
             setProgress(nextProgress);
             await Promise.all([
-                AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(nextGoal)),
+                AsyncStorage.setItem(goalStorageKey(userId), JSON.stringify(serializeWeeklyGoal(nextGoal, encryptionKey))),
                 AsyncStorage.setItem(progressStorageKey(userId), JSON.stringify(nextProgress)),
             ]);
             if (userId) {
                 console.log("[weeklyGoal] recordGoalCheck: pushing to remote", {userId, achieved, points: nextPoints});
                 await Promise.all([
-                    pushGoalToRemote(userId, nextGoal),
+                    pushGoalToRemote(userId, nextGoal, encryptionKey),
                     pushProgressToRemote(userId, nextProgress),
                 ]);
             } else {
                 console.warn("[weeklyGoal] recordGoalCheck: no userId, remote push SKIPPED");
             }
         },
-        [userId],
+        [encryptionKey, userId],
     );
 
     const clearGoal = useCallback(async () => {

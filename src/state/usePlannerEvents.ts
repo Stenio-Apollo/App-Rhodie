@@ -5,6 +5,8 @@ import {supabase} from "../lib/supabase";
 import {createId} from "../lib/id";
 import {isPlannerEventColor, type PlannerEventColor} from "../lib/planner-colors";
 import {syncPlannerEventReminderNotifications} from "../lib/notifications";
+import {decryptString, encryptString, encryptedPlaceholder, type EncryptionKey, looksEncrypted} from "../lib/e2ee";
+import type {EncryptionState} from "./useEncryption";
 
 export type PlannerEvent = {
     id: string;
@@ -24,7 +26,9 @@ type PlannerEventRow = {
     id: string;
     user_id: string;
     title: string;
+    title_encrypted: string | null;
     description: string | null;
+    description_encrypted: string | null;
     start_at: string;
     end_at: string;
     color: string;
@@ -33,6 +37,11 @@ type PlannerEventRow = {
     recurrence_until: string | null;
     created_at: string;
     updated_at: string;
+};
+
+type StoredPlannerEvent = PlannerEvent & {
+    titleEncrypted?: string | null;
+    descriptionEncrypted?: string | null;
 };
 
 export type CreatePlannerEventInput = {
@@ -60,11 +69,24 @@ function storageKey(userId: string | null | undefined): string {
     return `${STORAGE_PREFIX}.${userId ?? "local"}`;
 }
 
-function mapRowToEvent(row: PlannerEventRow): PlannerEvent {
+function decryptPlannerText(key: EncryptionKey | null, encrypted: string | null | undefined, fallback: string): string {
+    if (key && encrypted && looksEncrypted(encrypted)) {
+        try {
+            return decryptString(key, encrypted);
+        } catch (error) {
+            console.warn("[planner] decrypt error", error);
+        }
+    }
+    return fallback;
+}
+
+function mapRowToEvent(row: PlannerEventRow, key: EncryptionKey | null = null): PlannerEvent {
     return {
         id: row.id,
-        title: row.title,
-        description: row.description,
+        title: decryptPlannerText(key, row.title_encrypted, row.title),
+        description: row.description || row.description_encrypted
+            ? decryptPlannerText(key, row.description_encrypted, row.description ?? "")
+            : null,
         startAt: row.start_at,
         endAt: row.end_at,
         color: isPlannerEventColor(row.color) ? row.color : "other",
@@ -76,12 +98,17 @@ function mapRowToEvent(row: PlannerEventRow): PlannerEvent {
     };
 }
 
-function eventToRow(userId: string, event: PlannerEvent): PlannerEventRow {
+function eventToRow(userId: string, event: PlannerEvent, key: EncryptionKey | null = null): PlannerEventRow {
+    const encryptedTitle = key ? encryptString(key, event.title) : null;
+    const encryptedDescription = key && event.description ? encryptString(key, event.description) : null;
+
     return {
         id: event.id,
         user_id: userId,
-        title: event.title,
-        description: event.description,
+        title: encryptedTitle ? encryptedPlaceholder("encrypted planner event") : event.title,
+        title_encrypted: encryptedTitle,
+        description: encryptedDescription ? encryptedPlaceholder("encrypted planner description") : event.description,
+        description_encrypted: encryptedDescription,
         start_at: event.startAt,
         end_at: event.endAt,
         color: event.color,
@@ -108,17 +135,33 @@ async function getAuthenticatedUserId(fallbackUserId: string): Promise<string> {
     return authenticatedUserId;
 }
 
-function parseLocalEvents(raw: string | null): PlannerEvent[] {
+function serializeLocalEvents(key: EncryptionKey | null, events: PlannerEvent[]): StoredPlannerEvent[] {
+    return events.map((event) => {
+        const titleEncrypted = key ? encryptString(key, event.title) : null;
+        const descriptionEncrypted = key && event.description ? encryptString(key, event.description) : null;
+        return {
+            ...event,
+            title: titleEncrypted ? encryptedPlaceholder("encrypted planner event") : event.title,
+            titleEncrypted,
+            description: descriptionEncrypted ? encryptedPlaceholder("encrypted planner description") : event.description,
+            descriptionEncrypted,
+        };
+    });
+}
+
+function parseLocalEvents(raw: string | null, key: EncryptionKey | null = null): PlannerEvent[] {
     if (!raw) return [];
     try {
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [];
         return parsed
-            .filter((e): e is Partial<PlannerEvent> => Boolean(e) && typeof e === "object")
+            .filter((e): e is Partial<StoredPlannerEvent> => Boolean(e) && typeof e === "object")
             .map((e) => ({
                 id: typeof e.id === "string" ? e.id : createId(),
-                title: typeof e.title === "string" ? e.title : "",
-                description: typeof e.description === "string" ? e.description : null,
+                title: decryptPlannerText(key, e.titleEncrypted, typeof e.title === "string" ? e.title : ""),
+                description: typeof e.description === "string" || e.descriptionEncrypted
+                    ? decryptPlannerText(key, e.descriptionEncrypted, typeof e.description === "string" ? e.description : "")
+                    : null,
                 startAt: typeof e.startAt === "string" ? e.startAt : new Date().toISOString(),
                 endAt: typeof e.endAt === "string" ? e.endAt : new Date().toISOString(),
                 color: isPlannerEventColor(e.color) ? e.color : "other",
@@ -137,11 +180,12 @@ export async function clearPlannerEventsStorage(userId: string | null | undefine
     await AsyncStorage.removeItem(storageKey(userId));
 }
 
-export function usePlannerEvents(session: Session | null) {
+export function usePlannerEvents(session: Session | null, encryption?: EncryptionState) {
     const userId = session?.user.id ?? null;
     const [events, setEvents] = useState<PlannerEvent[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
     const eventsRef = useRef<PlannerEvent[]>([]);
+    const encryptionKey = encryption?.key ?? null;
 
     useEffect(() => {
         eventsRef.current = events;
@@ -149,18 +193,19 @@ export function usePlannerEvents(session: Session | null) {
 
     useEffect(() => {
         if (!isLoaded) return;
+        if (userId && !encryptionKey) return;
         void syncPlannerEventReminderNotifications(events);
-    }, [events, isLoaded]);
+    }, [encryptionKey, events, isLoaded, userId]);
 
     const persistLocal = useCallback(
         async (next: PlannerEvent[]) => {
             try {
-                await AsyncStorage.setItem(storageKey(userId), JSON.stringify(next));
+                await AsyncStorage.setItem(storageKey(userId), JSON.stringify(serializeLocalEvents(encryptionKey, next)));
             } catch (err) {
                 console.warn("[planner] AsyncStorage save error", err);
             }
         },
-        [userId],
+        [encryptionKey, userId],
     );
 
     useEffect(() => {
@@ -168,54 +213,69 @@ export function usePlannerEvents(session: Session | null) {
 
         async function hydrate() {
             setIsLoaded(false);
-            const localRaw = await AsyncStorage.getItem(storageKey(userId));
-            if (!mounted) return;
-            const local = parseLocalEvents(localRaw);
-            setEvents(local);
-
-            if (!userId) {
-                if (!mounted) return;
-                setIsLoaded(true);
-                return;
-            }
-
-            const {data, error} = await supabase
-                .from("planner_events")
-                .select("*")
-                .eq("user_id", userId)
-                .order("start_at", {ascending: true});
-
-            if (!mounted) return;
-
-            if (error) {
-                console.warn("[planner] load error", error.message);
-                setIsLoaded(true);
-                return;
-            }
-
-            const remote = ((data ?? []) as PlannerEventRow[]).map(mapRowToEvent);
-            const remoteById = new Map(remote.map((e) => [e.id, e]));
-            const localOnly = local.filter((e) => !remoteById.has(e.id));
-
-            // Push any local-only events up to Supabase
-            if (localOnly.length > 0) {
-                try {
-                    const authenticatedUserId = await getAuthenticatedUserId(userId);
-                    const rows = localOnly.map((e) => eventToRow(authenticatedUserId, e));
-                    const {error: upsertErr} = await supabase.from("planner_events").upsert(rows);
-                    if (upsertErr) {
-                        console.warn("[planner] migrate local-up error", upsertErr.message);
-                    }
-                } catch (err) {
-                    console.warn("[planner] auth check before local-up error", err);
+            try {
+                if (userId && !encryptionKey) {
+                    setEvents([]);
+                    return;
                 }
-            }
 
-            // Merge: remote is canonical; preserve any local-only that just got pushed
-            const merged = [...remote, ...localOnly];
-            setEvents(merged);
-            await persistLocal(merged);
-            setIsLoaded(true);
+                const localRaw = await AsyncStorage.getItem(storageKey(userId));
+                if (!mounted) return;
+                const local = parseLocalEvents(localRaw, encryptionKey);
+                setEvents(local);
+
+                if (!userId) {
+                    return;
+                }
+
+                const {data, error} = await supabase
+                    .from("planner_events")
+                    .select("*")
+                    .eq("user_id", userId)
+                    .order("start_at", {ascending: true});
+
+                if (!mounted) return;
+
+                if (error) {
+                    console.warn("[planner] load error", error.message);
+                    return;
+                }
+
+                const remote = ((data ?? []) as PlannerEventRow[]).map((row) => mapRowToEvent(row, encryptionKey));
+                const remoteById = new Map(remote.map((e) => [e.id, e]));
+                const localOnly = local.filter((e) => !remoteById.has(e.id));
+
+                // Push any local-only events up to Supabase
+                if (localOnly.length > 0) {
+                    try {
+                        const authenticatedUserId = await getAuthenticatedUserId(userId);
+                        const rows = localOnly.map((e) => eventToRow(authenticatedUserId, e, encryptionKey));
+                        const {error: upsertErr} = await supabase.from("planner_events").upsert(rows);
+                        if (upsertErr) {
+                            console.warn("[planner] migrate local-up error", upsertErr.message);
+                        }
+                    } catch (err) {
+                        console.warn("[planner] auth check before local-up error", err);
+                    }
+                }
+
+                // Merge: remote is canonical; preserve any local-only that just got pushed
+                const merged = [...remote, ...localOnly];
+                setEvents(merged);
+                await persistLocal(merged);
+                if (encryptionKey) {
+                    const plaintextRows = ((data ?? []) as PlannerEventRow[]).filter((row) => row.title && !row.title_encrypted);
+                    if (plaintextRows.length > 0) {
+                        void supabase.from("planner_events").upsert(
+                            plaintextRows.map((row) => eventToRow(userId, mapRowToEvent(row, encryptionKey), encryptionKey)),
+                        );
+                    }
+                }
+            } catch (error) {
+                console.warn("[planner] hydrate error", error);
+            } finally {
+                if (mounted) setIsLoaded(true);
+            }
         }
 
         void hydrate();
@@ -223,7 +283,7 @@ export function usePlannerEvents(session: Session | null) {
         return () => {
             mounted = false;
         };
-    }, [persistLocal, userId]);
+    }, [encryptionKey, persistLocal, userId]);
 
     const createEvent = useCallback(
         async (input: CreatePlannerEventInput): Promise<PlannerEvent | null> => {
@@ -251,7 +311,7 @@ export function usePlannerEvents(session: Session | null) {
 
             if (userId) {
                 const authenticatedUserId = await getAuthenticatedUserId(userId);
-                const {error} = await supabase.from("planner_events").insert(eventToRow(authenticatedUserId, event));
+                const {error} = await supabase.from("planner_events").insert(eventToRow(authenticatedUserId, event, encryptionKey));
                 if (error) {
                     console.warn("[planner] insert error", error.message);
                     setEvents(previous);
@@ -261,7 +321,7 @@ export function usePlannerEvents(session: Session | null) {
             }
             return event;
         },
-        [persistLocal, userId],
+        [encryptionKey, persistLocal, userId],
     );
 
     const updateEvent = useCallback(
@@ -289,8 +349,10 @@ export function usePlannerEvents(session: Session | null) {
                 const {error} = await supabase
                     .from("planner_events")
                     .update({
-                        title: merged.title,
-                        description: merged.description,
+                        title: encryptionKey ? encryptedPlaceholder("encrypted planner event") : merged.title,
+                        title_encrypted: encryptionKey ? encryptString(encryptionKey, merged.title) : null,
+                        description: encryptionKey && merged.description ? encryptedPlaceholder("encrypted planner description") : merged.description,
+                        description_encrypted: encryptionKey && merged.description ? encryptString(encryptionKey, merged.description) : null,
                         start_at: merged.startAt,
                         end_at: merged.endAt,
                         color: merged.color,
@@ -307,7 +369,7 @@ export function usePlannerEvents(session: Session | null) {
                 }
             }
         },
-        [persistLocal, userId],
+        [encryptionKey, persistLocal, userId],
     );
 
     const deleteEvent = useCallback(

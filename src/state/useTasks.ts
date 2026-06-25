@@ -7,11 +7,15 @@ import {supabase} from "../lib/supabase";
 import type {Session} from "@supabase/supabase-js";
 import {useGoogleCalendar} from "./useGoogleCalendar";
 import {syncTaskReminderNotifications} from "../lib/notifications";
+import {decryptString, encryptString, encryptedPlaceholder, type EncryptionKey, looksEncrypted} from "../lib/e2ee";
+import type {EncryptionState} from "./useEncryption";
 
 type TaskRow = {
     id: string;
     title: string;
+    title_encrypted: string | null;
     description: string | null;
+    description_encrypted: string | null;
     due_date: string | null;
     due_time: string | null;
     status: "todo" | "completed";
@@ -28,11 +32,22 @@ function normalizeTaskStatus(status: string | null | undefined): TaskStatus {
     return "todo";
 }
 
-function mapTaskRowToTask(row: TaskRow): Task {
+function decryptTaskText(key: EncryptionKey | null, encrypted: string | null | undefined, fallback: string): string {
+    if (key && encrypted && looksEncrypted(encrypted)) {
+        try {
+            return decryptString(key, encrypted);
+        } catch (error) {
+            console.warn("Task decrypt error", error);
+        }
+    }
+    return fallback;
+}
+
+function mapTaskRowToTask(row: TaskRow, key: EncryptionKey | null): Task {
     return {
         id: row.id,
-        title: row.title,
-        description: row.description ?? "",
+        title: decryptTaskText(key, row.title_encrypted, row.title),
+        description: decryptTaskText(key, row.description_encrypted, row.description ?? ""),
         dueDate: row.due_date ?? null,
         dueTime: row.due_time ?? null,
         status: normalizeTaskStatus(row.status),
@@ -45,10 +60,34 @@ function mapTaskRowToTask(row: TaskRow): Task {
     };
 }
 
-export function useTasks(session: Session | null) {
+function taskToRemoteRow(userId: string, task: Task, key: EncryptionKey | null) {
+    const encryptedTitle = key ? encryptString(key, task.title) : null;
+    const encryptedDescription = key && task.description ? encryptString(key, task.description) : null;
+
+    return {
+        id: task.id,
+        user_id: userId,
+        title: encryptedTitle ? encryptedPlaceholder("encrypted task") : task.title,
+        title_encrypted: encryptedTitle,
+        description: encryptedDescription ? encryptedPlaceholder("encrypted task description") : task.description,
+        description_encrypted: encryptedDescription,
+        due_date: task.dueDate,
+        due_time: task.dueTime,
+        status: task.status,
+        priority: task.priority,
+        order: task.order ?? 0,
+        created_at: task.createdAt,
+        source: task.source ?? "manual",
+        external_id: task.externalId ?? null,
+        external_updated_at: task.externalUpdatedAt ?? null,
+    };
+}
+
+export function useTasks(session: Session | null, encryption?: EncryptionState) {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
     const tasksRef = useRef<Task[]>([]);
+    const encryptionKey = encryption?.key ?? null;
 
     useEffect(() => {
         tasksRef.current = tasks;
@@ -67,8 +106,8 @@ export function useTasks(session: Session | null) {
             return null;
         }
 
-        return ((data ?? []) as TaskRow[]).map(mapTaskRowToTask);
-    }, []);
+        return ((data ?? []) as TaskRow[]).map((row) => mapTaskRowToTask(row, encryptionKey));
+    }, [encryptionKey]);
 
     const refreshTasksFromRemote = useCallback(async (userId: string) => {
         const latest = await loadRemoteTasks(userId);
@@ -84,53 +123,61 @@ export function useTasks(session: Session | null) {
         session,
         getTodoBaseOrder,
         refreshTasksFromRemote,
+        encryptionKey,
     });
 
     useEffect(() => {
         let mounted = true;
 
         async function hydrateLocal() {
-            const loaded = await loadTasks(session?.user.id);
-            if (!mounted) return;
-            setTasks(loaded.map((task) => ({
-                ...task,
-                dueTime: task.dueTime ?? null,
-                status: normalizeTaskStatus(task.status),
-            })));
-            setIsLoaded(true);
+            try {
+                const loaded = await loadTasks(session?.user.id, encryptionKey);
+                if (!mounted) return;
+                setTasks(loaded.map((task) => ({
+                    ...task,
+                    dueTime: task.dueTime ?? null,
+                    status: normalizeTaskStatus(task.status),
+                })));
+            } catch (error) {
+                console.warn("Tasks local hydrate error", error);
+            } finally {
+                if (mounted) setIsLoaded(true);
+            }
         }
 
         async function hydrateRemote(userId: string) {
-            const local = (await loadTasks(userId)).map((task) => ({
-                ...task,
-                dueTime: task.dueTime ?? null,
-                status: normalizeTaskStatus(task.status),
-            }));
+            try {
+                if (!encryptionKey) {
+                    setTasks([]);
+                    return;
+                }
 
-            if (local.length > 0) {
-                const toUpsert = local.map((task) => ({
-                    id: task.id,
-                    user_id: userId,
-                    title: task.title,
-                    description: task.description,
-                    due_date: task.dueDate,
-                    due_time: task.dueTime,
-                    status: task.status,
-                    priority: task.priority,
-                    order: task.order ?? 0,
-                    created_at: task.createdAt,
-                    source: task.source ?? "manual",
-                    external_id: task.externalId ?? null,
-                    external_updated_at: task.externalUpdatedAt ?? null,
+                const local = (await loadTasks(userId, encryptionKey)).map((task) => ({
+                    ...task,
+                    dueTime: task.dueTime ?? null,
+                    status: normalizeTaskStatus(task.status),
                 }));
-                const {error: upsertErr} = await supabase.from("tasks").upsert(toUpsert);
-                if (upsertErr) console.warn("Supabase tasks upsert error", upsertErr.message);
-            }
 
-            const remoteTasks = await loadRemoteTasks(userId);
-            if (!mounted) return;
-            setTasks(remoteTasks ?? local ?? []);
-            setIsLoaded(true);
+                if (local.length > 0) {
+                    const toUpsert = local.map((task) => taskToRemoteRow(userId, task, encryptionKey));
+                    const {error: upsertErr} = await supabase.from("tasks").upsert(toUpsert);
+                    if (upsertErr) console.warn("Supabase tasks upsert error", upsertErr.message);
+                }
+
+                const remoteTasks = await loadRemoteTasks(userId);
+                if (!mounted) return;
+                setTasks(remoteTasks ?? local ?? []);
+                if (remoteTasks) {
+                    const plaintextTasks = remoteTasks.filter((task) => task.title && !task.title.startsWith("[encrypted"));
+                    if (plaintextTasks.length > 0) {
+                        void supabase.from("tasks").upsert(plaintextTasks.map((task) => taskToRemoteRow(userId, task, encryptionKey)));
+                    }
+                }
+            } catch (error) {
+                console.warn("Tasks remote hydrate error", error);
+            } finally {
+                if (mounted) setIsLoaded(true);
+            }
         }
 
         if (session) {
@@ -142,13 +189,14 @@ export function useTasks(session: Session | null) {
         return () => {
             mounted = false;
         };
-    }, [loadRemoteTasks, session]);
+    }, [encryptionKey, loadRemoteTasks, session]);
 
     useEffect(() => {
         if (!isLoaded) return;
-        void saveTasks(tasks, session?.user.id);
+        if (session && !encryptionKey) return;
+        void saveTasks(tasks, session?.user.id, encryptionKey);
         void syncTaskReminderNotifications(tasks);
-    }, [isLoaded, session?.user.id, tasks]);
+    }, [encryptionKey, isLoaded, session, session?.user.id, tasks]);
 
     const syncTaskOrdering = useCallback(
         async (userId: string, nextTasks: Task[], taskIds: string[]) => {
@@ -202,28 +250,14 @@ export function useTasks(session: Session | null) {
             setTasks((prev) => [...prev, nextTask]);
 
             if (session) {
-                const {error} = await supabase.from("tasks").insert({
-                    id: nextTask.id,
-                    user_id: session.user.id,
-                    title: nextTask.title,
-                    description: nextTask.description,
-                    due_date: nextTask.dueDate,
-                    due_time: nextTask.dueTime,
-                    status: nextTask.status,
-                    priority: nextTask.priority,
-                    order: nextTask.order,
-                    created_at: nextTask.createdAt,
-                    source: nextTask.source,
-                    external_id: nextTask.externalId,
-                    external_updated_at: nextTask.externalUpdatedAt,
-                });
+                const {error} = await supabase.from("tasks").insert(taskToRemoteRow(session.user.id, nextTask, encryptionKey));
                 if (error) {
                     console.warn("Supabase task insert error", error.message);
                     Alert.alert("Save error", "Could not save task to server. It will stay locally for now.");
                 }
             }
         },
-        [session],
+        [encryptionKey, session],
     );
 
     const deleteTask = useCallback(

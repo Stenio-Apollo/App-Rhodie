@@ -17,6 +17,8 @@
     "@expo-google-fonts/archivo": "^0.4.2",
     "@expo-google-fonts/lexend": "^0.4.1",
     "@expo/metro-runtime": "~4.0.1",
+    "@noble/ciphers": "^2.2.0",
+    "@noble/hashes": "^2.2.0",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@supabase/supabase-js": "^2.102.1",
     "expo": "~52.0.37",

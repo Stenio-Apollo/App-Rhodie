@@ -20,32 +20,37 @@ export function useOnboarding(userId: string | null | undefined) {
         let mounted = true;
 
         async function hydrate() {
-            if (!userId) {
-                if (!mounted) return;
-                setHasCompletedOnboarding(true);
-                setDismissedTutorials(new Set());
-                setIsLoaded(true);
-                return;
-            }
-
-            setIsLoaded(false);
-            const [onboardingRaw, ...tutorialValues] = await Promise.all([
-                AsyncStorage.getItem(scopedKey(ONBOARDING_PREFIX, userId)),
-                ...TUTORIAL_KEYS.map((key) => AsyncStorage.getItem(scopedKey(TUTORIAL_PREFIX, userId, key))),
-            ]);
-
-            if (!mounted) return;
-
-            const dismissed = new Set<TutorialKey>();
-            TUTORIAL_KEYS.forEach((key, index) => {
-                if (tutorialValues[index] === "dismissed") {
-                    dismissed.add(key);
+            try {
+                if (!userId) {
+                    if (!mounted) return;
+                    setHasCompletedOnboarding(true);
+                    setDismissedTutorials(new Set());
+                    return;
                 }
-            });
 
-            setHasCompletedOnboarding(onboardingRaw === "complete");
-            setDismissedTutorials(dismissed);
-            setIsLoaded(true);
+                setIsLoaded(false);
+                const [onboardingRaw, ...tutorialValues] = await Promise.all([
+                    AsyncStorage.getItem(scopedKey(ONBOARDING_PREFIX, userId)),
+                    ...TUTORIAL_KEYS.map((key) => AsyncStorage.getItem(scopedKey(TUTORIAL_PREFIX, userId, key))),
+                ]);
+
+                if (!mounted) return;
+
+                const dismissed = new Set<TutorialKey>();
+                TUTORIAL_KEYS.forEach((key, index) => {
+                    if (tutorialValues[index] === "dismissed") {
+                        dismissed.add(key);
+                    }
+                });
+
+                setHasCompletedOnboarding(onboardingRaw === "complete");
+                setDismissedTutorials(dismissed);
+            } catch (error) {
+                console.warn("Onboarding hydrate error", error);
+                if (mounted) setHasCompletedOnboarding(true);
+            } finally {
+                if (mounted) setIsLoaded(true);
+            }
         }
 
         void hydrate();

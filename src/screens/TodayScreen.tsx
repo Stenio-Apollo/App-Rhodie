@@ -138,7 +138,7 @@ export function TodayScreen({
                     <Pressable
                         onPress={() => onOpenJournalPrompt(latestPrompt?.id ?? null)}
                         style={({pressed}) => [
-                            tw`rounded-3xl border border-[#2c2c2c] bg-black/57 p-4`,
+                            tw`rounded-3xl border border-[#F5DBC9]/33 bg-black/57 p-4`,
                             pressed && tw`opacity-85`,
                         ]}
                     >
@@ -165,7 +165,7 @@ export function TodayScreen({
                     <Pressable
                         onPress={onOpenWeeklyGoal}
                         style={({pressed}) => [
-                            tw`rounded-3xl border border-[#B55941]/43 bg-black/43 p-4`,
+                            tw`rounded-3xl border border-[#F5DBC9]/33 bg-black/43 p-4`,
                             pressed && tw`opacity-85`,
                         ]}
                     >
@@ -224,7 +224,7 @@ export function TodayScreen({
                     <Pressable
                         onPress={() => onOpenGratitude(latestGratitude?.id ?? null)}
                         style={({pressed}) => [
-                            tw`rounded-3xl border border-[#B55941]/43 bg-black/43 p-4`,
+                            tw`rounded-3xl border border-[#F5DBC9]/33 bg-black/43 p-4`,
                             pressed && tw`opacity-85`,
                         ]}
                     >
@@ -245,7 +245,7 @@ export function TodayScreen({
                     <Pressable
                         onPress={onOpenTasks}
                         style={({pressed}) => [
-                            tw`mb-1 rounded-3xl border border-[#2c2c2c] bg-black/39 p-4`,
+                            tw`mb-1 rounded-3xl border border-[#F5DBC9]/33 bg-black/39 p-4`,
                             pressed && tw`opacity-85`,
                         ]}
                     >

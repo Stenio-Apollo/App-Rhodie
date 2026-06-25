@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, AppState, PanResponder, Platform, SafeAreaView, View} from "react-native";
+import {Alert, AppState, PanResponder, Platform, SafeAreaView, Text, View} from "react-native";
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -39,6 +39,10 @@ import {OnboardingScreen} from "./src/screens/OnboardingScreen";
 import {useOnboarding} from "./src/state/useOnboarding";
 import {clearStickyNoteStorage, useStickyNote} from "./src/state/useStickyNote";
 import {clearVisualModeStorage, useVisualMode} from "./src/state/useVisualMode";
+import {useEncryption} from "./src/state/useEncryption";
+import {PrivacyPassphraseScreen} from "./src/screens/PrivacyPassphraseScreen";
+import {fonts} from "./src/theme/fonts";
+import {AppErrorBoundary} from "./src/components/AppErrorBoundary";
 
 type HomeAction =
     | { key: number; target: "journalPrompt"; entryId: string | null }
@@ -56,7 +60,7 @@ const TAB_ORDER: Tab[] = ["today", "plan", "journal", "board", "calendar", "insi
 const SWIPE_DISTANCE_THRESHOLD = 70;
 const SWIPE_VERTICAL_LIMIT = 55;
 
-export default function App() {
+function AppContent() {
     const [tab, setTab] = useState<Tab>("today");
     const [accountOpen, setAccountOpen] = useState(false);
     const [subscriptionOfferOpen, setSubscriptionOfferOpen] = useState(false);
@@ -81,19 +85,21 @@ export default function App() {
     } = useSupabaseAuth();
     const subscription = useSubscription(session);
     const {profile, upsertProfile} = useProfile(session);
-    const tasksState = useTasks(session);
-    const weeklyGoalState = useWeeklyGoal(session?.user.id);
-    const journalState = useJournal(session);
-    const plannerState = usePlannerEvents(session);
+    const encryption = useEncryption(session);
+    const tasksState = useTasks(session, encryption);
+    const weeklyGoalState = useWeeklyGoal(session?.user.id, encryption);
+    const journalState = useJournal(session, encryption);
+    const plannerState = usePlannerEvents(session, encryption);
     const onboarding = useOnboarding(session?.user.id);
-    const stickyNoteState = useStickyNote(session?.user.id);
+    const stickyNoteState = useStickyNote(session?.user.id, encryption);
     const visualModeState = useVisualMode(session?.user.id);
     const [fontsLoaded] = useAppFonts();
     const birthdayActive = Boolean(profile?.birthday && isToday(profile.birthday));
     const appLoading = !fontsLoaded ||
         authLoading ||
         (session && subscription.loading) ||
-        (session && (!tasksState.isLoaded || !weeklyGoalState.isLoaded || !onboarding.isLoaded || !stickyNoteState.isLoaded || !visualModeState.isLoaded));
+        (session && !encryption.isReady) ||
+        (session && (!onboarding.isLoaded || !visualModeState.isLoaded));
 
     useEffect(() => {
         if (!session) {
@@ -265,6 +271,7 @@ export default function App() {
     async function handleSignOut() {
         setAccountOpen(false);
         setSubscriptionOfferOpen(false);
+        await encryption.forgetDeviceKey();
         await signOut();
     }
 
@@ -281,6 +288,7 @@ export default function App() {
         }
 
         await Promise.all([
+            encryption.forgetDeviceKey(),
             clearTasksStorage(session?.user.id),
             clearJournalStorage(session?.user.id),
             clearWeeklyGoalStorage(session?.user.id),
@@ -337,6 +345,22 @@ export default function App() {
     }
 
     if (appLoading) {
+        if (session && encryption.status === "unlocked") {
+            return (
+                <GradientBackground>
+                    <StatusBar style="light"/>
+                    <View style={tw`flex-1 items-center justify-center bg-black px-6`}>
+                        <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                            Unlocking your private data...
+                        </Text>
+                        <Text style={[tw`mt-3 text-center text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
+                            If your connection is slow, Rhodie will still open with your local encrypted data.
+                        </Text>
+                    </View>
+                </GradientBackground>
+            );
+        }
+
         return (
             <GradientBackground>
                 <StatusBar style="light"/>
@@ -390,6 +414,15 @@ export default function App() {
         );
     }
 
+    if (encryption.status !== "unlocked") {
+        return (
+            <GradientBackground>
+                <StatusBar style="light"/>
+                <PrivacyPassphraseScreen encryption={encryption} onSignOut={handleSignOut}/>
+            </GradientBackground>
+        );
+    }
+
     if (!onboarding.hasCompletedOnboarding) {
         return (
             <GradientBackground>
@@ -402,7 +435,12 @@ export default function App() {
     }
 
     return (
-        <SafeAreaProvider>
+        <AppErrorBoundary
+            onReset={() => {
+                void handleSignOut();
+            }}
+        >
+            <SafeAreaProvider>
             <GradientBackground>
                 <SafeAreaView style={tw`bg-black flex-1`}>
                     <StatusBar style="light"/>
@@ -542,6 +580,15 @@ export default function App() {
                 />
                 </SafeAreaView>
             </GradientBackground>
-        </SafeAreaProvider>
+            </SafeAreaProvider>
+        </AppErrorBoundary>
+    );
+}
+
+export default function App() {
+    return (
+        <AppErrorBoundary>
+            <AppContent/>
+        </AppErrorBoundary>
     );
 }

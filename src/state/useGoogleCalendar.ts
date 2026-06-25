@@ -6,6 +6,7 @@ import * as WebBrowser from "expo-web-browser";
 import Constants from "expo-constants";
 import {supabase} from "../lib/supabase";
 import type {Session} from "@supabase/supabase-js";
+import {encryptString, encryptedPlaceholder, type EncryptionKey} from "../lib/e2ee";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -51,9 +52,10 @@ interface UseGoogleCalendarOptions {
     getTodoBaseOrder: () => number;
     /** Re-load tasks from Supabase into the parent's local state. Called after a successful sync. */
     refreshTasksFromRemote: (userId: string) => Promise<void>;
+    encryptionKey?: EncryptionKey | null;
 }
 
-export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRemote}: UseGoogleCalendarOptions) {
+export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRemote, encryptionKey = null}: UseGoogleCalendarOptions) {
     const googleConfig = (Constants.expoConfig?.extra as {
         googleOAuthClientId?: string;
         googleIosOAuthClientId?: string;
@@ -177,7 +179,7 @@ export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRe
     );
 
     const syncGoogleCalendar = useCallback(async () => {
-        if (!session || !googleEnabled) return;
+        if (!session || !googleEnabled || !encryptionKey) return;
 
         setGoogleBusy(true);
         setGoogleError(null);
@@ -230,11 +232,17 @@ export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRe
             events.forEach((event, index) => {
                 if (!event.id) return;
                 const id = googleTaskId(event.id);
+                const title = eventTitle(event);
+                const description = (event.description ?? "").slice(0, 1000);
+                const titleEncrypted = encryptionKey ? encryptString(encryptionKey, title) : null;
+                const descriptionEncrypted = encryptionKey && description ? encryptString(encryptionKey, description) : null;
                 const rowBase = {
                     id,
                     user_id: session.user.id,
-                    title: eventTitle(event),
-                    description: (event.description ?? "").slice(0, 1000),
+                    title: titleEncrypted ? encryptedPlaceholder("encrypted task") : title,
+                    title_encrypted: titleEncrypted,
+                    description: descriptionEncrypted ? encryptedPlaceholder("encrypted task description") : description,
+                    description_encrypted: descriptionEncrypted,
                     due_date: eventDate(event),
                     due_time: null,
                     source: "google_calendar",
@@ -269,7 +277,9 @@ export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRe
                             .from("tasks")
                             .update({
                                 title: row.title,
+                                title_encrypted: row.title_encrypted,
                                 description: row.description,
+                                description_encrypted: row.description_encrypted,
                                 due_date: row.due_date,
                                 external_updated_at: row.external_updated_at,
                             })
@@ -290,6 +300,7 @@ export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRe
         }
     }, [
         getTodoBaseOrder,
+        encryptionKey,
         googleConnection,
         googleEnabled,
         loadGoogleConnection,
@@ -308,7 +319,7 @@ export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRe
     }, [loadGoogleConnection, session]);
 
     useEffect(() => {
-        if (!session || !googleEnabled || !response) return;
+        if (!session || !googleEnabled || !response || !encryptionKey) return;
 
         if (response.type !== "success") {
             setGoogleBusy(false);
@@ -355,10 +366,10 @@ export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRe
                 setGoogleBusy(false);
             }
         })();
-    }, [googleEnabled, response, session, syncGoogleCalendar]);
+    }, [encryptionKey, googleEnabled, response, session, syncGoogleCalendar]);
 
     useEffect(() => {
-        if (!session || !googleConnected) return;
+        if (!session || !googleConnected || !encryptionKey) return;
 
         void syncGoogleCalendar();
         const interval = setInterval(() => {
@@ -375,7 +386,7 @@ export function useGoogleCalendar({session, getTodoBaseOrder, refreshTasksFromRe
             clearInterval(interval);
             subscription.remove();
         };
-    }, [googleConnected, session, syncGoogleCalendar]);
+    }, [encryptionKey, googleConnected, session, syncGoogleCalendar]);
 
     const connectGoogleCalendar = useCallback(async () => {
         if (!session) return;

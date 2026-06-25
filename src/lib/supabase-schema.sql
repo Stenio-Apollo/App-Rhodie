@@ -5,6 +5,7 @@ create table if not exists public.journal_entries (
   date date not null,
   category text not null check (category in ('gratitude','prompt')),
   text text not null,
+  text_encrypted text,
   created_at timestamptz not null default now()
 );
 update public.journal_entries set category = 'prompt' where category = 'journal';
@@ -18,7 +19,9 @@ create table if not exists public.tasks (
   id text primary key,
   user_id text not null,
   title text not null,
+  title_encrypted text,
   description text,
+  description_encrypted text,
   due_date date,
   due_time time,
   status text not null check (status in ('todo','completed')),
@@ -53,6 +56,17 @@ create table if not exists public.google_calendar_connections (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.encryption_profiles (
+  user_id text primary key,
+  salt text not null,
+  verifier text not null,
+  kdf text not null,
+  iterations int not null,
+  version int not null default 1,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Push tokens for Expo notifications
 create table if not exists public.push_tokens (
   user_id text not null,
@@ -77,6 +91,7 @@ alter table public.tasks enable row level security;
 alter table public.push_tokens enable row level security;
 alter table public.push_notification_deliveries enable row level security;
 alter table public.google_calendar_connections enable row level security;
+alter table public.encryption_profiles enable row level security;
 
 -- Ownership policies
 drop policy if exists "own journal entries" on public.journal_entries;
@@ -94,6 +109,16 @@ create policy "own push tokens" on public.push_tokens
 drop policy if exists "own google calendar connection" on public.google_calendar_connections;
 create policy "own google calendar connection" on public.google_calendar_connections
   for all using (auth.uid()::text = user_id);
+
+drop policy if exists "select own encryption profile" on public.encryption_profiles;
+create policy "select own encryption profile" on public.encryption_profiles
+  for select to authenticated using (auth.uid()::text = user_id);
+drop policy if exists "insert own encryption profile" on public.encryption_profiles;
+create policy "insert own encryption profile" on public.encryption_profiles
+  for insert to authenticated with check (auth.uid()::text = user_id);
+drop policy if exists "update own encryption profile" on public.encryption_profiles;
+create policy "update own encryption profile" on public.encryption_profiles
+  for update to authenticated using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
 
 -- Insert policies
 drop policy if exists "insert journal entries" on public.journal_entries;
@@ -118,6 +143,8 @@ revoke all on public.tasks from anon;
 revoke all on public.push_tokens from anon;
 revoke all on public.push_notification_deliveries from anon, authenticated;
 revoke all on public.google_calendar_connections from anon;
+grant select, insert, update on table public.encryption_profiles to authenticated;
+revoke all on public.encryption_profiles from anon;
 
 -- Profiles
 create table if not exists public.profiles (
@@ -137,6 +164,7 @@ revoke all on public.profiles from anon;
 create table if not exists public.sticky_notes (
   user_id text primary key,
   text text not null default '',
+  text_encrypted text,
   updated_at timestamptz not null default now()
 );
 alter table public.sticky_notes enable row level security;
