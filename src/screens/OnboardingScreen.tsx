@@ -68,7 +68,7 @@ function IntroVideo({onDone}: { onDone: () => void }) {
     const [isDismissing, setIsDismissing] = useState(false);
     const dismissingRef = useRef(false);
     const opacity = useRef(new Animated.Value(1)).current;
-    const player = useVideoPlayer(require("../../public/videos/rh.rhodie.mp4"), (instance) => {
+    const player = useVideoPlayer(require("../../public/videos/rh.rhodie-ota.mp4"), (instance) => {
         instance.loop = false;
         instance.muted = false;
         instance.volume = 1;
