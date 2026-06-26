@@ -22,7 +22,7 @@ const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; act
 ];
 
 const ACTIVE_NAV_COLOR = "#B55941";
-const SUNSET_NAV_COLOR = "#DFC4AA";
+const SUNSET_NAV_COLOR = "#B55941";
 const INACTIVE_COLOR = "#E4E0D4";
 const ROW_HORIZONTAL_PADDING = 3;
 const PILL_HORIZONTAL_INSET = 3;
@@ -205,7 +205,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
         >
             <Animated.View
                 style={[
-                    tw`overflow-hidden rounded-full border bg-black/10 p-1`,
+                    tw`overflow-hidden rounded-full border bg-black/99 p-1`,
                     {
                         borderColor: navBorderSoft,
                         transform: [

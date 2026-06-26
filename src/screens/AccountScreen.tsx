@@ -6,7 +6,6 @@ import {Button} from "../components/ui/Button";
 import {Input} from "../components/ui/Input";
 import {fonts} from "../theme/fonts";
 import type {Profile} from "../state/useProfile";
-import {haptics} from "../lib/haptics";
 import {BirthdayPicker, formatBirthday, parseBirthdayParts} from "../components/BirthdayPicker";
 import type {VisualMode} from "../state/useVisualMode";
 
@@ -291,13 +290,13 @@ export function AccountScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-60`}>
-            <View style={[tw`flex-1 bg-black/35`, {paddingHorizontal: 1}]}>
+            <View style={[tw`flex-1 bg-black/49`, {paddingHorizontal: 1}]}>
                 <ScrollView
                     style={tw`flex-1`}
                     contentContainerStyle={tw`px-4 pb-32 pt-4 gap-4`}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/30 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/70 p-4`}>
                         <View>
                             <Text style={[tw`text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Account</Text>
                             <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
@@ -306,7 +305,7 @@ export function AccountScreen({
                         </View>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/75 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Profile</Text>
                         <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>Update the name and
                             birthday used across the app.</Text>
@@ -315,17 +314,17 @@ export function AccountScreen({
                             placeholder="Your name"
                             value={name}
                             onChangeText={setName}
-                            style={tw`mt-4 px-4 py-3`}
+                            style={tw`mt-4 px-4 py-3 opacity-49`}
                         />
 
                         <Input
                             placeholder="Email"
                             value={session.user.email ?? "No email on file"}
                             editable={false}
-                            style={tw`mt-3 px-4 py-3 opacity-75`}
+                            style={tw`mt-3 px-4 py-3 opacity-49`}
                         />
 
-                        <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f] px-4 py-3`}>
+                        <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/44 px-4 py-3`}>
                             <BirthdayPicker
                                 month={birthdayMonth}
                                 day={birthdayDay}
@@ -335,7 +334,8 @@ export function AccountScreen({
                                 }}
                                 placeholder="Optional birthday"
                                 showClear
-                                pickerBackgroundClass="bg-black/20"
+                                pickerBackgroundClass="bg-black/47"
+
                             />
                         </View>
 
@@ -363,7 +363,7 @@ export function AccountScreen({
                         ) : null}
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/79 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Support</Text>
                         <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Need help with
                             billing, syncing, or your account? Reach out directly and we’ll open your email app.</Text>
@@ -383,7 +383,7 @@ export function AccountScreen({
                         </View>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/45 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/79 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>App guide</Text>
                         <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
                             Replay the first-run onboarding and restore the in-app tutorial cards.
@@ -400,12 +400,12 @@ export function AccountScreen({
                         </View>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#DFC4AA]/33 bg-black/45 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#DFC4AA]/33 bg-black/79 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Subscription</Text>
                         <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>View your current
                             billing state and manage the store subscription.</Text>
 
-                        <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/45 px-4 py-3`}>
+                        <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/33 px-4 py-3`}>
                             <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Status</Text>
                             <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                 {getSubscriptionStatusLabel(subscription)}
@@ -488,7 +488,7 @@ export function AccountScreen({
                         </Text>
                     </View>
 
-                    <View style={tw`rounded-3xl border border-[#7f1d1d] bg-black/45 p-4`}>
+                    <View style={tw`rounded-3xl border border-[#7f1d1d] bg-black/49 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Account
                             security</Text>
                         <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Deleting your account
