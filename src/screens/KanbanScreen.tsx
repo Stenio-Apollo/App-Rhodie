@@ -47,7 +47,7 @@ export function KanbanScreen({
                                  onDismissTutorial
                              }: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
-    const bg = visualMode === "warm"
+    const bg = visualMode === "sunset"
         ? require("../../public/images/rhox.jpg")
         : require("../../public/images/rh28.jpg");
 
@@ -145,7 +145,7 @@ export function KanbanScreen({
                         <View
                             style={[
                                 tw`mt-2 overflow-hidden rounded-[28px] border bg-[black/10] p-1`,
-                                {borderColor: visualMode === "warm" ? "rgba(223,196,170,0.11)" : "rgba(0,0,0,0.19)"},
+                                {borderColor: visualMode === "sunset" ? "rgba(223,196,170,0.11)" : "rgba(0,0,0,0.19)"},
                             ]}>
                             <BlurView
                                 intensity={72}

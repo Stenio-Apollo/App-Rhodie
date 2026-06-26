@@ -17,6 +17,8 @@ export type EncryptionProfile = {
     userId: string;
     salt: string;
     verifier: string;
+    keyVerifier?: string | null;
+    wrappedKey?: string | null;
     kdf: string;
     iterations: number;
     version: number;
@@ -34,11 +36,22 @@ type EncryptedPayload = {
     ciphertext: string;
 };
 
+type WrappedKeyPayload = EncryptedPayload;
+
+type ProfileVerifierPayload = {
+    v: 2;
+    pinVerifier: string;
+    keyVerifier: string;
+    wrappedKey: string;
+};
+
 type CachedEncryptionKeyPayload = {
     v: number;
     userId: string;
     salt: string;
     verifier: string;
+    keyVerifier?: string | null;
+    wrappedKey?: string | null;
     kdf: string;
     iterations: number;
     keyBytes: string;
@@ -112,26 +125,115 @@ function createVerifier(keyBytes: Uint8Array): string {
     return bytesToBase64(hmac(sha256, keyBytes, utf8ToBytes(VERIFIER_MESSAGE)));
 }
 
-export async function createEncryptionProfile(userId: string, passphrase: string): Promise<EncryptionKey> {
+export function serializeProfileVerifier(profile: EncryptionProfile): string {
+    if (profile.version >= 2 && profile.keyVerifier && profile.wrappedKey) {
+        const payload: ProfileVerifierPayload = {
+            v: 2,
+            pinVerifier: profile.verifier,
+            keyVerifier: profile.keyVerifier,
+            wrappedKey: profile.wrappedKey,
+        };
+        return JSON.stringify(payload);
+    }
+
+    return profile.verifier;
+}
+
+export function parseProfileVerifier(
+    verifier: string,
+    version: number,
+    keyVerifier?: string | null,
+    wrappedKey?: string | null,
+): Pick<EncryptionProfile, "verifier" | "keyVerifier" | "wrappedKey"> {
+    if (keyVerifier && wrappedKey) {
+        return {verifier, keyVerifier, wrappedKey};
+    }
+
+    if (version >= 2) {
+        try {
+            const payload = JSON.parse(verifier) as Partial<ProfileVerifierPayload>;
+            if (
+                payload.v === 2 &&
+                typeof payload.pinVerifier === "string" &&
+                typeof payload.keyVerifier === "string" &&
+                typeof payload.wrappedKey === "string"
+            ) {
+                return {
+                    verifier: payload.pinVerifier,
+                    keyVerifier: payload.keyVerifier,
+                    wrappedKey: payload.wrappedKey,
+                };
+            }
+        } catch {
+            // Legacy verifier strings are not JSON.
+        }
+    }
+
+    return {verifier, keyVerifier, wrappedKey};
+}
+
+function encryptBytes(keyBytes: Uint8Array, value: Uint8Array): WrappedKeyPayload {
+    const nonce = Crypto.getRandomBytes(12);
+    const ciphertext = gcm(keyBytes, nonce).encrypt(value);
+    return {
+        v: ENCRYPTION_VERSION,
+        alg: ENCRYPTION_ALGORITHM,
+        nonce: bytesToBase64(nonce),
+        ciphertext: bytesToBase64(ciphertext),
+    };
+}
+
+function decryptBytes(keyBytes: Uint8Array, encryptedValue: string): Uint8Array {
+    const payload = JSON.parse(encryptedValue) as Partial<WrappedKeyPayload>;
+    if (payload.v !== ENCRYPTION_VERSION || payload.alg !== ENCRYPTION_ALGORITHM || !payload.nonce || !payload.ciphertext) {
+        throw new Error("Unsupported encrypted key payload.");
+    }
+    return gcm(keyBytes, base64ToBytes(payload.nonce)).decrypt(base64ToBytes(payload.ciphertext));
+}
+
+export async function createEncryptionProfileFromKey(
+    userId: string,
+    pin: string,
+    keyBytes: Uint8Array,
+): Promise<EncryptionKey> {
     const salt = createEncryptionSalt();
-    const keyBytes = await deriveKeyBytes(passphrase, salt, ENCRYPTION_KDF_ITERATIONS);
+    const pinKeyBytes = await deriveKeyBytes(pin, salt, ENCRYPTION_KDF_ITERATIONS);
     const profile: EncryptionProfile = {
         userId,
         salt,
-        verifier: createVerifier(keyBytes),
+        verifier: createVerifier(pinKeyBytes),
+        keyVerifier: createVerifier(keyBytes),
+        wrappedKey: JSON.stringify(encryptBytes(pinKeyBytes, keyBytes)),
         kdf: ENCRYPTION_KDF,
         iterations: ENCRYPTION_KDF_ITERATIONS,
-        version: ENCRYPTION_VERSION,
+        version: 2,
     };
     return {keyBytes, profile};
 }
 
-export async function unlockEncryptionProfile(profile: EncryptionProfile, passphrase: string): Promise<EncryptionKey> {
-    const keyBytes = await deriveKeyBytes(passphrase, profile.salt, profile.iterations);
-    if (createVerifier(keyBytes) !== profile.verifier) {
+export async function createEncryptionProfile(userId: string, pin: string): Promise<EncryptionKey> {
+    return createEncryptionProfileFromKey(userId, pin, Crypto.getRandomBytes(32));
+}
+
+export async function unlockEncryptionProfile(profile: EncryptionProfile, pin: string): Promise<EncryptionKey> {
+    const pinKeyBytes = await deriveKeyBytes(pin, profile.salt, profile.iterations);
+
+    if (profile.version >= 2 && profile.wrappedKey) {
+        if (createVerifier(pinKeyBytes) !== profile.verifier) {
+            throw new Error("That PIN did not unlock your encrypted data.");
+        }
+
+        const keyBytes = decryptBytes(pinKeyBytes, profile.wrappedKey);
+        if (profile.keyVerifier && createVerifier(keyBytes) !== profile.keyVerifier) {
+            throw new Error("That PIN did not unlock your encrypted data.");
+        }
+        return {keyBytes, profile};
+    }
+
+    if (createVerifier(pinKeyBytes) !== profile.verifier) {
         throw new Error("That passphrase did not unlock your encrypted data.");
     }
-    return {keyBytes, profile};
+    return {keyBytes: pinKeyBytes, profile};
 }
 
 export function serializeEncryptionKeyForDevice(key: EncryptionKey): string {
@@ -140,6 +242,8 @@ export function serializeEncryptionKeyForDevice(key: EncryptionKey): string {
         userId: key.profile.userId,
         salt: key.profile.salt,
         verifier: key.profile.verifier,
+        keyVerifier: key.profile.keyVerifier,
+        wrappedKey: key.profile.wrappedKey,
         kdf: key.profile.kdf,
         iterations: key.profile.iterations,
         keyBytes: bytesToBase64(key.keyBytes),
@@ -155,15 +259,13 @@ export function restoreEncryptionKeyFromDeviceCache(profile: EncryptionProfile, 
         const matchesProfile =
             payload.v === ENCRYPTION_VERSION &&
             payload.userId === profile.userId &&
-            payload.salt === profile.salt &&
-            payload.verifier === profile.verifier &&
             payload.kdf === profile.kdf &&
-            payload.iterations === profile.iterations &&
             cachedKeyBytes !== null;
         if (!matchesProfile) return null;
 
         const keyBytes = base64ToBytes(cachedKeyBytes);
-        if (createVerifier(keyBytes) !== profile.verifier) return null;
+        const expectedKeyVerifier = profile.keyVerifier ?? profile.verifier;
+        if (createVerifier(keyBytes) !== expectedKeyVerifier) return null;
         return {keyBytes, profile};
     } catch {
         return null;

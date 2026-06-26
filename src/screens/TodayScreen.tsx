@@ -83,7 +83,7 @@ export function TodayScreen({
         [tasks, today],
     );
 
-    const bg = visualMode === "warm"
+    const bg = visualMode === "sunset"
         ? require("../../public/images/rhelk1.jpg")
         : require("../../public/images/rh19.jpg");
     const badgeIcon = require("../../public/images/badge.png");
@@ -101,7 +101,7 @@ export function TodayScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`}
-                         imageStyle={visualMode === "warm" ? tw`opacity-27` : tw`opacity-40`}>
+                         imageStyle={visualMode === "sunset" ? tw`opacity-27` : tw`opacity-40`}>
             <View style={[tw`flex-1 bg-black/3 3`, {paddingHorizontal: 1}]}>
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
@@ -130,7 +130,7 @@ export function TodayScreen({
                     {showTutorial && onDismissTutorial ? (
                         <TutorialCard
                             title="Home is command center"
-                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Warm/Cool to change the mode."
+                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Sunset/Overcast to change the mode."
                             onDismiss={onDismissTutorial}
                         />
                     ) : null}

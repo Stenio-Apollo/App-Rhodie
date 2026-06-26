@@ -88,7 +88,7 @@ export function CalendarScreen({
     const [goalSaveError, setGoalSaveError] = useState<string | null>(null);
     const scrollRef = useRef<ScrollView>(null);
     const customGoalInputRef = useRef<TextInput>(null);
-    const bg = visualMode === "warm"
+    const bg = visualMode === "sunset"
         ? require("../../public/images/rhram1.jpg")
         : require("../../public/images/rh211.jpg");
 

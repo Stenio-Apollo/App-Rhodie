@@ -5,6 +5,7 @@ import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import tw from "../lib/tw";
+import type {VisualMode} from "../state/useVisualMode";
 import {fonts} from "../theme/fonts";
 
 export type Tab = "today" | "journal" | "board" | "plan" | "calendar" | "insights";
@@ -21,6 +22,7 @@ const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; act
 ];
 
 const ACTIVE_NAV_COLOR = "#B55941";
+const SUNSET_NAV_COLOR = "#DFC4AA";
 const INACTIVE_COLOR = "#E4E0D4";
 const ROW_HORIZONTAL_PADDING = 3;
 const PILL_HORIZONTAL_INSET = 3;
@@ -30,14 +32,28 @@ const BAR_VERTICAL_OFFSET = 33;
 interface BottomTabBarProps {
     activeTab: Tab;
     accountOpen: boolean;
+    visualMode: VisualMode;
     onTabPress: (tab: Tab) => void;
 }
 
-export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarProps) {
+function hexToRgba(hex: string, opacity: number): string {
+    const normalized = hex.replace("#", "");
+    const red = Number.parseInt(normalized.slice(0, 2), 16);
+    const green = Number.parseInt(normalized.slice(2, 4), 16);
+    const blue = Number.parseInt(normalized.slice(4, 6), 16);
+    return `rgba(${red},${green},${blue},${opacity})`;
+}
+
+export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
     const [rowWidth, setRowWidth] = useState(0);
     const tabCount = TAB_ITEMS.length;
     const activeIndex = accountOpen ? -1 : TAB_ITEMS.findIndex((item) => item.key === activeTab);
+    const activeNavColor = visualMode === "sunset" ? SUNSET_NAV_COLOR : ACTIVE_NAV_COLOR;
+    const navBorderSoft = hexToRgba(activeNavColor, 0.23);
+    const navBorderStrong = hexToRgba(activeNavColor, 0.69);
+    const pillBorderColor = hexToRgba(activeNavColor, 0.43);
+    const rippleBorderColor = hexToRgba(activeNavColor, 0.33);
 
     const tabWidth = rowWidth > 0 ? (rowWidth - ROW_HORIZONTAL_PADDING * 2) / tabCount : 0;
     const pillWidth = Math.max(0, tabWidth - PILL_HORIZONTAL_INSET * 2);
@@ -189,8 +205,9 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
         >
             <Animated.View
                 style={[
-                    tw`overflow-hidden rounded-full border border-[#B55941]/23 bg-black/10 p-1`,
+                    tw`overflow-hidden rounded-full border bg-black/10 p-1`,
                     {
+                        borderColor: navBorderSoft,
                         transform: [
                             {translateY: barTranslateY},
                             {scaleX: barScaleX},
@@ -202,7 +219,7 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
                 <BlurView
                     intensity={72}
                     tint="dark"
-                    style={tw`overflow-hidden rounded-full border border-[#B55941]/69`}
+                    style={[tw`overflow-hidden rounded-full border`, {borderColor: navBorderStrong}]}
                 >
                     {/* Base tint behind everything */}
                     <View
@@ -232,12 +249,13 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
                             <Animated.View
                                 pointerEvents="none"
                                 style={[
-                                    tw`absolute rounded-full border border-[#B55941]/43`,
+                                    tw`absolute rounded-full border`,
                                     {
                                         width: pillWidth,
                                         top: PILL_VERTICAL_INSET,
                                         bottom: PILL_VERTICAL_INSET,
                                         left: ROW_HORIZONTAL_PADDING + PILL_HORIZONTAL_INSET,
+                                        borderColor: pillBorderColor,
                                         backgroundColor: "rgb(255 255 255 / 0.22)",
                                         transform: [
                                             {translateX: pillTranslateX},
@@ -258,8 +276,9 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
                                     pointerEvents="none"
                                     style={[
                                         StyleSheet.absoluteFill,
-                                        tw`rounded-full border border-[#B55941]/33`,
+                                        tw`rounded-full border`,
                                         {
+                                            borderColor: rippleBorderColor,
                                             opacity: rippleOpacity,
                                             transform: [{scale: rippleScale}],
                                         },
@@ -270,7 +289,7 @@ export function BottomTabBar({activeTab, accountOpen, onTabPress}: BottomTabBarP
 
                         {TAB_ITEMS.map((item) => {
                             const active = !accountOpen && activeTab === item.key;
-                            const iconColor = active ? ACTIVE_NAV_COLOR : INACTIVE_COLOR;
+                            const iconColor = active ? activeNavColor : INACTIVE_COLOR;
                             const iconName = active ? item.activeIcon : item.icon;
                             return (
                                 <Pressable

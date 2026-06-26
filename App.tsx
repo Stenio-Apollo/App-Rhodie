@@ -448,15 +448,11 @@ function AppContent() {
                 <AppHeader
                     fullName={profile?.full_name}
                     accountOpen={accountOpen}
-                    birthdayActive={birthdayActive}
                     visualMode={visualModeState.mode}
                     onToggleVisualMode={() => {
-                        visualModeState.setMode(visualModeState.mode === "warm" ? "cool" : "warm");
+                        visualModeState.setMode(visualModeState.mode === "sunset" ? "overcast" : "sunset");
                     }}
                     onToggleAccount={() => setAccountOpen((current) => !current)}
-                    onSignOut={() => {
-                        void handleSignOut();
-                    }}
                 />
 
                 <UpdateAvailableBanner/>
@@ -479,7 +475,6 @@ function AppContent() {
                             onDeleteAccount={handleDeleteAccount}
                             onResetOnboarding={onboarding.resetOnboarding}
                             visualMode={visualModeState.mode}
-                            onChangeVisualMode={visualModeState.setMode}
                         />
                     ) : null}
                     {!accountOpen && tab === "today" ? (
@@ -561,7 +556,12 @@ function AppContent() {
                         />
                     ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen/> : null}
-                    <BottomTabBar activeTab={tab} accountOpen={accountOpen} onTabPress={handleTabChange}/>
+                    <BottomTabBar
+                        activeTab={tab}
+                        accountOpen={accountOpen}
+                        visualMode={visualModeState.mode}
+                        onTabPress={handleTabChange}
+                    />
                 </View>
                 <BirthdayConfetti visible={birthdayActive} triggerKey={birthdayBurstKey}/>
                 <GoalCheckModal

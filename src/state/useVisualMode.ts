@@ -3,14 +3,14 @@ import {useCallback, useEffect, useState} from "react";
 
 const STORAGE_PREFIX = "rhnative.visual-mode.v1";
 
-export type VisualMode = "cool" | "warm";
+export type VisualMode = "overcast" | "sunset";
 
 function storageKey(userId: string | null | undefined): string {
     return `${STORAGE_PREFIX}.${userId ?? "local"}`;
 }
 
 function normalizeVisualMode(value: string | null): VisualMode {
-    return value === "warm" ? "warm" : "cool";
+    return value === "sunset" || value === "warm" ? "sunset" : "overcast";
 }
 
 export async function clearVisualModeStorage(userId?: string | null): Promise<void> {
@@ -18,7 +18,7 @@ export async function clearVisualModeStorage(userId?: string | null): Promise<vo
 }
 
 export function useVisualMode(userId?: string | null) {
-    const [mode, setModeState] = useState<VisualMode>("cool");
+    const [mode, setModeState] = useState<VisualMode>("overcast");
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
