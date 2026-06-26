@@ -48,7 +48,7 @@ export function KanbanScreen({
                              }: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
     const bg = visualMode === "sunset"
-        ? require("../../public/images/rhox.jpg")
+        ? require("../../public/images/rhbull3.jpg")
         : require("../../public/images/rh28.jpg");
 
     const [title, setTitle] = useState("");
@@ -125,7 +125,7 @@ export function KanbanScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-30`}>
-            <View style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}>
+            <View style={[tw`flex-1 bg-black/19`, {paddingHorizontal: 1}]}>
                 <ScrollView
                     ref={scrollRef}
                     style={tw`flex-1`}
@@ -154,16 +154,16 @@ export function KanbanScreen({
                             >
                                 <View
                                     pointerEvents="none"
-                                    style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.63)"}]}
+                                    style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.43)"}]}
                                 />
                                 <LinearGradient
-                                    colors={["rgba(255,255,255,0.10)", "rgba(255,255,255,0.01)", "transparent"]}
+                                    colors={["rgba(255,255,255,0.03)", "rgba(255,255,255,0.01)", "transparent"]}
                                     locations={[0, 0.5, 1]}
                                     pointerEvents="none"
                                     style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                                 />
                                 <LinearGradient
-                                    colors={["transparent", "rgba(0,0,0,0.35)"]}
+                                    colors={["transparent", "rgba(0,0,0,0.15)"]}
                                     pointerEvents="none"
                                     style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                                 />
@@ -171,20 +171,20 @@ export function KanbanScreen({
                                 <View style={tw`gap-2 p-3`}>
                                     <Input ref={titleInputRef} value={title} onChangeText={setTitle}
                                            placeholder="Task title"
-                                           style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
+                                           style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/39 p-3`}/>
                                     <Input value={description} onChangeText={setDescription} placeholder="Description"
-                                           style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
+                                           style={tw`text-[#E4E0D4] gap-2 rounded-lg border border-[#2c2c2c] bg-black/39 p-3`}/>
 
                                     <View style={tw`flex-row gap-2`}>
                                         <View style={tw`flex-1`}>
                                             <Input value={dueDate} onChangeText={setDueDate}
                                                    placeholder="Due date YYYY-MM-DD"
-                                                   style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}/>
+                                                   style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
                                         </View>
                                         <View style={tw`flex-1`}>
                                             <Input value={dueTime} onChangeText={setDueTime}
                                                    placeholder="HH:MM"
-                                                   style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/23 p-3`}/>
+                                                   style={tw`text-slate-400/70 gap-2 rounded-lg border border-[#2c2c2c] bg-black/33 p-3`}/>
                                         </View>
                                         <Button
                                             label={showCalendar ? "Hide Calendar" : "Show Calendar"}

@@ -38,7 +38,7 @@ export function JournalScreen({journal, homeAction, visualMode, showTutorial, on
     const promptInputRef = useRef<TextInput>(null);
     const gratitudeInputRef = useRef<TextInput>(null);
     const bg = visualMode === "sunset"
-        ? require("../../public/images/rhbear1.jpg")
+        ? require("../../public/images/rhhorse1.jpg")
         : require("../../public/images/rh201.jpg");
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);

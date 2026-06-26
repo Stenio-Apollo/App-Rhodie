@@ -14,7 +14,7 @@ import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import type {EncryptionState} from "../state/useEncryption";
 
-const passphraseBackground = require("../../public/images/rhelk1.jpg");
+const passphraseBackground = require("../../public/images/rhCowboy.png");
 
 interface PrivacyPassphraseScreenProps {
     encryption: EncryptionState;
@@ -388,7 +388,8 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
 
                         {isLegacyProfile ? (
                             <>
-                                <Text style={[tw`mt-4 text-center text-sm leading-5 text-[#F6F0E7]/80`, {fontFamily: fonts.body}]}>
+                                <Text
+                                    style={[tw`mt-4 text-center text-sm leading-5 text-[#F6F0E7]/80`, {fontFamily: fonts.body}]}>
                                     Enter your old passphrase once, then choose a 4-digit PIN.
                                 </Text>
                                 <TextInput
@@ -414,23 +415,28 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
 
                     <View style={tw`flex-1 items-center justify-center`}>
                         {resetCodeSent && recoveryStage === "code" ? (
-                            <View style={tw`mb-8 items-center rounded-2xl border border-[#F6F0E7]/30 bg-black/35 px-8 py-4`}>
-                                <Text style={[tw`text-xs uppercase tracking-[2px] text-[#F6F0E7]/70`, {fontFamily: fonts.strong}]}>
+                            <View
+                                style={tw`mb-8 items-center rounded-2xl border border-[#F6F0E7]/30 bg-black/35 px-8 py-4`}>
+                                <Text
+                                    style={[tw`text-xs uppercase tracking-[2px] text-[#F6F0E7]/70`, {fontFamily: fonts.strong}]}>
                                     Check your email
                                 </Text>
-                                <Text style={[tw`mt-2 text-center text-sm leading-5 text-[#F6F0E7]`, {fontFamily: fonts.body}]}>
+                                <Text
+                                    style={[tw`mt-2 text-center text-sm leading-5 text-[#F6F0E7]`, {fontFamily: fonts.body}]}>
                                     Enter the 8-digit reset code from your Rhodie email.
                                 </Text>
                             </View>
                         ) : null}
 
                         {helperText ? (
-                            <Text style={[tw`mb-5 text-xs uppercase tracking-[2px] text-[#F6F0E7]/70`, {fontFamily: fonts.strong}]}>
+                            <Text
+                                style={[tw`mb-5 text-xs uppercase tracking-[2px] text-[#F6F0E7]/70`, {fontFamily: fonts.strong}]}>
                                 {helperText}
                             </Text>
                         ) : null}
 
-                        <View style={[tw`w-full flex-row items-center justify-center`, pinLength === 8 ? tw`gap-4` : tw`gap-12`]}>
+                        <View
+                            style={[tw`w-full flex-row items-center justify-center`, pinLength === 8 ? tw`gap-4` : tw`gap-12`]}>
                             {Array.from({length: pinLength}, (_, item) => (
                                 <View
                                     key={item}
@@ -443,7 +449,8 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
                         </View>
 
                         {error || encryption.error ? (
-                            <Text style={[tw`mt-8 text-center text-sm leading-5 text-rose-200`, {fontFamily: fonts.body}]}>
+                            <Text
+                                style={[tw`mt-8 text-center text-sm leading-5 text-rose-200`, {fontFamily: fonts.body}]}>
                                 {error ?? encryption.error}
                             </Text>
                         ) : null}

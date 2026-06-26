@@ -189,7 +189,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const [sheetStartAt, setSheetStartAt] = useState<string | undefined>(undefined);
     const [sheetEvent, setSheetEvent] = useState<PlannerEvent | undefined>(undefined);
     const bg = visualMode === "sunset"
-        ? require("../../public/images/rh27.jpg")
+        ? require("../../public/images/rhCowboy.png")
         : require("../../public/images/rh16.jpg");
 
     const dayEvents = useMemo(
