@@ -15,6 +15,9 @@ next-env.d.ts
 # TypeScript
 *.tsbuildinfo
 
+# Large source media
+public/videos/rh.rhodie.mp4
+
 # Env
 .env*
 !.env.example
