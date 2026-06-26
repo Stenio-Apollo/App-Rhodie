@@ -14,7 +14,7 @@ import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import type {EncryptionState} from "../state/useEncryption";
 
-const passphraseBackground = require("../../public/images/rhCowboy.png");
+const passphraseBackground = require("../../public/images/rhbull.jpg");
 
 interface PrivacyPassphraseScreenProps {
     encryption: EncryptionState;

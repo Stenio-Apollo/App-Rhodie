@@ -189,7 +189,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const [sheetStartAt, setSheetStartAt] = useState<string | undefined>(undefined);
     const [sheetEvent, setSheetEvent] = useState<PlannerEvent | undefined>(undefined);
     const bg = visualMode === "sunset"
-        ? require("../../public/images/rhCowboy.png")
+        ? require("../../public/images/rhbull3.jpg")
         : require("../../public/images/rh16.jpg");
 
     const dayEvents = useMemo(
@@ -235,7 +235,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const isToday = date === today;
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-40`}>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-39`}>
             <View style={[tw`flex-1 bg-black/47`, {paddingHorizontal: 1}]}>
                 <View style={tw`flex-row items-center justify-between px-4 pt-3 pb-2`}>
                     <Pressable

@@ -84,7 +84,7 @@ export function TodayScreen({
     );
 
     const bg = visualMode === "sunset"
-        ? require("../../public/images/rhbull.jpg")
+        ? require("../../public/images/rhelk1.jpg")
         : require("../../public/images/rh19.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
@@ -101,8 +101,8 @@ export function TodayScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`}
-                         imageStyle={visualMode === "sunset" ? tw`opacity-35` : tw`opacity-40`}>
-            <View style={[tw`flex-1`, {paddingHorizontal: 1}]}>
+                         imageStyle={visualMode === "sunset" ? tw`opacity-27` : tw`opacity-40`}>
+            <View style={[tw`flex-1 bg-black/3 3`, {paddingHorizontal: 1}]}>
                 <View style={tw`absolute inset-0 items-center justify-center`}>
                     <Text
                         style={[

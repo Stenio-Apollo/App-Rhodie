@@ -48,7 +48,7 @@ export function KanbanScreen({
                              }: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
     const bg = visualMode === "sunset"
-        ? require("../../public/images/rhbull3.jpg")
+        ? require("../../public/images/rhCowboy.png")
         : require("../../public/images/rh28.jpg");
 
     const [title, setTitle] = useState("");
