@@ -84,7 +84,7 @@ export function TodayScreen({
     );
 
     const bg = visualMode === "sunset"
-        ? require("../../public/images/rhelk1.jpg")
+        ? require("../../public/images/rhhorse1.jpg")
         : require("../../public/images/rh19.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
