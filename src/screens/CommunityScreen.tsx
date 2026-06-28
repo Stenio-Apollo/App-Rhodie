@@ -75,14 +75,29 @@ function formatTimestamp(value: string): string {
     return date.toLocaleDateString(undefined, {month: "short", day: "numeric"});
 }
 
+function formatDateKey(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("en-CA");
+}
+
 function formatTime(value: string): string {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
     return date.toLocaleTimeString(undefined, {hour: "numeric", minute: "2-digit"});
 }
 
-function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number }) {
+function Avatar({
+                    author,
+                    size = 38,
+                    currentUserId,
+                }: {
+    author: CommunityAuthor;
+    size?: number;
+    currentUserId?: string | null;
+}) {
     const initial = displayName(author)[0]?.toUpperCase() ?? "R";
+    const isCurrentUser = author.id === currentUserId;
     if (author.avatarUrl) {
         return (
             <Image
@@ -93,8 +108,16 @@ function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number })
     }
 
     return (
-        <View style={[tw`items-center justify-center rounded-full bg-[#B55941]`, {width: size, height: size}]}>
-            <Text style={[tw`text-sm text-[#FFF6E8]`, {fontFamily: fonts.heading}]}>{initial}</Text>
+        <View
+            style={[
+                tw`items-center justify-center rounded-full`,
+                isCurrentUser ? tw`bg-[#B55941]` : tw`bg-[#DFC4AA]`,
+                {width: size, height: size},
+            ]}
+        >
+            <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#111111"}]}>
+                {initial}
+            </Text>
         </View>
     );
 }
@@ -118,7 +141,7 @@ function MetricButton({
                 pressed && tw`opacity-75`,
             ]}
         >
-            <Ionicons name={icon} size={15} color={active ? "#d56262" : "#ffffff"}/>
+            <Ionicons name={icon} size={15} color={active ? "#FB7185" : "#ffffff"}/>
             <Text style={[tw`text-[11px]`, {fontFamily: fonts.button, color: active ? "#ffffff" : "#ffffff"}]}>
                 {label}
             </Text>
@@ -174,6 +197,7 @@ function OwnerMenuButton({onPress}: { onPress: () => void }) {
 function CommentItem({
                          comment,
                          depth = 0,
+                         showDate = false,
                          busy,
                          currentUserId,
                          onReply,
@@ -184,6 +208,7 @@ function CommentItem({
                      }: {
     comment: CommunityComment;
     depth?: number;
+    showDate?: boolean;
     busy: boolean;
     currentUserId: string | null;
     onReply: (comment: CommunityComment) => void;
@@ -208,9 +233,16 @@ function CommentItem({
 
     return (
         <View style={[tw`gap-2`, depth > 0 ? {marginLeft: Math.min(depth, 2) * 18} : null]}>
+            {showDate ? (
+                <View style={tw`my-1 items-center`}>
+                    <Text style={[tw`px-3 py-1 text-[10px] text-white/65`, {fontFamily: fonts.body}]}>
+                        {formatTimestamp(comment.createdAt)}
+                    </Text>
+                </View>
+            ) : null}
             <View style={tw`rounded-2xl border border-[#B55941]/33 bg-black/45 px-3 py-2.5`}>
                 <View style={tw`flex-row items-start gap-2`}>
-                    <Avatar author={comment.author} size={26}/>
+                    <Avatar author={comment.author} size={26} currentUserId={currentUserId}/>
                     <View style={tw`flex-1`}>
                         <Text style={[tw`text-[11px] text-white`, {fontFamily: fonts.heading}]}>
                             {displayName(comment.author)}
@@ -288,7 +320,7 @@ function CommentItem({
                         <Ionicons
                             name={comment.likedByMe ? "heart" : "heart-outline"}
                             size={13}
-                            color={comment.likedByMe ? "#FDA4AF" : "#ffffff"}
+                            color={comment.likedByMe ? "#FB7185" : "#ffffff"}
                         />
                         <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>
                             {comment.likesCount}
@@ -305,29 +337,34 @@ function CommentItem({
                     </Pressable>
                     <View style={tw`ml-auto flex-row items-center gap-1.5`}>
                         <Text style={[tw`text-[10px] text-white/45`, {fontFamily: fonts.body}]}>
-                            {formatTimestamp(comment.createdAt)}
+                            {formatTime(comment.createdAt)}
                         </Text>
                     </View>
                 </View>
             </View>
-            <Text style={[tw`self-end pr-1 text-[10px] text-white/45`, {fontFamily: fonts.body}]}>
-                {formatTime(comment.createdAt)}
-            </Text>
 
-            {comment.replies.map((reply) => (
-                <CommentItem
-                    key={reply.id}
-                    comment={reply}
-                    depth={depth + 1}
-                    busy={busy}
-                    currentUserId={currentUserId}
-                    onReply={onReply}
-                    onToggleLike={onToggleLike}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onOpenDirectMessage={onOpenDirectMessage}
-                />
-            ))}
+            {comment.replies.map((reply, index) => {
+                const previousReply = comment.replies[index - 1];
+                const replyDateKey = formatDateKey(reply.createdAt);
+                const previousDateValue = previousReply?.createdAt ?? comment.createdAt;
+                const showReplyDate = formatDateKey(previousDateValue) !== replyDateKey;
+
+                return (
+                    <CommentItem
+                        key={reply.id}
+                        comment={reply}
+                        depth={depth + 1}
+                        showDate={showReplyDate}
+                        busy={busy}
+                        currentUserId={currentUserId}
+                        onReply={onReply}
+                        onToggleLike={onToggleLike}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onOpenDirectMessage={onOpenDirectMessage}
+                    />
+                );
+            })}
             <OwnerActionSheet
                 visible={actionsOpen}
                 onClose={() => setActionsOpen(false)}
@@ -348,10 +385,10 @@ function PostCard({
                       onComment,
                       onToggleCommentLike,
                       onEditComment,
-	                      onDeleteComment,
-	                      onShare,
-	                      onOpenDirectMessage,
-	                  }: {
+                      onDeleteComment,
+                      onShare,
+                      onOpenDirectMessage,
+                  }: {
     post: CommunityPost;
     busy: boolean;
     currentUserId: string | null;
@@ -360,10 +397,10 @@ function PostCard({
     onDeletePost: (post: CommunityPost) => void;
     onComment: (postId: string, body: string, parentCommentId?: string | null) => void;
     onToggleCommentLike: (comment: CommunityComment) => void;
-	    onEditComment: (comment: CommunityComment, body: string) => void;
-	    onDeleteComment: (comment: CommunityComment) => void;
-	    onShare: (post: CommunityPost) => void;
-	    onOpenDirectMessage?: (author: CommunityAuthor) => void;
+    onEditComment: (comment: CommunityComment, body: string) => void;
+    onDeleteComment: (comment: CommunityComment) => void;
+    onShare: (post: CommunityPost) => void;
+    onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
     const [postEditing, setPostEditing] = useState(false);
     const [postEditText, setPostEditText] = useState(post.body);
@@ -404,177 +441,186 @@ function PostCard({
     return (
         <View style={tw`gap-1`}>
             <View style={tw`rounded-3xl border border-slate-700 bg-black/77 p-4`}>
-            <View style={tw`flex-row gap-3`}>
-                <Avatar author={post.author}/>
-                <View style={tw`flex-1`}>
-                    <View style={tw`flex-row items-start gap-3`}>
-                        <Text style={[tw`flex-1 text-sm text-white`, {fontFamily: fonts.heading}]}>
-                            {displayName(post.author)}
-                        </Text>
-                        {isOwnPost ? (
-                            <OwnerMenuButton onPress={() => setPostActionsOpen(true)}/>
+                <View style={tw`flex-row gap-3`}>
+                    <Avatar author={post.author} currentUserId={currentUserId}/>
+                    <View style={tw`flex-1`}>
+                        <View style={tw`flex-row items-start gap-3`}>
+                            <Text style={[tw`flex-1 text-sm text-white`, {fontFamily: fonts.heading}]}>
+                                {displayName(post.author)}
+                            </Text>
+                            {isOwnPost ? (
+                                <OwnerMenuButton onPress={() => setPostActionsOpen(true)}/>
+                            ) : (
+                                <AuthorMessageButton
+                                    author={post.author}
+                                    currentUserId={currentUserId}
+                                    onOpenDirectMessage={onOpenDirectMessage}
+                                />
+                            )}
+                        </View>
+                        {postEditing ? (
+                            <View style={tw`mt-2 gap-2`}>
+                                <TextInput
+                                    value={postEditText}
+                                    onChangeText={setPostEditText}
+                                    placeholder="Edit post..."
+                                    placeholderTextColor="rgba(228,224,212,0.45)"
+                                    keyboardAppearance="dark"
+                                    multiline
+                                    style={[tw`max-h-32 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                />
+                                <View style={tw`flex-row items-center gap-3`}>
+                                    <Pressable
+                                        disabled={busy || postEditText.trim().length === 0}
+                                        onPress={() => {
+                                            const nextText = postEditText.trim();
+                                            if (!nextText) return;
+                                            setPostEditing(false);
+                                            onEditPost(post, nextText);
+                                        }}
+                                        style={({pressed}) => [
+                                            tw`py-1`,
+                                            (busy || postEditText.trim().length === 0) && tw`opacity-50`,
+                                            pressed && tw`opacity-70`,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>Save</Text>
+                                    </Pressable>
+                                    <Pressable
+                                        onPress={() => {
+                                            setPostEditText(post.body);
+                                            setPostEditing(false);
+                                        }}
+                                        style={({pressed}) => [
+                                            tw`py-1`,
+                                            pressed && tw`opacity-70`,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[tw`text-[10px] text-white/70`, {fontFamily: fonts.button}]}>Cancel</Text>
+                                    </Pressable>
+                                </View>
+                            </View>
                         ) : (
-                            <AuthorMessageButton
-                                author={post.author}
-                                currentUserId={currentUserId}
-                                onOpenDirectMessage={onOpenDirectMessage}
-                            />
+                            <Text style={[tw`mt-2 text-sm leading-5 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                                {post.body}
+                            </Text>
                         )}
                     </View>
-                    {postEditing ? (
-                        <View style={tw`mt-2 gap-2`}>
+                </View>
+
+                <View style={tw`mt-4 flex-row flex-wrap items-center gap-2`}>
+                    <MetricButton
+                        icon={post.likedByMe ? "heart" : "heart-outline"}
+                        label={`${post.likesCount}`}
+                        active={post.likedByMe}
+                        onPress={() => onLike(post)}
+                    />
+                    <MetricButton
+                        icon="chatbubble-outline"
+                        label={`${post.commentsCount}`}
+                        onPress={() => {
+                            setCommentsOpen((current) => !current);
+                        }}
+                    />
+                    <MetricButton
+                        icon="share-outline"
+                        label={`${post.sharesCount}`}
+                        onPress={() => onShare(post)}
+                    />
+                    <View style={tw`ml-auto flex-row items-center gap-1.5`}>
+                        <Text style={[tw`text-[11px] text-slate-700`, {fontFamily: fonts.body}]}>
+                            {formatTimestamp(post.createdAt)}
+                        </Text>
+                    </View>
+                </View>
+
+                {commentsVisible ? (
+                    <Animated.View style={{opacity: commentsOpacity}}>
+                        {post.comments.length > 0 ? (
+                            <View style={tw`mt-4 gap-3 border-t border-slate-700 pt-4`}>
+                                {post.comments.map((comment, index) => {
+                                    const previousComment = post.comments[index - 1];
+                                    const commentDateKey = formatDateKey(comment.createdAt);
+                                    const showCommentDate = !previousComment || formatDateKey(previousComment.createdAt) !== commentDateKey;
+
+                                    return (
+                                        <CommentItem
+                                            key={comment.id}
+                                            comment={comment}
+                                            showDate={showCommentDate}
+                                            busy={busy}
+                                            currentUserId={currentUserId}
+                                            onReply={(target) => {
+                                                setReplyTarget(target);
+                                                setCommentsOpen(true);
+                                            }}
+                                            onToggleLike={onToggleCommentLike}
+                                            onEdit={onEditComment}
+                                            onDelete={onDeleteComment}
+                                            onOpenDirectMessage={onOpenDirectMessage}
+                                        />
+                                    );
+                                })}
+                            </View>
+                        ) : null}
+
+                        {replyTarget ? (
+                            <View
+                                style={tw`mt-4 flex-row items-center justify-between rounded-2xl border border-slate-700 px-3 py-2`}
+                            >
+                                <Text style={[tw`flex-1 text-xs text-white`, {fontFamily: fonts.body}]}>
+                                    Replying to {displayName(replyTarget.author)}
+                                </Text>
+                                <Pressable
+                                    onPress={() => setReplyTarget(null)}
+                                    style={({pressed}) => [
+                                        tw`h-6 w-6 items-center justify-center rounded-full`,
+                                        pressed && tw`opacity-70`,
+                                    ]}
+                                >
+                                    <Ionicons name="close" size={14} color="#ffffff"/>
+                                </Pressable>
+                            </View>
+                        ) : null}
+
+                        <View style={tw`mt-4 flex-row items-center gap-2`}>
                             <TextInput
-                                value={postEditText}
-                                onChangeText={setPostEditText}
-                                placeholder="Edit post..."
+                                value={commentText}
+                                onChangeText={setCommentText}
+                                placeholder={replyTarget ? "Reply..." : "Comment..."}
                                 placeholderTextColor="rgba(228,224,212,0.45)"
                                 keyboardAppearance="dark"
                                 multiline
-                                style={[tw`max-h-32 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                style={[tw`max-h-24 flex-1 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                             />
-                            <View style={tw`flex-row items-center gap-3`}>
-                                <Pressable
-                                    disabled={busy || postEditText.trim().length === 0}
-                                    onPress={() => {
-                                        const nextText = postEditText.trim();
-                                        if (!nextText) return;
-                                        setPostEditing(false);
-                                        onEditPost(post, nextText);
-                                    }}
-                                    style={({pressed}) => [
-                                        tw`py-1`,
-                                        (busy || postEditText.trim().length === 0) && tw`opacity-50`,
-                                        pressed && tw`opacity-70`,
-                                    ]}
-                                >
-                                    <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>Save</Text>
-                                </Pressable>
-                                <Pressable
-                                    onPress={() => {
-                                        setPostEditText(post.body);
-                                        setPostEditing(false);
-                                    }}
-                                    style={({pressed}) => [
-                                        tw`py-1`,
-                                        pressed && tw`opacity-70`,
-                                    ]}
-                                >
-                                    <Text style={[tw`text-[10px] text-white/70`, {fontFamily: fonts.button}]}>Cancel</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    ) : (
-                        <Text style={[tw`mt-2 text-sm leading-5 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
-                            {post.body}
-                        </Text>
-                    )}
-                </View>
-            </View>
-
-            <View style={tw`mt-4 flex-row flex-wrap items-center gap-2`}>
-                <MetricButton
-                    icon={post.likedByMe ? "heart" : "heart-outline"}
-                    label={`${post.likesCount}`}
-                    active={post.likedByMe}
-                    onPress={() => onLike(post)}
-                />
-                <MetricButton
-                    icon="chatbubble-outline"
-                    label={`${post.commentsCount}`}
-                    onPress={() => {
-                        setCommentsOpen((current) => !current);
-                    }}
-                />
-                <MetricButton
-                    icon="share-outline"
-                    label={`${post.sharesCount}`}
-                    onPress={() => onShare(post)}
-                />
-                <View style={tw`ml-auto flex-row items-center gap-1.5`}>
-                    <Text style={[tw`text-[11px] text-slate-700`, {fontFamily: fonts.body}]}>
-                        {formatTimestamp(post.createdAt)}
-                    </Text>
-                </View>
-            </View>
-
-            {commentsVisible ? (
-                <Animated.View style={{opacity: commentsOpacity}}>
-                    {post.comments.length > 0 ? (
-                        <View style={tw`mt-4 gap-3 border-t border-slate-700 pt-4`}>
-                            {post.comments.map((comment) => (
-                                <CommentItem
-                                    key={comment.id}
-                                    comment={comment}
-                                    busy={busy}
-                                    currentUserId={currentUserId}
-                                    onReply={(target) => {
-                                        setReplyTarget(target);
-                                        setCommentsOpen(true);
-	                                    }}
-	                                    onToggleLike={onToggleCommentLike}
-	                                    onEdit={onEditComment}
-	                                    onDelete={onDeleteComment}
-	                                    onOpenDirectMessage={onOpenDirectMessage}
-	                                />
-	                            ))}
-                        </View>
-                    ) : null}
-
-                    {replyTarget ? (
-                        <View
-                            style={tw`mt-4 flex-row items-center justify-between rounded-2xl border border-slate-700 px-3 py-2`}
-                        >
-                            <Text style={[tw`flex-1 text-xs text-white`, {fontFamily: fonts.body}]}>
-                                Replying to {displayName(replyTarget.author)}
-                            </Text>
                             <Pressable
-                                onPress={() => setReplyTarget(null)}
+                                disabled={busy || commentText.trim().length === 0}
+                                onPress={() => {
+                                    const text = commentText;
+                                    const parentCommentId = replyTarget?.id ?? null;
+                                    setCommentText("");
+                                    setReplyTarget(null);
+                                    onComment(post.id, text, parentCommentId);
+                                }}
                                 style={({pressed}) => [
-                                    tw`h-6 w-6 items-center justify-center rounded-full`,
-                                    pressed && tw`opacity-70`,
+                                    tw`h-10 w-10 items-center justify-center rounded-full`,
+                                    (busy || commentText.trim().length === 0) && tw`opacity-40`,
+                                    pressed && tw`opacity-75`,
                                 ]}
                             >
-                                <Ionicons name="close" size={14} color="#ffffff"/>
+                                <Ionicons name="send" size={17} color="#E4E0D4"/>
                             </Pressable>
                         </View>
-                    ) : null}
-
-                    <View style={tw`mt-4 flex-row items-center gap-2`}>
-                        <TextInput
-                            value={commentText}
-                            onChangeText={setCommentText}
-                            placeholder={replyTarget ? "Reply..." : "Comment..."}
-                            placeholderTextColor="rgba(228,224,212,0.45)"
-                            keyboardAppearance="dark"
-                            multiline
-                            style={[tw`max-h-24 flex-1 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
-                        />
-                        <Pressable
-                            disabled={busy || commentText.trim().length === 0}
-                            onPress={() => {
-                                const text = commentText;
-                                const parentCommentId = replyTarget?.id ?? null;
-                                setCommentText("");
-                                setReplyTarget(null);
-                                onComment(post.id, text, parentCommentId);
-                            }}
-                            style={({pressed}) => [
-                                tw`h-10 w-10 items-center justify-center rounded-full`,
-                                (busy || commentText.trim().length === 0) && tw`opacity-40`,
-                                pressed && tw`opacity-75`,
-                            ]}
-                        >
-                            <Ionicons name="send" size={17} color="#E4E0D4"/>
-                        </Pressable>
-                    </View>
-                </Animated.View>
-            ) : null}
-            <OwnerActionSheet
-                visible={postActionsOpen}
-                onClose={() => setPostActionsOpen(false)}
-                onEdit={() => setPostEditing(true)}
-                onDelete={() => onDeletePost(post)}
-            />
+                    </Animated.View>
+                ) : null}
+                <OwnerActionSheet
+                    visible={postActionsOpen}
+                    onClose={() => setPostActionsOpen(false)}
+                    onEdit={() => setPostEditing(true)}
+                    onDelete={() => onDeletePost(post)}
+                />
             </View>
             <Text style={[tw`self-end pr-2 text-[11px] text-slate-700`, {fontFamily: fonts.body}]}>
                 {formatTime(post.createdAt)}
@@ -635,32 +681,32 @@ export function CommunityScreen({
         }
     }
 
-	    async function handleToggleCommentLike(comment: CommunityComment) {
-	        try {
-	            haptics.selection();
-	            await community.toggleCommentLike(comment);
+    async function handleToggleCommentLike(comment: CommunityComment) {
+        try {
+            haptics.selection();
+            await community.toggleCommentLike(comment);
         } catch (error) {
             Alert.alert("Like failed", error instanceof Error ? error.message : "Your like could not be saved.");
-	        }
-	    }
+        }
+    }
 
-	    async function handleEditComment(comment: CommunityComment, body: string) {
-	        try {
-	            haptics.selection();
-	            await community.editComment(comment.id, body);
-	        } catch (error) {
-	            Alert.alert("Edit failed", error instanceof Error ? error.message : "Your comment could not be updated.");
-	        }
-	    }
+    async function handleEditComment(comment: CommunityComment, body: string) {
+        try {
+            haptics.selection();
+            await community.editComment(comment.id, body);
+        } catch (error) {
+            Alert.alert("Edit failed", error instanceof Error ? error.message : "Your comment could not be updated.");
+        }
+    }
 
-	    async function handleDeleteComment(comment: CommunityComment) {
-	        try {
-	            haptics.selection();
-	            await community.deleteComment(comment.id);
-	        } catch (error) {
-	            Alert.alert("Delete failed", error instanceof Error ? error.message : "Your comment could not be deleted.");
-	        }
-	    }
+    async function handleDeleteComment(comment: CommunityComment) {
+        try {
+            haptics.selection();
+            await community.deleteComment(comment.id);
+        } catch (error) {
+            Alert.alert("Delete failed", error instanceof Error ? error.message : "Your comment could not be deleted.");
+        }
+    }
 
     async function handleLike(post: CommunityPost) {
         try {
@@ -681,177 +727,177 @@ export function CommunityScreen({
         }
     }
 
-	    const backgroundImage = require("../../public/images/newspaper 1.jpg");
-	    const {keyboardInset} = useKeyboardInset();
+    const backgroundImage = require("../../public/images/newspaper 1.jpg");
+    const {keyboardInset} = useKeyboardInset();
 
-	    return (
-	        <ImageBackground source={backgroundImage} style={tw`flex-1 bg-black`} imageStyle={tw`opacity-9`}>
-	            <Animated.View style={[tw`flex-1`, {paddingBottom: keyboardInset}]}>
-	            {onOpenMessages ? (
-	                <View style={[tw`absolute top-4 z-20 items-end`, {right: 19}]}>
-                    <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Open messages"
-                        onPress={() => {
-                            haptics.selection();
-                            onOpenMessages();
-                        }}
-                        style={({pressed}) => [
-                            tw`h-8 w-8 items-center justify-center rounded-full`,
-                            pressed && {opacity: 0.78, transform: [{translateY: 1}]},
-                        ]}
-                    >
-                        <Ionicons name="mail-outline" size={22} color="#FFF6E8"/>
-                        {unreadMessageCount > 0 ? (
-                            <View
-                                style={tw`absolute -right-1 -top-1 min-w-4 items-center rounded-full bg-[#B55941] px-1`}>
-                                <Text style={[tw`text-[9px] text-white`, {fontFamily: fonts.button}]}>
-                                    {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
+    return (
+        <ImageBackground source={backgroundImage} style={tw`flex-1 bg-black`} imageStyle={tw`opacity-9`}>
+            <Animated.View style={[tw`flex-1`, {paddingBottom: keyboardInset}]}>
+                {onOpenMessages ? (
+                    <View style={[tw`absolute top-4 z-20 items-end`, {right: 19}]}>
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="Open messages"
+                            onPress={() => {
+                                haptics.selection();
+                                onOpenMessages();
+                            }}
+                            style={({pressed}) => [
+                                tw`h-8 w-8 items-center justify-center rounded-full`,
+                                pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                            ]}
+                        >
+                            <Ionicons name="mail-outline" size={22} color="#FFF6E8"/>
+                            {unreadMessageCount > 0 ? (
+                                <View
+                                    style={tw`absolute -right-1 -top-1 min-w-4 items-center rounded-full bg-[#B55941] px-1`}>
+                                    <Text style={[tw`text-[9px] text-white`, {fontFamily: fonts.button}]}>
+                                        {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
+                                    </Text>
+                                </View>
+                            ) : null}
+                        </Pressable>
+                    </View>
+                ) : null}
+                <ScrollView
+                    style={tw`flex-1`}
+                    contentContainerStyle={tw`px-4 pb-32 pt-16 gap-4`}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="interactive"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={tw`rounded-3xl border border-slate-700 bg-black/70 p-4`}>
+                        <Text style={[tw`text-2xl text-white`, {fontFamily: fonts.heading}]}>Community</Text>
+                        <Text style={[tw`mt-1 text-sm leading-5 text-[#E4E0D4]/70`, {fontFamily: fonts.body}]}>
+                            Post a prompt response, gratitude, or a positive note.
+                        </Text>
+                        <View style={tw`mt-4 flex-row rounded-2xl border border-slate-700 bg-black/45 p-1`}>
+                            {COMPOSER_MODES.map((mode) => {
+                                const active = mode.key === composerMode;
+                                return (
+                                    <Pressable
+                                        key={mode.key}
+                                        onPress={() => {
+                                            haptics.selection();
+                                            setComposerMode(mode.key);
+                                        }}
+                                        style={({pressed}) => [
+                                            tw`flex-1 items-center rounded-xl px-2 py-2`,
+                                            active && {
+                                                backgroundColor: "#DFC4AA",
+                                                borderWidth: 1,
+                                                borderColor: "rgba(43,43,43,0.22)",
+                                                shadowColor: "#000000",
+                                                shadowOffset: {width: 0, height: 5},
+                                                shadowOpacity: 0.24,
+                                                shadowRadius: 8,
+                                                elevation: 6,
+                                            },
+                                            pressed && tw`opacity-80`,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                tw`text-[11px]`,
+                                                {
+                                                    fontFamily: fonts.button,
+                                                    color: active ? "#111111" : "rgba(228,224,212,0.68)"
+                                                },
+                                            ]}
+                                        >
+                                            {mode.label}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+                        {composerMode === "prompt" ? (
+                            <View style={tw`mt-3 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2.5`}>
+                                <Text style={[tw`text-[11px] text-white`, {fontFamily: fonts.heading}]}>
+                                    Today's prompt
+                                </Text>
+                                <Text style={[tw`mt-1 text-xs leading-4 text-[#E4E0D4]/75`, {fontFamily: fonts.body}]}>
+                                    {todaysPrompt}
                                 </Text>
                             </View>
                         ) : null}
-                    </Pressable>
-                </View>
-            ) : null}
-            <ScrollView
-                style={tw`flex-1`}
-	                contentContainerStyle={tw`px-4 pb-32 pt-16 gap-4`}
-	                keyboardShouldPersistTaps="handled"
-	                keyboardDismissMode="interactive"
-	                showsVerticalScrollIndicator={false}
-	            >
-                <View style={tw`rounded-3xl border border-slate-700 bg-black/70 p-4`}>
-                    <Text style={[tw`text-2xl text-white`, {fontFamily: fonts.heading}]}>Community</Text>
-                    <Text style={[tw`mt-1 text-sm leading-5 text-[#E4E0D4]/70`, {fontFamily: fonts.body}]}>
-                        Post a prompt response, gratitude, or a positive note.
-                    </Text>
-                    <View style={tw`mt-4 flex-row rounded-2xl border border-slate-700 bg-black/45 p-1`}>
-                        {COMPOSER_MODES.map((mode) => {
-                            const active = mode.key === composerMode;
-                            return (
-                                <Pressable
-                                    key={mode.key}
-                                    onPress={() => {
-                                        haptics.selection();
-                                        setComposerMode(mode.key);
-                                    }}
-                                    style={({pressed}) => [
-                                        tw`flex-1 items-center rounded-xl px-2 py-2`,
-                                        active && {
-                                            backgroundColor: "#B55941",
-                                            borderWidth: 1,
-                                            borderColor: "rgba(43,43,43,0.22)",
-                                            shadowColor: "#000000",
-                                            shadowOffset: {width: 0, height: 5},
-                                            shadowOpacity: 0.24,
-                                            shadowRadius: 8,
-                                            elevation: 6,
-                                        },
-                                        pressed && tw`opacity-80`,
-                                    ]}
-                                >
-                                    <Text
-                                        style={[
-                                            tw`text-[11px]`,
-                                            {
-                                                fontFamily: fonts.button,
-                                                color: active ? "#ffffff" : "rgba(228,224,212,0.68)"
-                                            },
-                                        ]}
-                                    >
-                                        {mode.label}
-                                    </Text>
-                                </Pressable>
-                            );
-                        })}
-                    </View>
-                    {composerMode === "prompt" ? (
-                        <View style={tw`mt-3 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2.5`}>
-                            <Text style={[tw`text-[11px] text-white`, {fontFamily: fonts.heading}]}>
-                                Today's prompt
-                            </Text>
-                            <Text style={[tw`mt-1 text-xs leading-4 text-[#E4E0D4]/75`, {fontFamily: fonts.body}]}>
-                                {todaysPrompt}
-                            </Text>
+                        <TextInput
+                            value={postText}
+                            onChangeText={setPostText}
+                            placeholder={selectedComposerMode.placeholder}
+                            placeholderTextColor="rgba(228,224,212,0.45)"
+                            keyboardAppearance="dark"
+                            multiline
+                            style={[tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700 bg-black/45 px-4 py-3 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                        />
+                        <View style={tw`mt-3 flex-row justify-end`}>
+                            <Button
+                                label={community.busy ? "Sharing..." : "Share"}
+                                onPress={() => {
+                                    void handleCreatePost();
+                                }}
+                                disabled={community.busy || postText.trim().length === 0}
+                                shine
+                                style={tw`rounded-full bg-black px-4 py-2`}
+                                textStyle={{color: "#FFF6E8"}}
+                            />
                         </View>
-                    ) : null}
-                    <TextInput
-                        value={postText}
-                        onChangeText={setPostText}
-                        placeholder={selectedComposerMode.placeholder}
-                        placeholderTextColor="rgba(228,224,212,0.45)"
-                        keyboardAppearance="dark"
-                        multiline
-                        style={[tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700 bg-black/45 px-4 py-3 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
-                    />
-                    <View style={tw`mt-3 flex-row justify-end`}>
-                        <Button
-                            label={community.busy ? "Sharing..." : "Share"}
-                            onPress={() => {
-                                void handleCreatePost();
-                            }}
-                            disabled={community.busy || postText.trim().length === 0}
-                            shine
-                            style={tw`rounded-full bg-black px-4 py-2`}
-                            textStyle={{color: "#FFF6E8"}}
-                        />
                     </View>
-                </View>
 
-                {community.error ? (
-                    <Text
-                        style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-sm text-rose-200`, {fontFamily: fonts.body}]}>
-                        {community.error}
-                    </Text>
-                ) : null}
+                    {community.error ? (
+                        <Text
+                            style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-sm text-rose-200`, {fontFamily: fonts.body}]}>
+                            {community.error}
+                        </Text>
+                    ) : null}
 
-                {!community.isLoaded ? (
-                    <Text
-                        style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
-                        Loading community...
-                    </Text>
-                ) : community.posts.length === 0 ? (
-                    <Text
-                        style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
-                        No posts yet.
-                    </Text>
-                ) : (
-                    community.posts.map((post) => (
-                        <PostCard
-                            key={post.id}
-                            post={post}
-                            busy={community.busy}
-                            currentUserId={community.userId}
-	                            onLike={(item) => {
-	                                void handleLike(item);
-	                            }}
-	                            onEditPost={(item, body) => {
-	                                void handleEditPost(item, body);
-	                            }}
-	                            onDeletePost={(item) => {
-	                                void handleDeletePost(item);
-	                            }}
-	                            onComment={(postId, body, parentCommentId) => {
-	                                void handleComment(postId, body, parentCommentId);
-	                            }}
-	                            onToggleCommentLike={(comment) => {
-	                                void handleToggleCommentLike(comment);
-	                            }}
-	                            onEditComment={(comment, body) => {
-	                                void handleEditComment(comment, body);
-	                            }}
-	                            onDeleteComment={(comment) => {
-	                                void handleDeleteComment(comment);
-	                            }}
-	                            onShare={(item) => {
-	                                void handleShare(item);
-	                            }}
-                            onOpenDirectMessage={onOpenDirectMessage}
-                        />
-	                    ))
-	                )}
-	            </ScrollView>
-	            </Animated.View>
-	        </ImageBackground>
-	    );
-	}
+                    {!community.isLoaded ? (
+                        <Text
+                            style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            Loading community...
+                        </Text>
+                    ) : community.posts.length === 0 ? (
+                        <Text
+                            style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            No posts yet.
+                        </Text>
+                    ) : (
+                        community.posts.map((post) => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                busy={community.busy}
+                                currentUserId={community.userId}
+                                onLike={(item) => {
+                                    void handleLike(item);
+                                }}
+                                onEditPost={(item, body) => {
+                                    void handleEditPost(item, body);
+                                }}
+                                onDeletePost={(item) => {
+                                    void handleDeletePost(item);
+                                }}
+                                onComment={(postId, body, parentCommentId) => {
+                                    void handleComment(postId, body, parentCommentId);
+                                }}
+                                onToggleCommentLike={(comment) => {
+                                    void handleToggleCommentLike(comment);
+                                }}
+                                onEditComment={(comment, body) => {
+                                    void handleEditComment(comment, body);
+                                }}
+                                onDeleteComment={(comment) => {
+                                    void handleDeleteComment(comment);
+                                }}
+                                onShare={(item) => {
+                                    void handleShare(item);
+                                }}
+                                onOpenDirectMessage={onOpenDirectMessage}
+                            />
+                        ))
+                    )}
+                </ScrollView>
+            </Animated.View>
+        </ImageBackground>
+    );
+}
