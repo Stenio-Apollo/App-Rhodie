@@ -1,8 +1,7 @@
 import {useEffect, useMemo, useRef, useState} from "react";
 import {
+    Animated,
     ImageBackground,
-    KeyboardAvoidingView,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -22,6 +21,7 @@ import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
 import {TutorialCard} from "../components/TutorialCard";
 import type {VisualMode} from "../state/useVisualMode";
+import {useKeyboardInset} from "../lib/useKeyboardInset";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -91,6 +91,7 @@ export function CalendarScreen({
     const bg = visualMode === "sunset"
         ? require("../../public/images/rhram1.jpg")
         : require("../../public/images/rh211.jpg");
+    const {keyboardInset} = useKeyboardInset();
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -133,9 +134,8 @@ export function CalendarScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1}]}
+            <Animated.View
+                style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1, paddingBottom: keyboardInset}]}
             >
                 <ScrollView
                     ref={scrollRef}
@@ -143,7 +143,6 @@ export function CalendarScreen({
                     contentContainerStyle={tw`px-4 pt-2 pb-28`}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="interactive"
-                    automaticallyAdjustKeyboardInsets
                 >
                     <Text
                         style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
@@ -455,7 +454,7 @@ export function CalendarScreen({
                         </BlurView>
                     </View>
                 </ScrollView>
-            </KeyboardAvoidingView>
+            </Animated.View>
         </ImageBackground>
     );
 }

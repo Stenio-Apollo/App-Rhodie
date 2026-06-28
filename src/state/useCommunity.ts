@@ -2,6 +2,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {Session} from "@supabase/supabase-js";
 import {supabase} from "../lib/supabase";
 import {createId} from "../lib/id";
+import {ensureOwnProfile} from "../lib/profiles";
 
 export type CommunityAuthor = {
     id: string;
@@ -306,6 +307,13 @@ export function useCommunity(session: Session | null) {
         if (!trimmed) return;
         setBusy(true);
         setError(null);
+        const profileResult = await ensureOwnProfile({expectedUserId: userId});
+        if (profileResult.error || profileResult.skipped) {
+            setBusy(false);
+            const message = profileResult.error?.message ?? "Your profile is still loading. Try again in a moment.";
+            setError(message);
+            throw new Error(message);
+        }
         const {error: insertError} = await supabase.from("community_posts").insert({
             id: createId(),
             user_id: userId,
@@ -325,6 +333,13 @@ export function useCommunity(session: Session | null) {
         if (!trimmed) return;
         setBusy(true);
         setError(null);
+        const profileResult = await ensureOwnProfile({expectedUserId: userId});
+        if (profileResult.error || profileResult.skipped) {
+            setBusy(false);
+            const message = profileResult.error?.message ?? "Your profile is still loading. Try again in a moment.";
+            setError(message);
+            throw new Error(message);
+        }
         const {error: insertError} = await supabase.from("community_comments").insert({
             id: createId(),
             post_id: postId,
@@ -336,6 +351,42 @@ export function useCommunity(session: Session | null) {
         if (insertError) {
             setError(insertError.message);
             throw insertError;
+        }
+        await refresh();
+    }, [refresh, userId]);
+
+    const editComment = useCallback(async (commentId: string, body: string) => {
+        if (!userId) return;
+        const trimmed = body.trim();
+        if (!trimmed) return;
+        setBusy(true);
+        setError(null);
+        const {error: updateError} = await supabase
+            .from("community_comments")
+            .update({body: trimmed})
+            .eq("id", commentId)
+            .eq("user_id", userId);
+        setBusy(false);
+        if (updateError) {
+            setError(updateError.message);
+            throw updateError;
+        }
+        await refresh();
+    }, [refresh, userId]);
+
+    const deleteComment = useCallback(async (commentId: string) => {
+        if (!userId) return;
+        setBusy(true);
+        setError(null);
+        const {error: deleteError} = await supabase
+            .from("community_comments")
+            .delete()
+            .eq("id", commentId)
+            .eq("user_id", userId);
+        setBusy(false);
+        if (deleteError) {
+            setError(deleteError.message);
+            throw deleteError;
         }
         await refresh();
     }, [refresh, userId]);
@@ -414,10 +465,12 @@ export function useCommunity(session: Session | null) {
         refresh,
         createPost,
         addComment,
+        editComment,
+        deleteComment,
         toggleLike,
         toggleCommentLike,
         recordShare,
-    }), [addComment, busy, createPost, error, isLoaded, posts, recordShare, refresh, toggleCommentLike, toggleLike, userId]);
+    }), [addComment, busy, createPost, deleteComment, editComment, error, isLoaded, posts, recordShare, refresh, toggleCommentLike, toggleLike, userId]);
 }
 
 export type CommunityState = ReturnType<typeof useCommunity>;

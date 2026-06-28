@@ -19,6 +19,8 @@ import {haptics} from "../lib/haptics";
 import {toLocalISODate} from "../lib/date-utils";
 import {getDailyJournalPrompt} from "../lib/prompts";
 import type {CommunityAuthor, CommunityComment, CommunityPost, CommunityState} from "../state/useCommunity";
+import {useKeyboardInset} from "../lib/useKeyboardInset";
+import {OwnerActionSheet} from "../components/OwnerActionSheet";
 
 interface CommunityScreenProps {
     community: CommunityState;
@@ -149,21 +151,41 @@ function CommentItem({
                          depth = 0,
                          busy,
                          currentUserId,
-                         onReply,
-                         onToggleLike,
-                         onOpenDirectMessage,
-                     }: {
-    comment: CommunityComment;
-    depth?: number;
-    busy: boolean;
-    currentUserId: string | null;
-    onReply: (comment: CommunityComment) => void;
-    onToggleLike: (comment: CommunityComment) => void;
-    onOpenDirectMessage?: (author: CommunityAuthor) => void;
-}) {
-    return (
-        <View style={[tw`gap-2`, depth > 0 ? {marginLeft: Math.min(depth, 2) * 18} : null]}>
-            <View style={tw`flex-row gap-2`}>
+	                         onReply,
+	                         onToggleLike,
+	                         onEdit,
+	                         onDelete,
+	                         onOpenDirectMessage,
+	                     }: {
+	    comment: CommunityComment;
+	    depth?: number;
+	    busy: boolean;
+	    currentUserId: string | null;
+	    onReply: (comment: CommunityComment) => void;
+	    onToggleLike: (comment: CommunityComment) => void;
+	    onEdit: (comment: CommunityComment, body: string) => void;
+	    onDelete: (comment: CommunityComment) => void;
+	    onOpenDirectMessage?: (author: CommunityAuthor) => void;
+	}) {
+	    const [editing, setEditing] = useState(false);
+	    const [editText, setEditText] = useState(comment.body);
+	    const [actionsOpen, setActionsOpen] = useState(false);
+	    const isOwnComment = comment.userId === currentUserId;
+
+    useEffect(() => {
+        if (!editing) setEditText(comment.body);
+    }, [comment.body, editing]);
+
+    function openCommentActions() {
+        if (busy || !isOwnComment) return;
+
+        haptics.selection();
+        setActionsOpen(true);
+    }
+
+	    return (
+	        <View style={[tw`gap-2`, depth > 0 ? {marginLeft: Math.min(depth, 2) * 18} : null]}>
+	            <View style={tw`flex-row gap-2`}>
                 <Avatar author={comment.author} size={26}/>
                 <View style={tw`flex-1`}>
                     <View style={tw`flex-row items-center gap-2`}>
@@ -176,12 +198,65 @@ function CommentItem({
                             onOpenDirectMessage={onOpenDirectMessage}
                         />
                     </View>
-                    <Text style={[tw`mt-0.5 text-xs leading-4 text-[#ffffff]/90`, {fontFamily: fonts.body}]}>
-                        {comment.body}
-                    </Text>
-                    <View style={tw`mt-1.5 flex-row items-center gap-3`}>
-                        <Pressable
-                            disabled={busy}
+	                    {editing ? (
+	                        <View style={tw`mt-1 gap-2`}>
+	                            <TextInput
+	                                value={editText}
+	                                onChangeText={setEditText}
+	                                placeholder="Edit comment..."
+	                                placeholderTextColor="rgba(228,224,212,0.45)"
+	                                keyboardAppearance="dark"
+	                                multiline
+	                                style={[tw`max-h-24 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-xs text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+	                            />
+	                            <View style={tw`flex-row items-center gap-3`}>
+	                                <Pressable
+	                                    disabled={busy || editText.trim().length === 0}
+	                                    onPress={() => {
+	                                        const nextText = editText.trim();
+	                                        if (!nextText) return;
+	                                        setEditing(false);
+	                                        onEdit(comment, nextText);
+	                                    }}
+	                                    style={({pressed}) => [
+	                                        tw`py-1`,
+	                                        (busy || editText.trim().length === 0) && tw`opacity-50`,
+	                                        pressed && tw`opacity-70`,
+	                                    ]}
+	                                >
+	                                    <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>Save</Text>
+	                                </Pressable>
+	                                <Pressable
+	                                    onPress={() => {
+	                                        setEditText(comment.body);
+	                                        setEditing(false);
+	                                    }}
+	                                    style={({pressed}) => [
+	                                        tw`py-1`,
+	                                        pressed && tw`opacity-70`,
+	                                    ]}
+	                                >
+	                                    <Text style={[tw`text-[10px] text-white/70`, {fontFamily: fonts.button}]}>Cancel</Text>
+	                                </Pressable>
+	                            </View>
+	                        </View>
+		                    ) : (
+		                        <Pressable
+		                            onLongPress={openCommentActions}
+		                            delayLongPress={320}
+		                            style={({pressed}) => [
+		                                tw`mt-0.5`,
+		                                pressed && isOwnComment ? tw`opacity-80` : null,
+		                            ]}
+		                        >
+		                            <Text style={[tw`text-xs leading-4 text-[#ffffff]/90`, {fontFamily: fonts.body}]}>
+		                                {comment.body}
+		                            </Text>
+		                        </Pressable>
+		                    )}
+		                    <View style={tw`mt-1.5 flex-row items-center gap-3`}>
+	                        <Pressable
+	                            disabled={busy}
                             onPress={() => onToggleLike(comment)}
                             style={({pressed}) => [
                                 tw`flex-row items-center gap-1`,
@@ -204,25 +279,33 @@ function CommentItem({
                                 tw`py-0.5`,
                                 pressed && tw`opacity-70`,
                             ]}
-                        >
-                            <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>Reply</Text>
-                        </Pressable>
-                    </View>
-                </View>
-            </View>
+		                        >
+		                            <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>Reply</Text>
+		                        </Pressable>
+		                    </View>
+	                </View>
+	            </View>
 
-            {comment.replies.map((reply) => (
-                <CommentItem
+	            {comment.replies.map((reply) => (
+	                <CommentItem
                     key={reply.id}
                     comment={reply}
                     depth={depth + 1}
                     busy={busy}
                     currentUserId={currentUserId}
-                    onReply={onReply}
-                    onToggleLike={onToggleLike}
-                    onOpenDirectMessage={onOpenDirectMessage}
-                />
-            ))}
+	                    onReply={onReply}
+	                    onToggleLike={onToggleLike}
+	                    onEdit={onEdit}
+	                    onDelete={onDelete}
+	                    onOpenDirectMessage={onOpenDirectMessage}
+	                />
+	            ))}
+	            <OwnerActionSheet
+	                visible={actionsOpen}
+	                onClose={() => setActionsOpen(false)}
+	                onEdit={() => setEditing(true)}
+	                onDelete={() => onDelete(comment)}
+	            />
         </View>
     );
 }
@@ -232,20 +315,24 @@ function PostCard({
                       busy,
                       currentUserId,
                       onLike,
-                      onComment,
-                      onToggleCommentLike,
-                      onShare,
-                      onOpenDirectMessage,
-                  }: {
+	                      onComment,
+	                      onToggleCommentLike,
+	                      onEditComment,
+	                      onDeleteComment,
+	                      onShare,
+	                      onOpenDirectMessage,
+	                  }: {
     post: CommunityPost;
     busy: boolean;
     currentUserId: string | null;
     onLike: (post: CommunityPost) => void;
-    onComment: (postId: string, body: string, parentCommentId?: string | null) => void;
-    onToggleCommentLike: (comment: CommunityComment) => void;
-    onShare: (post: CommunityPost) => void;
-    onOpenDirectMessage?: (author: CommunityAuthor) => void;
-}) {
+	    onComment: (postId: string, body: string, parentCommentId?: string | null) => void;
+	    onToggleCommentLike: (comment: CommunityComment) => void;
+	    onEditComment: (comment: CommunityComment, body: string) => void;
+	    onDeleteComment: (comment: CommunityComment) => void;
+	    onShare: (post: CommunityPost) => void;
+	    onOpenDirectMessage?: (author: CommunityAuthor) => void;
+	}) {
     const [commentText, setCommentText] = useState("");
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [commentsVisible, setCommentsVisible] = useState(false);
@@ -332,11 +419,13 @@ function PostCard({
                                     onReply={(target) => {
                                         setReplyTarget(target);
                                         setCommentsOpen(true);
-                                    }}
-                                    onToggleLike={onToggleCommentLike}
-                                    onOpenDirectMessage={onOpenDirectMessage}
-                                />
-                            ))}
+	                                    }}
+	                                    onToggleLike={onToggleCommentLike}
+	                                    onEdit={onEditComment}
+	                                    onDelete={onDeleteComment}
+	                                    onOpenDirectMessage={onOpenDirectMessage}
+	                                />
+	                            ))}
                         </View>
                     ) : null}
 
@@ -427,14 +516,32 @@ export function CommunityScreen({
         }
     }
 
-    async function handleToggleCommentLike(comment: CommunityComment) {
-        try {
-            haptics.selection();
-            await community.toggleCommentLike(comment);
+	    async function handleToggleCommentLike(comment: CommunityComment) {
+	        try {
+	            haptics.selection();
+	            await community.toggleCommentLike(comment);
         } catch (error) {
             Alert.alert("Like failed", error instanceof Error ? error.message : "Your like could not be saved.");
-        }
-    }
+	        }
+	    }
+
+	    async function handleEditComment(comment: CommunityComment, body: string) {
+	        try {
+	            haptics.selection();
+	            await community.editComment(comment.id, body);
+	        } catch (error) {
+	            Alert.alert("Edit failed", error instanceof Error ? error.message : "Your comment could not be updated.");
+	        }
+	    }
+
+	    async function handleDeleteComment(comment: CommunityComment) {
+	        try {
+	            haptics.selection();
+	            await community.deleteComment(comment.id);
+	        } catch (error) {
+	            Alert.alert("Delete failed", error instanceof Error ? error.message : "Your comment could not be deleted.");
+	        }
+	    }
 
     async function handleLike(post: CommunityPost) {
         try {
@@ -455,12 +562,14 @@ export function CommunityScreen({
         }
     }
 
-    const backgroundImage = require("../../public/images/newspaper 1.jpg");
+	    const backgroundImage = require("../../public/images/newspaper 1.jpg");
+	    const {keyboardInset} = useKeyboardInset();
 
-    return (
-        <ImageBackground source={backgroundImage} style={tw`flex-1 bg-black`} imageStyle={tw`opacity-0`}>
-            {onOpenMessages ? (
-                <View style={[tw`absolute top-4 z-20 items-end`, {right: 19}]}>
+	    return (
+	        <ImageBackground source={backgroundImage} style={tw`flex-1 bg-black`} imageStyle={tw`opacity-9`}>
+	            <Animated.View style={[tw`flex-1`, {paddingBottom: keyboardInset}]}>
+	            {onOpenMessages ? (
+	                <View style={[tw`absolute top-4 z-20 items-end`, {right: 19}]}>
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel="Open messages"
@@ -487,9 +596,11 @@ export function CommunityScreen({
             ) : null}
             <ScrollView
                 style={tw`flex-1`}
-                contentContainerStyle={tw`px-4 pb-32 pt-16 gap-4`}
-                showsVerticalScrollIndicator={false}
-            >
+	                contentContainerStyle={tw`px-4 pb-32 pt-16 gap-4`}
+	                keyboardShouldPersistTaps="handled"
+	                keyboardDismissMode="interactive"
+	                showsVerticalScrollIndicator={false}
+	            >
                 <View style={tw`rounded-3xl border border-slate-700 bg-black/70 p-4`}>
                     <Text style={[tw`text-2xl text-white`, {fontFamily: fonts.heading}]}>Community</Text>
                     <Text style={[tw`mt-1 text-sm leading-5 text-[#E4E0D4]/70`, {fontFamily: fonts.body}]}>
@@ -598,17 +709,24 @@ export function CommunityScreen({
                             onComment={(postId, body, parentCommentId) => {
                                 void handleComment(postId, body, parentCommentId);
                             }}
-                            onToggleCommentLike={(comment) => {
-                                void handleToggleCommentLike(comment);
-                            }}
-                            onShare={(item) => {
-                                void handleShare(item);
-                            }}
+	                            onToggleCommentLike={(comment) => {
+	                                void handleToggleCommentLike(comment);
+	                            }}
+	                            onEditComment={(comment, body) => {
+	                                void handleEditComment(comment, body);
+	                            }}
+	                            onDeleteComment={(comment) => {
+	                                void handleDeleteComment(comment);
+	                            }}
+	                            onShare={(item) => {
+	                                void handleShare(item);
+	                            }}
                             onOpenDirectMessage={onOpenDirectMessage}
                         />
-                    ))
-                )}
-            </ScrollView>
-        </ImageBackground>
-    );
-}
+	                    ))
+	                )}
+	            </ScrollView>
+	            </Animated.View>
+	        </ImageBackground>
+	    );
+	}

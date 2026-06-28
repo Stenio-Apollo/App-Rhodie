@@ -1,7 +1,8 @@
-import {KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View} from "react-native";
+import {Animated, Modal, Pressable, Text, TextInput, View} from "react-native";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {Button} from "./ui/Button";
+import {useKeyboardInset} from "../lib/useKeyboardInset";
 
 interface StickyNoteModalProps {
     visible: boolean;
@@ -21,12 +22,12 @@ export function StickyNoteModal({
                                     onClose,
                                 }: StickyNoteModalProps) {
     const canAddTask = text.trim().length > 0;
+    const {keyboardInset} = useKeyboardInset();
 
     return (
         <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                style={tw`flex-1 justify-center px-5`}
+            <Animated.View
+                style={[tw`flex-1 justify-center px-5`, {paddingBottom: keyboardInset}]}
             >
                 <Pressable style={tw`absolute inset-0 bg-black/72`} onPress={onClose}/>
                 <View
@@ -95,7 +96,7 @@ export function StickyNoteModal({
                         />
                     </View>
                 </View>
-            </KeyboardAvoidingView>
+            </Animated.View>
         </Modal>
     );
 }

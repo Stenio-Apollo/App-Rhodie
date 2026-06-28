@@ -3,6 +3,7 @@ import type {Session} from "@supabase/supabase-js";
 import {supabase} from "../lib/supabase";
 import {createId} from "../lib/id";
 import type {CommunityAuthor} from "./useCommunity";
+import {ensureOwnProfile} from "../lib/profiles";
 
 export type DirectMessage = {
     id: string;
@@ -254,6 +255,13 @@ export function useDirectMessages(session: Session | null) {
 
         setBusy(true);
         setError(null);
+        const ownProfileResult = await ensureOwnProfile({expectedUserId: userId});
+        if (ownProfileResult.error || ownProfileResult.skipped) {
+            setBusy(false);
+            const message = ownProfileResult.error?.message ?? "Your profile is still loading. Try again in a moment.";
+            setError(message);
+            throw new Error(message);
+        }
 
         const ownParticipantRows = await supabase
             .from("dm_conversation_participants")
@@ -326,6 +334,13 @@ export function useDirectMessages(session: Session | null) {
 
         setBusy(true);
         setError(null);
+        const profileResult = await ensureOwnProfile({expectedUserId: userId});
+        if (profileResult.error || profileResult.skipped) {
+            setBusy(false);
+            const message = profileResult.error?.message ?? "Your profile is still loading. Try again in a moment.";
+            setError(message);
+            throw new Error(message);
+        }
         const now = new Date().toISOString();
         const {error: insertError} = await supabase.from("dm_messages").insert({
             id: createId(),
@@ -354,6 +369,42 @@ export function useDirectMessages(session: Session | null) {
         await refresh();
     }, [refresh, userId]);
 
+    const editMessage = useCallback(async (messageId: string, body: string) => {
+        if (!userId) return;
+        const trimmed = body.trim();
+        if (!trimmed) return;
+        setBusy(true);
+        setError(null);
+        const {error: updateError} = await supabase
+            .from("dm_messages")
+            .update({body: trimmed})
+            .eq("id", messageId)
+            .eq("sender_id", userId);
+        setBusy(false);
+        if (updateError) {
+            setError(updateError.message);
+            throw updateError;
+        }
+        await refresh();
+    }, [refresh, userId]);
+
+    const deleteMessage = useCallback(async (messageId: string) => {
+        if (!userId) return;
+        setBusy(true);
+        setError(null);
+        const {error: deleteError} = await supabase
+            .from("dm_messages")
+            .delete()
+            .eq("id", messageId)
+            .eq("sender_id", userId);
+        setBusy(false);
+        if (deleteError) {
+            setError(deleteError.message);
+            throw deleteError;
+        }
+        await refresh();
+    }, [refresh, userId]);
+
     const markRead = useCallback(async (conversationId: string) => {
         if (!userId) return;
         const {error: updateError} = await supabase
@@ -374,6 +425,7 @@ export function useDirectMessages(session: Session | null) {
     );
 
     return useMemo(() => ({
+        userId,
         conversations,
         unreadCount,
         isLoaded,
@@ -382,8 +434,10 @@ export function useDirectMessages(session: Session | null) {
         refresh,
         openConversationWith,
         sendMessage,
+        editMessage,
+        deleteMessage,
         markRead,
-    }), [busy, conversations, error, isLoaded, markRead, openConversationWith, refresh, sendMessage, unreadCount]);
+    }), [busy, conversations, deleteMessage, editMessage, error, isLoaded, markRead, openConversationWith, refresh, sendMessage, unreadCount, userId]);
 }
 
 export type DirectMessagesState = ReturnType<typeof useDirectMessages>;

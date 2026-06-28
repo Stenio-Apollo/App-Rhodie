@@ -1,8 +1,7 @@
 import {useState} from "react";
 import {
+    Animated,
     ImageBackground,
-    KeyboardAvoidingView,
-    Platform,
     Pressable,
     SafeAreaView,
     Text,
@@ -13,6 +12,7 @@ import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import type {EncryptionState} from "../state/useEncryption";
+import {useKeyboardInset} from "../lib/useKeyboardInset";
 
 const passphraseBackground = require("../../public/images/rhbull.jpg");
 
@@ -359,10 +359,11 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
     const pinValue = currentPinValue();
     const pinLength = resetCodeSent && recoveryStage === "code" ? 8 : 4;
     const shouldShowForgotPin = !needsSetup && !isLegacyProfile && !resetCodeSent;
+    const {keyboardInset} = useKeyboardInset();
 
     return (
         <ImageBackground source={passphraseBackground} resizeMode="cover" style={tw`flex-1`}>
-            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={tw`flex-1`}>
+            <Animated.View style={[tw`flex-1`, {paddingBottom: keyboardInset}]}>
                 <SafeAreaView style={tw`flex-1 bg-black/35 px-7`}>
                     <View style={tw`pt-4`}>
                         <View style={tw`min-h-[44px] flex-row items-center justify-center`}>
@@ -513,7 +514,7 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
                         ))}
                     </View>
                 </SafeAreaView>
-            </KeyboardAvoidingView>
+            </Animated.View>
         </ImageBackground>
     );
 }

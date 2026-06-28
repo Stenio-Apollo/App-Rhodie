@@ -1,11 +1,13 @@
-import {useEffect, useMemo, useState} from "react";
-import {Alert, Image, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {Fragment, useEffect, useMemo, useState} from "react";
+import {Alert, Animated, Image, Pressable, ScrollView, Text, TextInput, View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import type {CommunityAuthor} from "../state/useCommunity";
-import type {DirectMessageConversation, DirectMessagesState} from "../state/useDirectMessages";
+import type {DirectMessage, DirectMessageConversation, DirectMessagesState} from "../state/useDirectMessages";
+import {useKeyboardInset} from "../lib/useKeyboardInset";
+import {OwnerActionSheet} from "../components/OwnerActionSheet";
 
 type DmStartTarget = {
     key: number;
@@ -22,10 +24,28 @@ function displayName(author: CommunityAuthor): string {
     return author.fullName?.trim() || "Rhodie member";
 }
 
-function formatTimestamp(value: string): string {
+function messageDate(value: string): Date | null {
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
+    if (Number.isNaN(date.getTime())) return null;
+    return date;
+}
+
+function formatDateKey(value: string): string {
+    const date = messageDate(value);
+    if (!date) return value;
+    return date.toLocaleDateString("en-CA");
+}
+
+function formatDateLabel(value: string): string {
+    const date = messageDate(value);
+    if (!date) return "";
     return date.toLocaleDateString(undefined, {month: "short", day: "numeric"});
+}
+
+function formatMessageTime(value: string): string {
+    const date = messageDate(value);
+    if (!date) return "";
+    return date.toLocaleTimeString(undefined, {hour: "numeric", minute: "2-digit"});
 }
 
 function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number }) {
@@ -91,6 +111,10 @@ function ConversationButton({
 export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesScreenProps) {
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [messageText, setMessageText] = useState("");
+    const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+    const [editingMessageText, setEditingMessageText] = useState("");
+    const [actionMessage, setActionMessage] = useState<DirectMessage | null>(null);
+    const {keyboardInset} = useKeyboardInset();
 
     useEffect(() => {
         if (!startTarget) return;
@@ -135,8 +159,39 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
         }
     }
 
+    async function handleEditMessage(message: DirectMessage, body: string) {
+        try {
+            haptics.selection();
+            await dm.editMessage(message.id, body);
+        } catch (error) {
+            Alert.alert("Edit failed", error instanceof Error ? error.message : "Your message could not be updated.");
+            setEditingMessageId(message.id);
+            setEditingMessageText(body);
+        }
+    }
+
+    async function handleDeleteMessage(message: DirectMessage) {
+        try {
+            haptics.selection();
+            await dm.deleteMessage(message.id);
+            if (editingMessageId === message.id) {
+                setEditingMessageId(null);
+                setEditingMessageText("");
+            }
+        } catch (error) {
+            Alert.alert("Delete failed", error instanceof Error ? error.message : "Your message could not be deleted.");
+        }
+    }
+
+    function openMessageActions(message: DirectMessage) {
+        if (dm.busy || message.senderId !== dm.userId) return;
+
+        haptics.selection();
+        setActionMessage(message);
+    }
+
     return (
-        <View style={tw`absolute inset-0 z-20 bg-black`}>
+        <Animated.View style={[tw`absolute inset-0 z-20 bg-black`, {paddingBottom: keyboardInset}]}>
             <View style={tw`flex-row items-center justify-between border-b border-slate-700 px-4 py-3`}>
                 <View style={tw`flex-row items-center gap-2`}>
                     {selectedConversation ? (
@@ -187,23 +242,100 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                                 No messages yet.
                             </Text>
                         ) : (
-                            selectedConversation.messages.map((message) => {
-                                const mine = message.senderId !== selectedConversation.participant.id;
+                            selectedConversation.messages.map((message, index) => {
+                                const mine = message.senderId === dm.userId;
+	                                const editing = editingMessageId === message.id;
+	                                const dateKey = formatDateKey(message.createdAt);
+	                                const previousMessage = selectedConversation.messages[index - 1];
+	                                const showDate = !previousMessage || formatDateKey(previousMessage.createdAt) !== dateKey;
+	                                const actionSelected = actionMessage?.id === message.id;
+
                                 return (
-                                    <View
-                                        key={message.id}
-                                        style={[
-                                            tw`max-w-[82%] rounded-3xl border border-slate-700 px-4 py-3`,
-                                            mine ? tw`self-end bg-[#B55941]` : tw`self-start bg-black/70`,
-                                        ]}
-                                    >
-                                        <Text style={[tw`text-sm leading-5 text-white`, {fontFamily: fonts.body}]}>
-                                            {message.body}
-                                        </Text>
-                                        <Text style={[tw`mt-1 text-[10px] text-white/60`, {fontFamily: fonts.body}]}>
-                                            {formatTimestamp(message.createdAt)}
-                                        </Text>
-                                    </View>
+                                    <Fragment key={message.id}>
+                                        {showDate ? (
+                                            <View style={tw`my-1 items-center`}>
+                                                <Text style={[tw`px-3 py-1 text-[10px] text-white/65`, {fontFamily: fonts.body}]}>
+                                                    {formatDateLabel(message.createdAt)}
+                                                </Text>
+                                            </View>
+                                        ) : null}
+                                        <View
+                                            style={[
+                                                tw`max-w-[82%]`,
+                                                mine ? tw`self-end items-end` : tw`self-start items-start`,
+                                            ]}
+                                        >
+                                            <Pressable
+                                                onLongPress={() => openMessageActions(message)}
+                                                delayLongPress={320}
+	                                                style={({pressed}) => [
+	                                                    tw`rounded-3xl border border-slate-700 px-4 py-3`,
+	                                                    mine ? tw`bg-[#B55941]` : tw`bg-black/70`,
+	                                                    actionSelected ? {
+	                                                        borderColor: "#B55941",
+	                                                        shadowColor: "#B55941",
+	                                                        shadowOffset: {width: 0, height: 0},
+	                                                        shadowOpacity: 0.42,
+	                                                        shadowRadius: 12,
+	                                                        elevation: 8,
+	                                                    } : null,
+	                                                    pressed && mine && !editing ? tw`opacity-85` : null,
+	                                                ]}
+	                                            >
+                                                {editing ? (
+                                                    <View style={tw`gap-2`}>
+                                                        <TextInput
+                                                            value={editingMessageText}
+                                                            onChangeText={setEditingMessageText}
+                                                            placeholder="Edit message..."
+                                                            placeholderTextColor="rgba(255,255,255,0.55)"
+                                                            keyboardAppearance="dark"
+                                                            multiline
+                                                            style={[tw`max-h-24 rounded-2xl border border-white/25 px-3 py-2 text-sm text-white`, {fontFamily: fonts.body}]}
+                                                        />
+                                                        <View style={tw`flex-row items-center gap-3`}>
+                                                            <Pressable
+                                                                disabled={dm.busy || editingMessageText.trim().length === 0}
+                                                                onPress={() => {
+                                                                    const nextText = editingMessageText.trim();
+                                                                    if (!nextText) return;
+                                                                    setEditingMessageId(null);
+                                                                    setEditingMessageText("");
+                                                                    void handleEditMessage(message, nextText);
+                                                                }}
+                                                                style={({pressed}) => [
+                                                                    tw`py-1`,
+                                                                    (dm.busy || editingMessageText.trim().length === 0) && tw`opacity-50`,
+                                                                    pressed && tw`opacity-70`,
+                                                                ]}
+                                                            >
+                                                                <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>Save</Text>
+                                                            </Pressable>
+                                                            <Pressable
+                                                                onPress={() => {
+                                                                    setEditingMessageId(null);
+                                                                    setEditingMessageText("");
+                                                                }}
+                                                                style={({pressed}) => [
+                                                                    tw`py-1`,
+                                                                    pressed && tw`opacity-70`,
+                                                                ]}
+                                                            >
+                                                                <Text style={[tw`text-[10px] text-white/70`, {fontFamily: fonts.button}]}>Cancel</Text>
+                                                            </Pressable>
+                                                        </View>
+                                                    </View>
+                                                ) : (
+                                                    <Text style={[tw`text-sm leading-5 text-white`, {fontFamily: fonts.body}]}>
+                                                        {message.body}
+                                                    </Text>
+                                                )}
+                                            </Pressable>
+                                            <Text style={[tw`mt-1 px-2 text-[10px] text-white/45`, {fontFamily: fonts.body}]}>
+                                                {formatMessageTime(message.createdAt)}
+                                            </Text>
+                                        </View>
+                                    </Fragment>
                                 );
                             })
                         )}
@@ -263,7 +395,20 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                     )}
                 </ScrollView>
             )}
-        </View>
+            <OwnerActionSheet
+                visible={Boolean(actionMessage)}
+                onClose={() => setActionMessage(null)}
+                onEdit={() => {
+                    if (!actionMessage) return;
+                    setEditingMessageId(actionMessage.id);
+                    setEditingMessageText(actionMessage.body);
+                }}
+                onDelete={() => {
+                    if (!actionMessage) return;
+                    void handleDeleteMessage(actionMessage);
+                }}
+            />
+        </Animated.View>
     );
 }
 

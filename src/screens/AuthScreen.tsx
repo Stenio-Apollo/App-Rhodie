@@ -1,12 +1,13 @@
-import {useEffect, useMemo, useState} from "react";
-import {ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View} from "react-native";
+import {useMemo, useState} from "react";
+import {Animated, ImageBackground, Pressable, ScrollView, Text, View} from "react-native";
 import {Input} from "../components/ui/Input";
 import {fonts} from "../theme/fonts";
 import tw from "../lib/tw";
 import type {SupabaseAuthState} from "../state/useSupabaseAuth";
-import {supabase} from "../lib/supabase";
 import {haptics} from "../lib/haptics";
 import {BirthdayPicker, formatBirthday} from "../components/BirthdayPicker";
+import {ensureOwnProfile} from "../lib/profiles";
+import {useKeyboardInset} from "../lib/useKeyboardInset";
 
 type AuthMode = "signIn" | "create";
 type AuthMethod = "code" | "password";
@@ -44,25 +45,8 @@ export function AuthScreen({
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [keyboardInset, setKeyboardInset] = useState(0);
+    const {keyboardInset} = useKeyboardInset();
     const bg = require("../../public/images/rh13.jpg");
-
-    useEffect(() => {
-        const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-        const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-
-        const showSubscription = Keyboard.addListener(showEvent, (event) => {
-            setKeyboardInset(event.endCoordinates?.height ?? 0);
-        });
-        const hideSubscription = Keyboard.addListener(hideEvent, () => {
-            setKeyboardInset(0);
-        });
-
-        return () => {
-            showSubscription.remove();
-            hideSubscription.remove();
-        };
-    }, []);
 
     const birthday = formatBirthday(birthdayMonth, birthdayDay);
     const title = mode === "signIn" ? "Sign in" : "Create account";
@@ -80,18 +64,12 @@ export function AuthScreen({
     );
 
     async function upsertProfile(userId: string): Promise<{ error: { message: string } | null; skipped: boolean }> {
-        if (!name.trim() && !birthday) return {error: null, skipped: false};
-        const {data: sessionData} = await supabase.auth.getSession();
-        const activeSessionUserId = sessionData.session?.user.id ?? null;
-        if (!activeSessionUserId || activeSessionUserId !== userId) {
-            return {error: null, skipped: true};
-        }
-        const {error: profileError} = await supabase.from("profiles").upsert({
-            id: userId,
-            full_name: name.trim() || null,
+        const {error: profileError, skipped} = await ensureOwnProfile({
+            expectedUserId: userId,
+            fullName: name,
             birthday,
         });
-        return {error: profileError ? {message: profileError.message} : null, skipped: false};
+        return {error: profileError ? {message: profileError.message} : null, skipped};
     }
 
     async function handleSendCode() {
@@ -213,22 +191,19 @@ export function AuthScreen({
 
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-55`}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 18 : 0}
-                style={[tw`flex-1 bg-black/20`, {paddingHorizontal: 1}]}
+            <Animated.View
+                style={[tw`flex-1 bg-black/20`, {paddingHorizontal: 1, paddingBottom: keyboardInset}]}
             >
                 <ScrollView
                     contentContainerStyle={[
                         tw`flex-grow px-6 pt-10`,
                         {
-                            justifyContent: keyboardInset > 0 ? "flex-start" : "center",
-                            paddingBottom: Math.max(28, keyboardInset + 20),
+                            justifyContent: "center",
+                            paddingBottom: 28,
                         },
                     ]}
                     keyboardShouldPersistTaps="always"
                     keyboardDismissMode="interactive"
-                    automaticallyAdjustKeyboardInsets
                     showsVerticalScrollIndicator={false}
                 >
                     <Text style={[tw`text-center text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{title}</Text>
@@ -441,7 +416,7 @@ export function AuthScreen({
                         <Text style={[tw`mt-3 text-center text-sm text-emerald-400`, {fontFamily: fonts.body}]}>{message}</Text>
                     ) : null}
                 </ScrollView>
-            </KeyboardAvoidingView>
+            </Animated.View>
         </ImageBackground>
     );
 }

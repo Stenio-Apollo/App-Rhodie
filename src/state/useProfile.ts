@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useState} from "react";
 import {supabase} from "../lib/supabase";
 import type {Session} from "@supabase/supabase-js";
+import {ensureOwnProfile} from "../lib/profiles";
 
 export interface Profile {
     id: string;
@@ -22,14 +23,10 @@ export function useProfile(session: Session | null) {
         let mounted = true;
         setLoading(true);
 
-        supabase
-            .from("profiles")
-            .select("id, full_name, birthday, avatar_url")
-            .eq("id", session.user.id)
-            .single()
-            .then(({data}) => {
+        ensureOwnProfile()
+            .then(({profile: ensuredProfile}) => {
                 if (!mounted) return;
-                setProfile(data ?? {id: session.user.id, full_name: null, birthday: null, avatar_url: null});
+                setProfile(ensuredProfile ?? {id: session.user.id, full_name: null, birthday: null, avatar_url: null});
             }, () => {
                 if (!mounted) return;
                 setProfile({id: session.user.id, full_name: null, birthday: null, avatar_url: null});

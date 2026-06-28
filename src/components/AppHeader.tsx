@@ -36,7 +36,7 @@ export function AppHeader({
     };
     const headerModeButtonStyle = {
         ...headerButtonDepthStyle,
-        backgroundColor: visualMode === "sunset" ? "#983a1f" : "#3895c5",
+        backgroundColor: visualMode === "sunset" ? "#B55941" : "#3895c5",
         borderWidth: 1,
         borderColor: "rgba(43,43,43,0.22)",
     };
