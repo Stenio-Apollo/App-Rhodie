@@ -292,7 +292,7 @@ export function CalendarScreen({
                         ))
                     )}
 
-                    <View style={tw`mt-3 overflow-hidden rounded-[28px] border border-slate-700/33 bg-black/10 p-1`}>
+                    <View style={tw`mt-3 overflow-hidden rounded-[28px] bg-black/10 p-1`}>
                         <BlurView
                             intensity={72}
                             tint="dark"

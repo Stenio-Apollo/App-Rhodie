@@ -34,9 +34,7 @@ const keypadRows = [
 
 export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphraseScreenProps) {
     const needsSetup = encryption.status === "needs_setup";
-    const isLegacyProfile = !needsSetup && encryption.profile
-        ? encryption.profile.version < 2 || !encryption.profile.wrappedKey
-        : false;
+    const isLegacyProfile = !needsSetup && encryption.legacyUpgradeRequired;
 
     const [pin, setPin] = useState("");
     const [confirmPin, setConfirmPin] = useState("");

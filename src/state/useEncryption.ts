@@ -39,6 +39,10 @@ function keyCacheKey(userId: string): string {
     return `${KEY_CACHE_PREFIX}.${userId}`;
 }
 
+function isLegacyProfile(profile: EncryptionProfile): boolean {
+    return profile.version < 2 || !profile.wrappedKey;
+}
+
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
     return new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => reject(new Error("Encryption profile load timed out.")), timeoutMs);
@@ -69,12 +73,45 @@ function rowToProfile(row: EncryptionProfileRow): EncryptionProfile {
     };
 }
 
+async function tableHasEncryptedRows(
+    table: string,
+    userId: string,
+    encryptedColumns: string[],
+): Promise<boolean> {
+    const {data, error} = await supabase
+        .from(table)
+        .select(encryptedColumns.join(","))
+        .eq("user_id", userId);
+
+    if (error) {
+        throw error;
+    }
+
+    const rows = (data ?? []) as unknown as Array<Record<string, string | null>>;
+    return rows.some((row) =>
+        encryptedColumns.some((column) => typeof row[column] === "string" && row[column].trim().length > 0),
+    );
+}
+
+async function userHasEncryptedContent(userId: string): Promise<boolean> {
+    const checks = [
+        tableHasEncryptedRows("journal_entries", userId, ["text_encrypted"]),
+        tableHasEncryptedRows("tasks", userId, ["title_encrypted", "description_encrypted"]),
+        tableHasEncryptedRows("sticky_notes", userId, ["text_encrypted"]),
+        tableHasEncryptedRows("planner_events", userId, ["title_encrypted", "description_encrypted"]),
+        tableHasEncryptedRows("weekly_goals", userId, ["text_encrypted"]),
+    ];
+    const results = await Promise.all(checks);
+    return results.some(Boolean);
+}
+
 export function useEncryption(session: Session | null) {
     const userId = session?.user.id ?? null;
     const [status, setStatus] = useState<EncryptionStatus>("loading");
     const [profile, setProfile] = useState<EncryptionProfile | null>(null);
     const [key, setKey] = useState<EncryptionKey | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [legacyUpgradeRequired, setLegacyUpgradeRequired] = useState(false);
 
     const cacheProfile = useCallback(async (nextProfile: EncryptionProfile) => {
         try {
@@ -126,6 +163,7 @@ export function useEncryption(session: Session | null) {
                 setKey(null);
                 setProfile(null);
                 setError(null);
+                setLegacyUpgradeRequired(false);
 
                 if (!userId) {
                     setStatus("unlocked");
@@ -140,9 +178,11 @@ export function useEncryption(session: Session | null) {
                     try {
                         const cachedProfile = JSON.parse(cachedProfileRaw) as EncryptionProfile;
                         if (cachedProfile.userId === userId && cachedProfile.salt && cachedProfile.verifier) {
-                            hasUsableCachedProfile = true;
-                            setProfile(cachedProfile);
-                            setStatus("locked");
+                            if (!isLegacyProfile(cachedProfile)) {
+                                hasUsableCachedProfile = true;
+                                setProfile(cachedProfile);
+                                setStatus("locked");
+                            }
                         }
                     } catch {
                         // Bad cache should not block the remote profile load.
@@ -172,6 +212,30 @@ export function useEncryption(session: Session | null) {
                 }
 
                 const nextProfile = rowToProfile(data as EncryptionProfileRow);
+                if (isLegacyProfile(nextProfile)) {
+                    try {
+                        const hasEncryptedContent = await userHasEncryptedContent(userId);
+                        if (!mounted) return;
+
+                        if (!hasEncryptedContent) {
+                            setProfile(null);
+                            setLegacyUpgradeRequired(false);
+                            await AsyncStorage.removeItem(profileCacheKey(userId));
+                            setStatus("needs_setup");
+                            return;
+                        }
+
+                        setLegacyUpgradeRequired(true);
+                    } catch (contentCheckError) {
+                        console.warn("Encryption content check error", contentCheckError);
+                        setProfile(null);
+                        setLegacyUpgradeRequired(false);
+                        await AsyncStorage.removeItem(profileCacheKey(userId));
+                        setStatus("needs_setup");
+                        return;
+                    }
+                }
+
                 setProfile(nextProfile);
                 void cacheProfile(nextProfile);
                 setStatus("locked");
@@ -198,6 +262,7 @@ export function useEncryption(session: Session | null) {
 
         setProfile(next.profile);
         setKey(next);
+        setLegacyUpgradeRequired(false);
         setStatus("unlocked");
         void cacheProfile(next.profile);
         void cacheDeviceKey(next);
@@ -211,6 +276,7 @@ export function useEncryption(session: Session | null) {
         const next = await unlockEncryptionProfile(profile, passphrase);
         setProfile(next.profile);
         setKey(next);
+        setLegacyUpgradeRequired(false);
         setStatus("unlocked");
         void cacheDeviceKey(next);
     }, [cacheDeviceKey, profile]);
@@ -225,6 +291,7 @@ export function useEncryption(session: Session | null) {
         await upsertProfile(next.profile);
         setProfile(next.profile);
         setKey(next);
+        setLegacyUpgradeRequired(false);
         setStatus("unlocked");
         void cacheProfile(next.profile);
         void cacheDeviceKey(next);
@@ -290,6 +357,7 @@ export function useEncryption(session: Session | null) {
         await upsertProfile(next.profile);
         setProfile(next.profile);
         setKey(next);
+        setLegacyUpgradeRequired(false);
         setStatus("unlocked");
         void cacheProfile(next.profile);
         void cacheDeviceKey(next);
@@ -306,6 +374,7 @@ export function useEncryption(session: Session | null) {
         profile,
         key,
         error,
+        legacyUpgradeRequired,
         isReady: status !== "loading",
         isUnlocked: status === "unlocked" && Boolean(key),
         setup,
@@ -316,7 +385,7 @@ export function useEncryption(session: Session | null) {
         resetPinAfterEmailVerification,
         lock,
         forgetDeviceKey,
-    }), [changePin, error, forgetDeviceKey, key, lock, profile, requestPinResetCode, resetPinAfterEmailVerification, setup, status, unlock, verifyPinResetCode]);
+    }), [changePin, error, forgetDeviceKey, key, legacyUpgradeRequired, lock, profile, requestPinResetCode, resetPinAfterEmailVerification, setup, status, unlock, verifyPinResetCode]);
 }
 
 export type EncryptionState = ReturnType<typeof useEncryption>;

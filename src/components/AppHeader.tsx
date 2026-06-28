@@ -1,4 +1,4 @@
-import {Pressable, Text, View} from "react-native";
+import {Image, Pressable, Text, View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
@@ -8,16 +8,22 @@ import {Button} from "./ui/Button";
 
 interface AppHeaderProps {
     fullName: string | null | undefined;
+    avatarUrl?: string | null;
     accountOpen: boolean;
     visualMode: VisualMode;
+    avatarBusy?: boolean;
+    onChangeAvatar?: () => void;
     onToggleVisualMode: () => void;
     onToggleAccount: () => void;
 }
 
 export function AppHeader({
                               fullName,
+                              avatarUrl,
                               accountOpen,
                               visualMode,
+                              avatarBusy = false,
+                              onChangeAvatar,
                               onToggleVisualMode,
                               onToggleAccount,
                           }: AppHeaderProps) {
@@ -46,9 +52,35 @@ export function AppHeader({
                     rh.
                 </Text>
                 <View style={tw`rounded-2xl px-2 py-1.5`}>
-                    <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
-                        {fullName ? `Welcome, ${fullName}` : "Welcome back"}
-                    </Text>
+                    <View style={tw`flex-row items-center gap-2`}>
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="Change profile photo"
+                            disabled={avatarBusy || !onChangeAvatar}
+                            onPress={() => {
+                                haptics.selection();
+                                onChangeAvatar?.();
+                            }}
+                            style={({pressed}) => [
+                                tw`h-8 w-8 rounded-full`,
+                                avatarBusy && tw`opacity-50`,
+                                pressed && tw`opacity-75`,
+                            ]}
+                        >
+                            {avatarUrl ? (
+                                <Image source={{uri: avatarUrl}} style={tw`h-8 w-8 rounded-full bg-black/40`}/>
+                            ) : (
+                                <View style={tw`h-8 w-8 items-center justify-center rounded-full bg-black/40`}>
+                                    <Text style={[tw`text-xs text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        {(fullName?.trim()?.[0] ?? "R").toUpperCase()}
+                                    </Text>
+                                </View>
+                            )}
+                        </Pressable>
+                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                            {fullName ? `Welcome, ${fullName}` : "Welcome back"}
+                        </Text>
+                    </View>
                 </View>
             </View>
             <View style={tw`flex-row items-center gap-2`}>

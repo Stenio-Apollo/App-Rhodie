@@ -10,6 +10,8 @@ import {TodayScreen} from "./src/screens/TodayScreen";
 import {AuthScreen} from "./src/screens/AuthScreen";
 import {SubscriptionScreen} from "./src/screens/SubscriptionScreen";
 import {InsightsScreen} from "./src/screens/InsightsScreen";
+import {CommunityScreen} from "./src/screens/CommunityScreen";
+import {DirectMessagesScreen, type DmStartTarget} from "./src/screens/DirectMessagesScreen";
 import {AccountScreen} from "./src/screens/AccountScreen";
 import tw from "./src/lib/tw";
 import {useTasks} from "./src/state/useTasks";
@@ -43,6 +45,8 @@ import {useEncryption} from "./src/state/useEncryption";
 import {PrivacyPassphraseScreen} from "./src/screens/PrivacyPassphraseScreen";
 import {fonts} from "./src/theme/fonts";
 import {AppErrorBoundary} from "./src/components/AppErrorBoundary";
+import {useCommunity, type CommunityAuthor} from "./src/state/useCommunity";
+import {useDirectMessages} from "./src/state/useDirectMessages";
 
 type HomeAction =
     | { key: number; target: "journalPrompt"; entryId: string | null }
@@ -56,13 +60,15 @@ type HomeActionInput =
     | { target: "weeklyGoal" }
     | { target: "tasks" };
 
-const TAB_ORDER: Tab[] = ["today", "plan", "journal", "board", "calendar", "insights"];
+const TAB_ORDER: Tab[] = ["today", "plan", "journal", "board", "calendar", "community", "insights"];
 const SWIPE_DISTANCE_THRESHOLD = 70;
 const SWIPE_VERTICAL_LIMIT = 55;
 
 function AppContent() {
     const [tab, setTab] = useState<Tab>("today");
     const [accountOpen, setAccountOpen] = useState(false);
+    const [messagesOpen, setMessagesOpen] = useState(false);
+    const [messageStartTarget, setMessageStartTarget] = useState<DmStartTarget | null>(null);
     const [subscriptionOfferOpen, setSubscriptionOfferOpen] = useState(false);
     const [homeAction, setHomeAction] = useState<HomeAction | null>(null);
     const [goalCheckVisible, setGoalCheckVisible] = useState(false);
@@ -90,6 +96,8 @@ function AppContent() {
     const weeklyGoalState = useWeeklyGoal(session?.user.id, encryption);
     const journalState = useJournal(session, encryption);
     const plannerState = usePlannerEvents(session, encryption);
+    const communityState = useCommunity(session);
+    const directMessagesState = useDirectMessages(session);
     const onboarding = useOnboarding(session?.user.id);
     const stickyNoteState = useStickyNote(session?.user.id, encryption);
     const visualModeState = useVisualMode(session?.user.id);
@@ -104,6 +112,8 @@ function AppContent() {
     useEffect(() => {
         if (!session) {
             setAccountOpen(false);
+            setMessagesOpen(false);
+            setMessageStartTarget(null);
             setSubscriptionOfferOpen(false);
             setGoalCheckVisible(false);
             setGoalFeedbackVisible(false);
@@ -205,6 +215,8 @@ function AppContent() {
     function handleTabChange(nextTab: Tab) {
         haptics.navigation();
         setHomeAction(null);
+        setMessagesOpen(false);
+        setMessageStartTarget(null);
 
         if (accountOpen) {
             setAccountOpen(false);
@@ -213,6 +225,16 @@ function AppContent() {
         if (nextTab === tab) return;
 
         setTab(nextTab);
+    }
+
+    function handleOpenMessages(author?: CommunityAuthor) {
+        setAccountOpen(false);
+        setMessagesOpen(true);
+        if (author) {
+            setMessageStartTarget({key: Date.now(), author});
+        } else {
+            setMessageStartTarget(null);
+        }
     }
 
     const screenSwipeResponder = useMemo(
@@ -247,6 +269,8 @@ function AppContent() {
     function openHomeAction(action: HomeActionInput) {
         haptics.navigation();
         setAccountOpen(false);
+        setMessagesOpen(false);
+        setMessageStartTarget(null);
         const key = Date.now();
 
         if (action.target === "gratitude" || action.target === "journalPrompt") {
@@ -270,12 +294,14 @@ function AppContent() {
 
     async function handleSignOut() {
         setAccountOpen(false);
+        setMessagesOpen(false);
+        setMessageStartTarget(null);
         setSubscriptionOfferOpen(false);
         await encryption.forgetDeviceKey();
         await signOut();
     }
 
-    async function handleSaveProfile(payload: { full_name: string; birthday: string | null }) {
+    async function handleSaveProfile(payload: { full_name: string; birthday: string | null; avatar_url?: string | null }) {
         const error = await upsertProfile(payload);
         return error?.message ?? null;
     }
@@ -296,6 +322,8 @@ function AppContent() {
             clearVisualModeStorage(session?.user.id),
         ]);
         setAccountOpen(false);
+        setMessagesOpen(false);
+        setMessageStartTarget(null);
         return null;
     }
 
@@ -334,6 +362,8 @@ function AppContent() {
         setTab("today");
         setHomeAction(null);
         setAccountOpen(false);
+        setMessagesOpen(false);
+        setMessageStartTarget(null);
 
         if (Updates.isEnabled) {
             try {
@@ -447,12 +477,17 @@ function AppContent() {
 
                 <AppHeader
                     fullName={profile?.full_name}
+                    avatarUrl={profile?.avatar_url}
                     accountOpen={accountOpen}
                     visualMode={visualModeState.mode}
                     onToggleVisualMode={() => {
                         visualModeState.setMode(visualModeState.mode === "sunset" ? "overcast" : "sunset");
                     }}
-                    onToggleAccount={() => setAccountOpen((current) => !current)}
+                    onToggleAccount={() => {
+                        setMessagesOpen(false);
+                        setMessageStartTarget(null);
+                        setAccountOpen((current) => !current);
+                    }}
                 />
 
                 <UpdateAvailableBanner/>
@@ -555,6 +590,14 @@ function AppContent() {
                             }}
                         />
                     ) : null}
+                    {!accountOpen && tab === "community" ? (
+                        <CommunityScreen
+                            community={communityState}
+                            unreadMessageCount={directMessagesState.unreadCount}
+                            onOpenMessages={() => handleOpenMessages()}
+                            onOpenDirectMessage={(author) => handleOpenMessages(author)}
+                        />
+                    ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen/> : null}
                     <BottomTabBar
                         activeTab={tab}
@@ -562,6 +605,16 @@ function AppContent() {
                         visualMode={visualModeState.mode}
                         onTabPress={handleTabChange}
                     />
+                    {messagesOpen ? (
+                        <DirectMessagesScreen
+                            dm={directMessagesState}
+                            startTarget={messageStartTarget}
+                            onClose={() => {
+                                setMessagesOpen(false);
+                                setMessageStartTarget(null);
+                            }}
+                        />
+                    ) : null}
                 </View>
                 <BirthdayConfetti visible={birthdayActive} triggerKey={birthdayBurstKey}/>
                 <GoalCheckModal

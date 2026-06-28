@@ -47,7 +47,13 @@
     "plugins": [
       "expo-notifications",
       "expo-video",
-      "expo-iap"
+      "expo-iap",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Rhodie accesses your photos so you can choose a profile picture."
+        }
+      ]
     ],
     "extra": {
       "supabaseUrl": "https://ddjnezmzwvhcgpktaqpv.supabase.co",

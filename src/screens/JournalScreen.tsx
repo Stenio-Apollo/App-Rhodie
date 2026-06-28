@@ -344,7 +344,7 @@ export function JournalScreen({journal, homeAction, visualMode, showTutorial, on
                         )}
                     </View>
 
-                    <View style={tw`mt-6 rounded-[28px] border border-[#F5DBC9]/33 bg-black/79 p-4`}>
+                    <View style={tw`mt-6 rounded-[28px] border border-[#F5DBC9]/33 bg-black/39 p-4`}>
                         <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                             Memory shelf
                         </Text>

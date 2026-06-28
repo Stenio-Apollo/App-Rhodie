@@ -36,7 +36,7 @@ interface AccountScreenProps {
     };
     onClose: () => void;
     onSignOut: () => void;
-    onSaveProfile: (payload: { full_name: string; birthday: string | null }) => Promise<string | null>;
+    onSaveProfile: (payload: { full_name: string; birthday: string | null; avatar_url?: string | null }) => Promise<string | null>;
     onDeleteAccount: () => Promise<string | null>;
     onResetOnboarding: () => Promise<void>;
     visualMode: VisualMode;
@@ -348,8 +348,8 @@ export function AccountScreen({
                                 variant="outlineAccent"
                                 disabled={saveBusy}
                                 shine
-                                style={sunsetButtonStyle}
-                                textStyle={darkButtonTextStyle}
+                                style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
                             />
                         </View>
 
@@ -377,8 +377,8 @@ export function AccountScreen({
                                 }}
                                 variant="outlineAccent"
                                 shine
-                                style={sunsetButtonStyle}
-                                textStyle={darkButtonTextStyle}
+                                style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
                             />
                         </View>
                     </View>
@@ -394,8 +394,8 @@ export function AccountScreen({
                                 onPress={confirmResetOnboarding}
                                 variant="outlineAccent"
                                 shine
-                                style={sunsetButtonStyle}
-                                textStyle={darkButtonTextStyle}
+                                style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
                             />
                         </View>
                     </View>
@@ -425,14 +425,14 @@ export function AccountScreen({
                             ) : null}
                         </View>
 
-                        <View style={tw`mt-4 flex-row gap-2`}>
+                        <View style={tw`mt-4 flex-row justify-start gap-2`}>
                             <Button
                                 label="Plans"
                                 onPress={onOpenSubscriptionOffers}
                                 variant="secondary"
                                 shine
-                                style={[tw`flex-1 px-2`, subscriptionAccentButtonStyle]}
-                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                style={[tw`rounded-xl px-4 py-2`, subscriptionAccentButtonStyle]}
+                                textStyle={[tw`text-xs`, darkButtonTextStyle]}
                             />
                             <Button
                                 label="Manage"
@@ -442,8 +442,8 @@ export function AccountScreen({
                                 variant="outlineAccent"
                                 disabled={subscription.manageBusy}
                                 shine
-                                style={[tw`flex-1 px-2`, subscriptionAccentButtonStyle]}
-                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                style={[tw`rounded-xl px-4 py-2`, subscriptionAccentButtonStyle]}
+                                textStyle={[tw`text-xs`, darkButtonTextStyle]}
                             />
                             <Button
                                 label={subscription.restoreBusy ? "Restoring..." : "Restore"}
@@ -451,8 +451,8 @@ export function AccountScreen({
                                 variant="secondary"
                                 disabled={subscription.restoreBusy}
                                 shine
-                                style={[tw`flex-1 px-2`, sunsetButtonStyle]}
-                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                style={[tw`rounded-xl px-4 py-2`, sunsetButtonStyle]}
+                                textStyle={[tw`text-xs`, darkButtonTextStyle]}
                             />
                         </View>
                         <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>

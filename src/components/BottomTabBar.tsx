@@ -8,7 +8,7 @@ import tw from "../lib/tw";
 import type {VisualMode} from "../state/useVisualMode";
 import {fonts} from "../theme/fonts";
 
-export type Tab = "today" | "journal" | "board" | "plan" | "calendar" | "insights";
+export type Tab = "today" | "journal" | "board" | "plan" | "calendar" | "insights" | "community";
 
 type TabIconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -18,6 +18,7 @@ const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; act
     {key: "journal", label: "Journal", icon: "book-outline", activeIcon: "book"},
     {key: "board", label: "Tasks", icon: "checkbox-outline", activeIcon: "checkbox"},
     {key: "calendar", label: "Calendar", icon: "calendar-outline", activeIcon: "calendar"},
+    {key: "community", label: "Community", icon: "people-outline", activeIcon: "people"},
     {key: "insights", label: "Insights", icon: "bar-chart-outline", activeIcon: "bar-chart"},
 ];
 
@@ -205,7 +206,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
         >
             <Animated.View
                 style={[
-                    tw`overflow-hidden rounded-full border bg-black/99 p-1`,
+                    tw`overflow-hidden rounded-full border p-1`,
                     {
                         borderColor: navBorderSoft,
                         transform: [
@@ -224,7 +225,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                     {/* Base tint behind everything */}
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.47)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.27)"}]}
                     />
 
                     {/* Top rim highlight — the "shine" */}

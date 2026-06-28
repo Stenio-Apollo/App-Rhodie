@@ -1,0 +1,614 @@
+import {useEffect, useMemo, useRef, useState} from "react";
+import {
+    Alert,
+    Animated,
+    Image,
+    ImageBackground,
+    Pressable,
+    ScrollView,
+    Share,
+    Text,
+    TextInput,
+    View
+} from "react-native";
+import {Ionicons} from "@expo/vector-icons";
+import tw from "../lib/tw";
+import {Button} from "../components/ui/Button";
+import {fonts} from "../theme/fonts";
+import {haptics} from "../lib/haptics";
+import {toLocalISODate} from "../lib/date-utils";
+import {getDailyJournalPrompt} from "../lib/prompts";
+import type {CommunityAuthor, CommunityComment, CommunityPost, CommunityState} from "../state/useCommunity";
+
+interface CommunityScreenProps {
+    community: CommunityState;
+    unreadMessageCount?: number;
+    onOpenMessages?: () => void;
+    onOpenDirectMessage?: (author: CommunityAuthor) => void;
+}
+
+type ComposerMode = "prompt" | "gratitude" | "message";
+
+const COMPOSER_MODES: Array<{
+    key: ComposerMode;
+    label: string;
+    placeholder: string;
+}> = [
+    {
+        key: "prompt",
+        label: "Prompt",
+        placeholder: "Respond publicly to today's prompt...",
+    },
+    {
+        key: "gratitude",
+        label: "Gratitude",
+        placeholder: "Share something you're grateful for...",
+    },
+    {
+        key: "message",
+        label: "Message",
+        placeholder: "Write a positive note to the community...",
+    },
+];
+
+function formatCommunityPost(mode: ComposerMode, body: string, prompt: string): string {
+    if (mode === "prompt") {
+        return `Today's prompt\n${prompt}\n\n${body}`;
+    }
+
+    if (mode === "gratitude") {
+        return `Gratitude\n\n${body}`;
+    }
+
+    return `Community note\n\n${body}`;
+}
+
+function displayName(author: CommunityAuthor): string {
+    return author.fullName?.trim() || "Rhodie member";
+}
+
+function formatTimestamp(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(undefined, {month: "short", day: "numeric"});
+}
+
+function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number }) {
+    const initial = displayName(author)[0]?.toUpperCase() ?? "R";
+    if (author.avatarUrl) {
+        return (
+            <Image
+                source={{uri: author.avatarUrl}}
+                style={[tw`rounded-full bg-black/70`, {width: size, height: size}]}
+            />
+        );
+    }
+
+    return (
+        <View style={[tw`items-center justify-center rounded-full bg-[#B55941]`, {width: size, height: size}]}>
+            <Text style={[tw`text-sm text-[#FFF6E8]`, {fontFamily: fonts.heading}]}>{initial}</Text>
+        </View>
+    );
+}
+
+function MetricButton({
+                          icon,
+                          label,
+                          active,
+                          onPress,
+                      }: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    active?: boolean;
+    onPress: () => void;
+}) {
+    return (
+        <Pressable
+            onPress={onPress}
+            style={({pressed}) => [
+                tw`flex-row items-center gap-1.5 rounded-full px-2 py-1.5`,
+                pressed && tw`opacity-75`,
+            ]}
+        >
+            <Ionicons name={icon} size={15} color={active ? "#d56262" : "#ffffff"}/>
+            <Text style={[tw`text-[11px]`, {fontFamily: fonts.button, color: active ? "#ffffff" : "#ffffff"}]}>
+                {label}
+            </Text>
+        </Pressable>
+    );
+}
+
+function AuthorMessageButton({
+                                 author,
+                                 currentUserId,
+                                 onOpenDirectMessage,
+                             }: {
+    author: CommunityAuthor;
+    currentUserId: string | null;
+    onOpenDirectMessage?: (author: CommunityAuthor) => void;
+}) {
+    if (!onOpenDirectMessage || author.id === currentUserId) return null;
+
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Message ${displayName(author)}`}
+            onPress={() => onOpenDirectMessage(author)}
+            style={({pressed}) => [
+                tw`h-7 w-7 items-center justify-center rounded-full`,
+                pressed && tw`opacity-70`,
+            ]}
+        >
+            <Ionicons name="mail-outline" size={15} color="#ffffff"/>
+        </Pressable>
+    );
+}
+
+function CommentItem({
+                         comment,
+                         depth = 0,
+                         busy,
+                         currentUserId,
+                         onReply,
+                         onToggleLike,
+                         onOpenDirectMessage,
+                     }: {
+    comment: CommunityComment;
+    depth?: number;
+    busy: boolean;
+    currentUserId: string | null;
+    onReply: (comment: CommunityComment) => void;
+    onToggleLike: (comment: CommunityComment) => void;
+    onOpenDirectMessage?: (author: CommunityAuthor) => void;
+}) {
+    return (
+        <View style={[tw`gap-2`, depth > 0 ? {marginLeft: Math.min(depth, 2) * 18} : null]}>
+            <View style={tw`flex-row gap-2`}>
+                <Avatar author={comment.author} size={26}/>
+                <View style={tw`flex-1`}>
+                    <View style={tw`flex-row items-center gap-2`}>
+                        <Text style={[tw`flex-1 text-[11px] text-white`, {fontFamily: fonts.heading}]}>
+                            {displayName(comment.author)}
+                        </Text>
+                        <AuthorMessageButton
+                            author={comment.author}
+                            currentUserId={currentUserId}
+                            onOpenDirectMessage={onOpenDirectMessage}
+                        />
+                    </View>
+                    <Text style={[tw`mt-0.5 text-xs leading-4 text-[#ffffff]/90`, {fontFamily: fonts.body}]}>
+                        {comment.body}
+                    </Text>
+                    <View style={tw`mt-1.5 flex-row items-center gap-3`}>
+                        <Pressable
+                            disabled={busy}
+                            onPress={() => onToggleLike(comment)}
+                            style={({pressed}) => [
+                                tw`flex-row items-center gap-1`,
+                                busy && tw`opacity-50`,
+                                pressed && tw`opacity-70`,
+                            ]}
+                        >
+                            <Ionicons
+                                name={comment.likedByMe ? "heart" : "heart-outline"}
+                                size={13}
+                                color={comment.likedByMe ? "#FDA4AF" : "#ffffff"}
+                            />
+                            <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>
+                                {comment.likesCount}
+                            </Text>
+                        </Pressable>
+                        <Pressable
+                            onPress={() => onReply(comment)}
+                            style={({pressed}) => [
+                                tw`py-0.5`,
+                                pressed && tw`opacity-70`,
+                            ]}
+                        >
+                            <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>Reply</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </View>
+
+            {comment.replies.map((reply) => (
+                <CommentItem
+                    key={reply.id}
+                    comment={reply}
+                    depth={depth + 1}
+                    busy={busy}
+                    currentUserId={currentUserId}
+                    onReply={onReply}
+                    onToggleLike={onToggleLike}
+                    onOpenDirectMessage={onOpenDirectMessage}
+                />
+            ))}
+        </View>
+    );
+}
+
+function PostCard({
+                      post,
+                      busy,
+                      currentUserId,
+                      onLike,
+                      onComment,
+                      onToggleCommentLike,
+                      onShare,
+                      onOpenDirectMessage,
+                  }: {
+    post: CommunityPost;
+    busy: boolean;
+    currentUserId: string | null;
+    onLike: (post: CommunityPost) => void;
+    onComment: (postId: string, body: string, parentCommentId?: string | null) => void;
+    onToggleCommentLike: (comment: CommunityComment) => void;
+    onShare: (post: CommunityPost) => void;
+    onOpenDirectMessage?: (author: CommunityAuthor) => void;
+}) {
+    const [commentText, setCommentText] = useState("");
+    const [commentsOpen, setCommentsOpen] = useState(false);
+    const [commentsVisible, setCommentsVisible] = useState(false);
+    const [replyTarget, setReplyTarget] = useState<CommunityComment | null>(null);
+    const commentsOpacity = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        if (commentsOpen) {
+            setCommentsVisible(true);
+            Animated.timing(commentsOpacity, {
+                toValue: 1,
+                duration: 180,
+                useNativeDriver: true,
+            }).start();
+            return;
+        }
+
+        Animated.timing(commentsOpacity, {
+            toValue: 0,
+            duration: 150,
+            useNativeDriver: true,
+        }).start(({finished}) => {
+            if (finished) {
+                setCommentsVisible(false);
+            }
+        });
+    }, [commentsOpen, commentsOpacity]);
+
+    return (
+        <View style={tw`rounded-3xl border border-slate-700 bg-black/77 p-4`}>
+            <View style={tw`flex-row gap-3`}>
+                <Avatar author={post.author}/>
+                <View style={tw`flex-1`}>
+                    <View style={tw`flex-row items-center justify-between gap-3`}>
+                        <Text style={[tw`flex-1 text-sm text-white`, {fontFamily: fonts.heading}]}>
+                            {displayName(post.author)}
+                        </Text>
+                        <AuthorMessageButton
+                            author={post.author}
+                            currentUserId={currentUserId}
+                            onOpenDirectMessage={onOpenDirectMessage}
+                        />
+                        <Text style={[tw`text-[11px] text-slate-700`, {fontFamily: fonts.body}]}>
+                            {formatTimestamp(post.createdAt)}
+                        </Text>
+                    </View>
+                    <Text style={[tw`mt-2 text-sm leading-5 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                        {post.body}
+                    </Text>
+                </View>
+            </View>
+
+            <View style={tw`mt-4 flex-row flex-wrap gap-2`}>
+                <MetricButton
+                    icon={post.likedByMe ? "heart" : "heart-outline"}
+                    label={`${post.likesCount}`}
+                    active={post.likedByMe}
+                    onPress={() => onLike(post)}
+                />
+                <MetricButton
+                    icon="chatbubble-outline"
+                    label={`${post.commentsCount}`}
+                    onPress={() => {
+                        setCommentsOpen((current) => !current);
+                    }}
+                />
+                <MetricButton
+                    icon="share-outline"
+                    label={`${post.sharesCount}`}
+                    onPress={() => onShare(post)}
+                />
+            </View>
+
+            {commentsVisible ? (
+                <Animated.View style={{opacity: commentsOpacity}}>
+                    {post.comments.length > 0 ? (
+                        <View style={tw`mt-4 gap-3 border-t border-slate-700 pt-4`}>
+                            {post.comments.map((comment) => (
+                                <CommentItem
+                                    key={comment.id}
+                                    comment={comment}
+                                    busy={busy}
+                                    currentUserId={currentUserId}
+                                    onReply={(target) => {
+                                        setReplyTarget(target);
+                                        setCommentsOpen(true);
+                                    }}
+                                    onToggleLike={onToggleCommentLike}
+                                    onOpenDirectMessage={onOpenDirectMessage}
+                                />
+                            ))}
+                        </View>
+                    ) : null}
+
+                    {replyTarget ? (
+                        <View
+                            style={tw`mt-4 flex-row items-center justify-between rounded-2xl border border-slate-700 px-3 py-2`}
+                        >
+                            <Text style={[tw`flex-1 text-xs text-white`, {fontFamily: fonts.body}]}>
+                                Replying to {displayName(replyTarget.author)}
+                            </Text>
+                            <Pressable
+                                onPress={() => setReplyTarget(null)}
+                                style={({pressed}) => [
+                                    tw`h-6 w-6 items-center justify-center rounded-full`,
+                                    pressed && tw`opacity-70`,
+                                ]}
+                            >
+                                <Ionicons name="close" size={14} color="#ffffff"/>
+                            </Pressable>
+                        </View>
+                    ) : null}
+
+                    <View style={tw`mt-4 flex-row items-center gap-2`}>
+                        <TextInput
+                            value={commentText}
+                            onChangeText={setCommentText}
+                            placeholder={replyTarget ? "Reply..." : "Comment..."}
+                            placeholderTextColor="rgba(228,224,212,0.45)"
+                            keyboardAppearance="dark"
+                            multiline
+                            style={[tw`max-h-24 flex-1 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                        />
+                        <Pressable
+                            disabled={busy || commentText.trim().length === 0}
+                            onPress={() => {
+                                const text = commentText;
+                                const parentCommentId = replyTarget?.id ?? null;
+                                setCommentText("");
+                                setReplyTarget(null);
+                                onComment(post.id, text, parentCommentId);
+                            }}
+                            style={({pressed}) => [
+                                tw`h-10 w-10 items-center justify-center rounded-full`,
+                                (busy || commentText.trim().length === 0) && tw`opacity-40`,
+                                pressed && tw`opacity-75`,
+                            ]}
+                        >
+                            <Ionicons name="send" size={17} color="#E4E0D4"/>
+                        </Pressable>
+                    </View>
+                </Animated.View>
+            ) : null}
+        </View>
+    );
+}
+
+export function CommunityScreen({
+                                    community,
+                                    unreadMessageCount = 0,
+                                    onOpenMessages,
+                                    onOpenDirectMessage,
+                                }: CommunityScreenProps) {
+    const [postText, setPostText] = useState("");
+    const [composerMode, setComposerMode] = useState<ComposerMode>("prompt");
+    const today = useMemo(() => toLocalISODate(), []);
+    const todaysPrompt = useMemo(() => getDailyJournalPrompt(today), [today]);
+    const selectedComposerMode = COMPOSER_MODES.find((mode) => mode.key === composerMode) ?? COMPOSER_MODES[0];
+
+    async function handleCreatePost() {
+        const body = postText.trim();
+        if (!body) return;
+        try {
+            setPostText("");
+            haptics.selection();
+            await community.createPost(formatCommunityPost(composerMode, body, todaysPrompt));
+        } catch (error) {
+            Alert.alert("Post failed", error instanceof Error ? error.message : "Your post could not be shared.");
+            setPostText(body);
+        }
+    }
+
+    async function handleComment(postId: string, body: string, parentCommentId?: string | null) {
+        try {
+            haptics.selection();
+            await community.addComment(postId, body, parentCommentId);
+        } catch (error) {
+            Alert.alert("Comment failed", error instanceof Error ? error.message : "Your comment could not be shared.");
+        }
+    }
+
+    async function handleToggleCommentLike(comment: CommunityComment) {
+        try {
+            haptics.selection();
+            await community.toggleCommentLike(comment);
+        } catch (error) {
+            Alert.alert("Like failed", error instanceof Error ? error.message : "Your like could not be saved.");
+        }
+    }
+
+    async function handleLike(post: CommunityPost) {
+        try {
+            haptics.selection();
+            await community.toggleLike(post);
+        } catch (error) {
+            Alert.alert("Like failed", error instanceof Error ? error.message : "Your like could not be saved.");
+        }
+    }
+
+    async function handleShare(post: CommunityPost) {
+        try {
+            haptics.selection();
+            await Share.share({message: `${displayName(post.author)} on Rhodie:\n\n${post.body}`});
+            await community.recordShare(post.id);
+        } catch (error) {
+            Alert.alert("Share failed", error instanceof Error ? error.message : "This post could not be shared.");
+        }
+    }
+
+    const backgroundImage = require("../../public/images/newspaper 1.jpg");
+
+    return (
+        <ImageBackground source={backgroundImage} style={tw`flex-1 bg-black`} imageStyle={tw`opacity-0`}>
+            {onOpenMessages ? (
+                <View style={[tw`absolute top-4 z-20 items-end`, {right: 19}]}>
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Open messages"
+                        onPress={() => {
+                            haptics.selection();
+                            onOpenMessages();
+                        }}
+                        style={({pressed}) => [
+                            tw`h-8 w-8 items-center justify-center rounded-full`,
+                            pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                        ]}
+                    >
+                        <Ionicons name="mail-outline" size={22} color="#FFF6E8"/>
+                        {unreadMessageCount > 0 ? (
+                            <View
+                                style={tw`absolute -right-1 -top-1 min-w-4 items-center rounded-full bg-[#B55941] px-1`}>
+                                <Text style={[tw`text-[9px] text-white`, {fontFamily: fonts.button}]}>
+                                    {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
+                                </Text>
+                            </View>
+                        ) : null}
+                    </Pressable>
+                </View>
+            ) : null}
+            <ScrollView
+                style={tw`flex-1`}
+                contentContainerStyle={tw`px-4 pb-32 pt-16 gap-4`}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={tw`rounded-3xl border border-slate-700 bg-black/70 p-4`}>
+                    <Text style={[tw`text-2xl text-white`, {fontFamily: fonts.heading}]}>Community</Text>
+                    <Text style={[tw`mt-1 text-sm leading-5 text-[#E4E0D4]/70`, {fontFamily: fonts.body}]}>
+                        Post a prompt response, gratitude, or a positive note.
+                    </Text>
+                    <View style={tw`mt-4 flex-row rounded-2xl border border-slate-700 bg-black/45 p-1`}>
+                        {COMPOSER_MODES.map((mode) => {
+                            const active = mode.key === composerMode;
+                            return (
+                                <Pressable
+                                    key={mode.key}
+                                    onPress={() => {
+                                        haptics.selection();
+                                        setComposerMode(mode.key);
+                                    }}
+                                    style={({pressed}) => [
+                                        tw`flex-1 items-center rounded-xl px-2 py-2`,
+                                        active && {
+                                            backgroundColor: "#DFC4AA",
+                                            borderWidth: 1,
+                                            borderColor: "rgba(43,43,43,0.22)",
+                                            shadowColor: "#000000",
+                                            shadowOffset: {width: 0, height: 5},
+                                            shadowOpacity: 0.24,
+                                            shadowRadius: 8,
+                                            elevation: 6,
+                                        },
+                                        pressed && tw`opacity-80`,
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            tw`text-[11px]`,
+                                            {
+                                                fontFamily: fonts.button,
+                                                color: active ? "#111111" : "rgba(228,224,212,0.68)"
+                                            },
+                                        ]}
+                                    >
+                                        {mode.label}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
+                    </View>
+                    {composerMode === "prompt" ? (
+                        <View style={tw`mt-3 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2.5`}>
+                            <Text style={[tw`text-[11px] text-white`, {fontFamily: fonts.heading}]}>
+                                Today's prompt
+                            </Text>
+                            <Text style={[tw`mt-1 text-xs leading-4 text-[#E4E0D4]/75`, {fontFamily: fonts.body}]}>
+                                {todaysPrompt}
+                            </Text>
+                        </View>
+                    ) : null}
+                    <TextInput
+                        value={postText}
+                        onChangeText={setPostText}
+                        placeholder={selectedComposerMode.placeholder}
+                        placeholderTextColor="rgba(228,224,212,0.45)"
+                        keyboardAppearance="dark"
+                        multiline
+                        style={[tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700 bg-black/45 px-4 py-3 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                    />
+                    <View style={tw`mt-3 flex-row justify-end`}>
+                        <Button
+                            label={community.busy ? "Sharing..." : "Share"}
+                            onPress={() => {
+                                void handleCreatePost();
+                            }}
+                            disabled={community.busy || postText.trim().length === 0}
+                            shine
+                            style={tw`rounded-full bg-black px-4 py-2`}
+                            textStyle={{color: "#FFF6E8"}}
+                        />
+                    </View>
+                </View>
+
+                {community.error ? (
+                    <Text
+                        style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-sm text-rose-200`, {fontFamily: fonts.body}]}>
+                        {community.error}
+                    </Text>
+                ) : null}
+
+                {!community.isLoaded ? (
+                    <Text
+                        style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                        Loading community...
+                    </Text>
+                ) : community.posts.length === 0 ? (
+                    <Text
+                        style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                        No posts yet.
+                    </Text>
+                ) : (
+                    community.posts.map((post) => (
+                        <PostCard
+                            key={post.id}
+                            post={post}
+                            busy={community.busy}
+                            currentUserId={community.userId}
+                            onLike={(item) => {
+                                void handleLike(item);
+                            }}
+                            onComment={(postId, body, parentCommentId) => {
+                                void handleComment(postId, body, parentCommentId);
+                            }}
+                            onToggleCommentLike={(comment) => {
+                                void handleToggleCommentLike(comment);
+                            }}
+                            onShare={(item) => {
+                                void handleShare(item);
+                            }}
+                            onOpenDirectMessage={onOpenDirectMessage}
+                        />
+                    ))
+                )}
+            </ScrollView>
+        </ImageBackground>
+    );
+}

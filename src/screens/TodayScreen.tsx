@@ -14,7 +14,6 @@ import {TutorialCard} from "../components/TutorialCard";
 import type {StickyNote} from "../state/useStickyNote";
 import {StickyNoteModal} from "../components/StickyNoteModal";
 import type {VisualMode} from "../state/useVisualMode";
-import {Button} from "../components/ui/Button";
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -87,11 +86,9 @@ export function TodayScreen({
         ? require("../../public/images/rhhorse1.jpg")
         : require("../../public/images/rh19.jpg");
     const badgeIcon = require("../../public/images/badge.png");
+    const stickyNoteIcon = require("../../public/images/notes (1).png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
-    const stickyNoteButtonStyle = {
-        backgroundColor: "#E1B996",
-        borderWidth: 1,
-        borderColor: "rgba(43,43,43,0.22)",
+    const stickyNoteIconStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},
         shadowOpacity: 0.24,
@@ -114,13 +111,22 @@ export function TodayScreen({
                     </Text>
                 </View>
                 <View style={tw`absolute right-4 top-4 z-20 items-end gap-2`}>
-                    <Button
-                        label="Sticky note"
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Open sticky note"
                         onPress={() => setStickyNoteOpen(true)}
-                        shine
-                        style={[tw`rounded-full px-3 py-1.5`, stickyNoteButtonStyle]}
-                        textStyle={[tw`text-[11px]`, {color: "#111111"}]}
-                    />
+                        style={({pressed}) => [
+                            tw`h-10 w-10 items-center justify-center`,
+                            stickyNoteIconStyle,
+                            pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                        ]}
+                    >
+                        <Image
+                            source={stickyNoteIcon}
+                            resizeMode="contain"
+                            style={{width: 26, height: 26, tintColor: "#DFC4AA"}}
+                        />
+                    </Pressable>
                 </View>
                 <ScrollView
                     style={tw`flex-1`}
@@ -138,7 +144,7 @@ export function TodayScreen({
                     <Pressable
                         onPress={() => onOpenJournalPrompt(latestPrompt?.id ?? null)}
                         style={({pressed}) => [
-                            tw`rounded-3xl border border-[#F5DBC9]/33 bg-black/59 p-4`,
+                            tw`rounded-3xl border border-[#F5DBC9]/33 bg-black/43 p-4`,
                             pressed && tw`opacity-85`,
                         ]}
                     >
@@ -165,7 +171,7 @@ export function TodayScreen({
                     <Pressable
                         onPress={onOpenWeeklyGoal}
                         style={({pressed}) => [
-                            tw`rounded-3xl border border-[#2c2c2c] bg-black/59 p-4`,
+                            tw`rounded-3xl border border-[#2c2c2c] bg-black/43 p-4`,
                             pressed && tw`opacity-85`,
                         ]}
                     >
@@ -224,7 +230,7 @@ export function TodayScreen({
                     <Pressable
                         onPress={() => onOpenGratitude(latestGratitude?.id ?? null)}
                         style={({pressed}) => [
-                            tw`rounded-3xl border border-[#2c2c2c] bg-black/59 p-4`,
+                            tw`rounded-3xl border border-[#2c2c2c] bg-black/43 p-4`,
                             pressed && tw`opacity-85`,
                         ]}
                     >
@@ -245,7 +251,7 @@ export function TodayScreen({
                     <Pressable
                         onPress={onOpenTasks}
                         style={({pressed}) => [
-                            tw`mb-1 rounded-3xl border border-[#2c2c2c] bg-black/59 p-4`,
+                            tw`mb-1 rounded-3xl border border-[#2c2c2c] bg-black/43 p-4`,
                             pressed && tw`opacity-85`,
                         ]}
                     >

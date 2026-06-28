@@ -151,14 +151,93 @@ create table if not exists public.profiles (
   id text primary key,
   full_name text,
   birthday date,
+  avatar_url text,
   updated_at timestamptz default now()
 );
 alter table public.profiles enable row level security;
 drop policy if exists "own profile" on public.profiles;
-create policy "own profile" on public.profiles for all using (auth.uid()::text = id);
+drop policy if exists "select public profiles" on public.profiles;
+create policy "select public profiles" on public.profiles for select to authenticated using (true);
 drop policy if exists "insert profile" on public.profiles;
-create policy "insert profile" on public.profiles for insert with check (auth.uid()::text = id);
+drop policy if exists "insert own profile" on public.profiles;
+create policy "insert own profile" on public.profiles for insert to authenticated with check (auth.uid()::text = id);
+drop policy if exists "update own profile" on public.profiles;
+create policy "update own profile" on public.profiles for update to authenticated using (auth.uid()::text = id) with check (auth.uid()::text = id);
+drop policy if exists "delete own profile" on public.profiles;
+create policy "delete own profile" on public.profiles for delete to authenticated using (auth.uid()::text = id);
 revoke all on public.profiles from anon;
+
+-- Community
+create table if not exists public.community_posts (
+  id text primary key,
+  user_id text not null references public.profiles(id) on delete cascade,
+  body text not null check (char_length(trim(body)) between 1 and 1000),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.community_comments (
+  id text primary key,
+  post_id text not null references public.community_posts(id) on delete cascade,
+  parent_comment_id text references public.community_comments(id) on delete cascade,
+  user_id text not null references public.profiles(id) on delete cascade,
+  body text not null check (char_length(trim(body)) between 1 and 500),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.community_likes (
+  post_id text not null references public.community_posts(id) on delete cascade,
+  user_id text not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+
+create table if not exists public.community_shares (
+  post_id text not null references public.community_posts(id) on delete cascade,
+  user_id text not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+
+create table if not exists public.community_comment_likes (
+  comment_id text not null references public.community_comments(id) on delete cascade,
+  user_id text not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (comment_id, user_id)
+);
+
+create table if not exists public.dm_conversations (
+  id text primary key,
+  created_by text not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.dm_conversation_participants (
+  conversation_id text not null references public.dm_conversations(id) on delete cascade,
+  user_id text not null references public.profiles(id) on delete cascade,
+  last_read_at timestamptz,
+  created_at timestamptz not null default now(),
+  primary key (conversation_id, user_id)
+);
+
+create table if not exists public.dm_messages (
+  id text primary key,
+  conversation_id text not null references public.dm_conversations(id) on delete cascade,
+  sender_id text not null references public.profiles(id) on delete cascade,
+  body text not null check (char_length(trim(body)) between 1 and 1000),
+  body_encrypted text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.community_posts enable row level security;
+alter table public.community_comments enable row level security;
+alter table public.community_likes enable row level security;
+alter table public.community_shares enable row level security;
+alter table public.community_comment_likes enable row level security;
+alter table public.dm_conversations enable row level security;
+alter table public.dm_conversation_participants enable row level security;
+alter table public.dm_messages enable row level security;
 
 -- Sticky notes
 create table if not exists public.sticky_notes (
