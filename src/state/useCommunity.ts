@@ -355,6 +355,42 @@ export function useCommunity(session: Session | null) {
         await refresh();
     }, [refresh, userId]);
 
+    const editPost = useCallback(async (postId: string, body: string) => {
+        if (!userId) return;
+        const trimmed = body.trim();
+        if (!trimmed) return;
+        setBusy(true);
+        setError(null);
+        const {error: updateError} = await supabase
+            .from("community_posts")
+            .update({body: trimmed})
+            .eq("id", postId)
+            .eq("user_id", userId);
+        setBusy(false);
+        if (updateError) {
+            setError(updateError.message);
+            throw updateError;
+        }
+        await refresh();
+    }, [refresh, userId]);
+
+    const deletePost = useCallback(async (postId: string) => {
+        if (!userId) return;
+        setBusy(true);
+        setError(null);
+        const {error: deleteError} = await supabase
+            .from("community_posts")
+            .delete()
+            .eq("id", postId)
+            .eq("user_id", userId);
+        setBusy(false);
+        if (deleteError) {
+            setError(deleteError.message);
+            throw deleteError;
+        }
+        await refresh();
+    }, [refresh, userId]);
+
     const editComment = useCallback(async (commentId: string, body: string) => {
         if (!userId) return;
         const trimmed = body.trim();
@@ -465,12 +501,14 @@ export function useCommunity(session: Session | null) {
         refresh,
         createPost,
         addComment,
+        editPost,
+        deletePost,
         editComment,
         deleteComment,
         toggleLike,
         toggleCommentLike,
         recordShare,
-    }), [addComment, busy, createPost, deleteComment, editComment, error, isLoaded, posts, recordShare, refresh, toggleCommentLike, toggleLike, userId]);
+    }), [addComment, busy, createPost, deleteComment, deletePost, editComment, editPost, error, isLoaded, posts, recordShare, refresh, toggleCommentLike, toggleLike, userId]);
 }
 
 export type CommunityState = ReturnType<typeof useCommunity>;

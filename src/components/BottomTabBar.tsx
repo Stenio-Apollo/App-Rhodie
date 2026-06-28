@@ -52,7 +52,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
     const activeIndex = accountOpen ? -1 : TAB_ITEMS.findIndex((item) => item.key === activeTab);
     const activeNavColor = visualMode === "sunset" ? SUNSET_NAV_COLOR : ACTIVE_NAV_COLOR;
     const navBorderSoft = hexToRgba(activeNavColor, 0.23);
-    const navBorderStrong = hexToRgba(activeNavColor, 0.69);
+    const navBorderStrong = hexToRgba(activeNavColor, 0.39);
     const pillBorderColor = hexToRgba(activeNavColor, 0.43);
     const rippleBorderColor = hexToRgba(activeNavColor, 0.33);
 
@@ -206,7 +206,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
         >
             <Animated.View
                 style={[
-                    tw`overflow-hidden rounded-full border p-1`,
+                    tw`overflow-hidden rounded-full  p-1`,
                     {
                         borderColor: navBorderSoft,
                         transform: [
@@ -225,7 +225,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                     {/* Base tint behind everything */}
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.27)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.49)"}]}
                     />
 
                     {/* Top rim highlight — the "shine" */}
