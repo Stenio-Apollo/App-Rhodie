@@ -1,5 +1,5 @@
-import {Fragment, useEffect, useMemo, useState} from "react";
-import {Alert, Animated, Image, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {Fragment, useEffect, useMemo, useRef, useState} from "react";
+import {Alert, Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
@@ -46,6 +46,30 @@ function formatMessageTime(value: string): string {
     const date = messageDate(value);
     if (!date) return "";
     return date.toLocaleTimeString(undefined, {hour: "numeric", minute: "2-digit"});
+}
+
+function hasReadMessage(message: DirectMessage, conversation: DirectMessageConversation): boolean {
+    const readDate = conversation.participantLastReadAt ? messageDate(conversation.participantLastReadAt) : null;
+    const messageCreatedAt = messageDate(message.createdAt);
+    if (!readDate || !messageCreatedAt) return false;
+    return readDate.getTime() >= messageCreatedAt.getTime();
+}
+
+function messageReceipt(
+    message: DirectMessage,
+    conversation: DirectMessageConversation,
+    currentUserId: string | null,
+): "Read" | "Delivered" | null {
+    if (!currentUserId || message.senderId !== currentUserId) return null;
+
+    const ownMessages = conversation.messages.filter((item) => item.senderId === currentUserId);
+    const latestOwnMessage = ownMessages[ownMessages.length - 1] ?? null;
+    const readOwnMessages = ownMessages.filter((item) => hasReadMessage(item, conversation));
+    const latestReadOwnMessage = readOwnMessages[readOwnMessages.length - 1] ?? null;
+
+    if (latestReadOwnMessage?.id === message.id) return "Read";
+    if (latestOwnMessage?.id === message.id && latestReadOwnMessage?.id !== latestOwnMessage.id) return "Delivered";
+    return null;
 }
 
 function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number }) {
@@ -115,6 +139,25 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
     const [editingMessageText, setEditingMessageText] = useState("");
     const [actionMessage, setActionMessage] = useState<DirectMessage | null>(null);
     const {keyboardInset} = useKeyboardInset();
+    const routeOpacity = useRef(new Animated.Value(0)).current;
+    const routeTranslateY = useRef(new Animated.Value(-14)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(routeOpacity, {
+                toValue: 1,
+                duration: 260,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+            Animated.timing(routeTranslateY, {
+                toValue: 0,
+                duration: 260,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [routeOpacity, routeTranslateY]);
 
     useEffect(() => {
         if (!startTarget) return;
@@ -142,7 +185,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
     useEffect(() => {
         if (!selectedConversationId) return;
         void dm.markRead(selectedConversationId);
-    }, [dm.markRead, selectedConversationId]);
+    }, [dm.markRead, selectedConversation?.lastMessage?.id, selectedConversationId]);
 
     async function handleSend() {
         if (!selectedConversation) return;
@@ -192,6 +235,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
 
     return (
         <Animated.View style={[tw`absolute inset-0 z-20 bg-black`, {paddingBottom: keyboardInset}]}>
+            <Animated.View style={[tw`flex-1`, {opacity: routeOpacity, transform: [{translateY: routeTranslateY}]}]}>
             <View style={tw`flex-row items-center justify-between border-b border-slate-700 px-4 py-3`}>
                 <View style={tw`flex-row items-center gap-2`}>
                     {selectedConversation ? (
@@ -249,6 +293,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
 	                                const previousMessage = selectedConversation.messages[index - 1];
 	                                const showDate = !previousMessage || formatDateKey(previousMessage.createdAt) !== dateKey;
 	                                const actionSelected = actionMessage?.id === message.id;
+                                    const receipt = messageReceipt(message, selectedConversation, dm.userId);
 
                                 return (
                                     <Fragment key={message.id}>
@@ -334,6 +379,11 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                                             <Text style={[tw`mt-1 px-2 text-[10px] text-white/45`, {fontFamily: fonts.body}]}>
                                                 {formatMessageTime(message.createdAt)}
                                             </Text>
+                                            {receipt ? (
+                                                <Text style={[tw`px-2 text-[10px] text-white/55`, {fontFamily: fonts.body}]}>
+                                                    {receipt}
+                                                </Text>
+                                            ) : null}
                                         </View>
                                     </Fragment>
                                 );
@@ -408,6 +458,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                     void handleDeleteMessage(actionMessage);
                 }}
             />
+            </Animated.View>
         </Animated.View>
     );
 }

@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from "react";
+import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
 import {
     Alert,
     Animated,
@@ -27,6 +27,7 @@ interface CommunityScreenProps {
     unreadMessageCount?: number;
     onOpenMessages?: () => void;
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
+    onOpenInsights?: () => void;
 }
 
 type ComposerMode = "prompt" | "gratitude" | "message";
@@ -49,7 +50,7 @@ const COMPOSER_MODES: Array<{
     {
         key: "message",
         label: "Message",
-        placeholder: "Write a positive note to the community...",
+        placeholder: "Write a positive note to your peers...",
     },
 ];
 
@@ -62,7 +63,7 @@ function formatCommunityPost(mode: ComposerMode, body: string, prompt: string): 
         return `Gratitude\n\n${body}`;
     }
 
-    return `Community note\n\n${body}`;
+    return `Peer note\n\n${body}`;
 }
 
 function displayName(author: CommunityAuthor): string {
@@ -190,6 +191,53 @@ function OwnerMenuButton({onPress}: { onPress: () => void }) {
             ]}
         >
             <Ionicons name="ellipsis-horizontal" size={18} color="#ffffff"/>
+        </Pressable>
+    );
+}
+
+function CommunityRouteEntry({
+                                 label,
+                                 icon,
+                                 onPress,
+                                 badgeCount = 0,
+                             }: {
+    label: string;
+    icon: ComponentProps<typeof Ionicons>["name"];
+    onPress: () => void;
+    badgeCount?: number;
+}) {
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            onPress={() => {
+                haptics.navigation();
+                onPress();
+            }}
+            style={({pressed}) => [
+                tw`items-center justify-center px-1 py-0.5`,
+                pressed && {transform: [{scale: 0.94}], opacity: 0.85},
+            ]}
+        >
+            <Text
+                numberOfLines={1}
+                style={[
+                    tw`mb-1 text-[10px] font-bold text-[#E4E0D4]`,
+                    {fontFamily: fonts.heading},
+                ]}
+            >
+                {label}
+            </Text>
+            <View>
+                <Ionicons name={icon} size={22} color="#E4E0D4"/>
+                {badgeCount > 0 ? (
+                    <View style={tw`absolute -right-2 -top-2 min-w-4 items-center rounded-full bg-[#B55941] px-1`}>
+                        <Text style={[tw`text-[9px] text-white`, {fontFamily: fonts.button}]}>
+                            {badgeCount > 9 ? "9+" : badgeCount}
+                        </Text>
+                    </View>
+                ) : null}
+            </View>
         </Pressable>
     );
 }
@@ -634,6 +682,7 @@ export function CommunityScreen({
                                     unreadMessageCount = 0,
                                     onOpenMessages,
                                     onOpenDirectMessage,
+                                    onOpenInsights,
                                 }: CommunityScreenProps) {
     const [postText, setPostText] = useState("");
     const [composerMode, setComposerMode] = useState<ComposerMode>("prompt");
@@ -731,45 +780,36 @@ export function CommunityScreen({
     const {keyboardInset} = useKeyboardInset();
 
     return (
-        <ImageBackground source={backgroundImage} style={tw`flex-1 bg-black`} imageStyle={tw`opacity-9`}>
+        <ImageBackground source={backgroundImage} style={tw`flex-1 bg-black`} imageStyle={tw`opacity-11`}>
             <Animated.View style={[tw`flex-1`, {paddingBottom: keyboardInset}]}>
-                {onOpenMessages ? (
-                    <View style={[tw`absolute top-4 z-20 items-end`, {right: 19}]}>
-                        <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel="Open messages"
-                            onPress={() => {
-                                haptics.selection();
-                                onOpenMessages();
-                            }}
-                            style={({pressed}) => [
-                                tw`h-8 w-8 items-center justify-center rounded-full`,
-                                pressed && {opacity: 0.78, transform: [{translateY: 1}]},
-                            ]}
-                        >
-                            <Ionicons name="mail-outline" size={22} color="#FFF6E8"/>
-                            {unreadMessageCount > 0 ? (
-                                <View
-                                    style={tw`absolute -right-1 -top-1 min-w-4 items-center rounded-full bg-[#B55941] px-1`}>
-                                    <Text style={[tw`text-[9px] text-white`, {fontFamily: fonts.button}]}>
-                                        {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
-                                    </Text>
-                                </View>
-                            ) : null}
-                        </Pressable>
-                    </View>
-                ) : null}
+                <View style={tw`absolute right-3 top-16 z-20 items-center gap-5`}>
+                    {onOpenMessages ? (
+                        <CommunityRouteEntry
+                            label="DMs"
+                            icon="mail-outline"
+                            onPress={onOpenMessages}
+                            badgeCount={unreadMessageCount}
+                        />
+                    ) : null}
+                    {onOpenInsights ? (
+                        <CommunityRouteEntry
+                            label="Insights"
+                            icon="bar-chart-outline"
+                            onPress={onOpenInsights}
+                        />
+                    ) : null}
+                </View>
                 <ScrollView
                     style={tw`flex-1`}
-                    contentContainerStyle={tw`px-4 pb-32 pt-16 gap-4`}
+                    contentContainerStyle={tw`pl-4 pr-20 pb-32 pt-16 gap-4`}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="interactive"
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={tw`rounded-3xl border border-slate-700 bg-black/70 p-4`}>
-                        <Text style={[tw`text-2xl text-white`, {fontFamily: fonts.heading}]}>Community</Text>
+                        <Text style={[tw`text-2xl text-white`, {fontFamily: fonts.heading}]}>Connect</Text>
                         <Text style={[tw`mt-1 text-sm leading-5 text-[#E4E0D4]/70`, {fontFamily: fonts.body}]}>
-                            Post a prompt response, gratitude, or a positive note.
+                            Post a prompt response, gratitude, or a positive note with your peers.
                         </Text>
                         <View style={tw`mt-4 flex-row rounded-2xl border border-slate-700 bg-black/45 p-1`}>
                             {COMPOSER_MODES.map((mode) => {
@@ -854,7 +894,7 @@ export function CommunityScreen({
                     {!community.isLoaded ? (
                         <Text
                             style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
-                            Loading community...
+                            Loading peers...
                         </Text>
                     ) : community.posts.length === 0 ? (
                         <Text

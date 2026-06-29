@@ -4,6 +4,15 @@ import {supabase} from "../lib/supabase";
 import {createId} from "../lib/id";
 import type {CommunityAuthor} from "./useCommunity";
 import {ensureOwnProfile} from "../lib/profiles";
+import type {EncryptionState} from "./useEncryption";
+import {
+    createDmKeyPair,
+    decryptDmBody,
+    encryptDmBody,
+    type DmKeyPair,
+    unlockDmKeyPair,
+} from "../lib/dmEncryption";
+import {encryptedPlaceholder} from "../lib/e2ee";
 
 export type DirectMessage = {
     id: string;
@@ -17,6 +26,7 @@ export type DirectMessage = {
 export type DirectMessageConversation = {
     id: string;
     participant: CommunityAuthor;
+    participantLastReadAt: string | null;
     messages: DirectMessage[];
     lastMessage: DirectMessage | null;
     unreadCount: number;
@@ -45,11 +55,29 @@ type MessageRow = {
     created_at: string;
 };
 
+type MessageRecipientRow = {
+    message_id: string;
+    user_id: string;
+    body_encrypted: string;
+};
+
+type DmPublicKeyRow = {
+    user_id: string;
+    public_key: string;
+};
+
+type DmPrivateKeyRow = {
+    user_id: string;
+    private_key_encrypted: string;
+};
+
 type ProfileRow = {
     id: string;
     full_name: string | null;
     avatar_url: string | null;
 };
+
+const ENCRYPTED_DM_PLACEHOLDER = encryptedPlaceholder("encrypted message");
 
 const UNKNOWN_AUTHOR: CommunityAuthor = {
     id: "unknown",
@@ -72,13 +100,109 @@ function byMostRecent(a: DirectMessageConversation, b: DirectMessageConversation
     return bTime - aTime;
 }
 
-export function useDirectMessages(session: Session | null) {
+export function useDirectMessages(session: Session | null, encryption?: EncryptionState) {
     const userId = session?.user.id ?? null;
+    const encryptionKey = encryption?.key ?? null;
     const [conversations, setConversations] = useState<DirectMessageConversation[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [dmKeyPair, setDmKeyPair] = useState<DmKeyPair | null>(null);
     const realtimeRefreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        setDmKeyPair(null);
+    }, [encryptionKey, userId]);
+
+    const ensureDmKeyPair = useCallback(async () => {
+        if (!userId || !encryptionKey) {
+            throw new Error("Unlock your private data before using messages.");
+        }
+        if (dmKeyPair) return dmKeyPair;
+
+        const [publicKeyResult, privateKeyResult] = await Promise.all([
+            supabase
+                .from("dm_encryption_public_keys")
+                .select("user_id,public_key")
+                .eq("user_id", userId)
+                .maybeSingle(),
+            supabase
+                .from("dm_encryption_private_keys")
+                .select("user_id,private_key_encrypted")
+                .eq("user_id", userId)
+                .maybeSingle(),
+        ]);
+
+        const firstError = publicKeyResult.error ?? privateKeyResult.error;
+        if (firstError) throw firstError;
+
+        const publicKeyRow = publicKeyResult.data as DmPublicKeyRow | null;
+        const privateKeyRow = privateKeyResult.data as DmPrivateKeyRow | null;
+        if (publicKeyRow?.public_key && privateKeyRow?.private_key_encrypted) {
+            const unlocked = unlockDmKeyPair(encryptionKey, publicKeyRow.public_key, privateKeyRow.private_key_encrypted);
+            setDmKeyPair(unlocked);
+            return unlocked;
+        }
+
+        const next = createDmKeyPair(encryptionKey);
+        const now = new Date().toISOString();
+        const [publicUpsert, privateUpsert] = await Promise.all([
+            supabase.from("dm_encryption_public_keys").upsert({
+                user_id: userId,
+                public_key: next.publicKey,
+                updated_at: now,
+            }, {onConflict: "user_id"}),
+            supabase.from("dm_encryption_private_keys").upsert({
+                user_id: userId,
+                private_key_encrypted: next.privateKeyEncrypted,
+                updated_at: now,
+            }, {onConflict: "user_id"}),
+        ]);
+
+        const upsertError = publicUpsert.error ?? privateUpsert.error;
+        if (upsertError) throw upsertError;
+
+        setDmKeyPair(next.keyPair);
+        return next.keyPair;
+    }, [dmKeyPair, encryptionKey, userId]);
+
+    const loadConversationParticipants = useCallback(async (conversationId: string) => {
+        const {data, error: participantsError} = await supabase
+            .from("dm_conversation_participants")
+            .select("conversation_id,user_id,last_read_at")
+            .eq("conversation_id", conversationId);
+        if (participantsError) throw participantsError;
+        return (data ?? []) as ParticipantRow[];
+    }, []);
+
+    const loadPublicKeys = useCallback(async (participantIds: string[]) => {
+        if (participantIds.length === 0) return new Map<string, string>();
+        const {data, error: publicKeyError} = await supabase
+            .from("dm_encryption_public_keys")
+            .select("user_id,public_key")
+            .in("user_id", participantIds);
+        if (publicKeyError) throw publicKeyError;
+        return new Map(((data ?? []) as DmPublicKeyRow[]).map((row) => [row.user_id, row.public_key]));
+    }, []);
+
+    const buildRecipientCiphertexts = useCallback((
+        senderKeyPair: DmKeyPair,
+        participantIds: string[],
+        publicKeys: Map<string, string>,
+        body: string,
+        messageId: string,
+    ) => {
+        const missingRecipient = participantIds.find((participantId) => !publicKeys.has(participantId));
+        if (missingRecipient) {
+            throw new Error("This person needs to open the updated app once before private messages can be sent.");
+        }
+
+        return participantIds.map((participantId) => ({
+            message_id: messageId,
+            user_id: participantId,
+            body_encrypted: encryptDmBody(senderKeyPair, publicKeys.get(participantId)!, body),
+        }));
+    }, []);
 
     const refresh = useCallback(async () => {
         if (!userId) {
@@ -88,6 +212,16 @@ export function useDirectMessages(session: Session | null) {
         }
 
         setError(null);
+        let ownDmKeyPair: DmKeyPair | null = null;
+        try {
+            ownDmKeyPair = await ensureDmKeyPair();
+        } catch (keyError) {
+            setError(keyError instanceof Error ? keyError.message : "Could not unlock private messages.");
+            setConversations([]);
+            setIsLoaded(true);
+            return;
+        }
+
         const {data: ownParticipantRows, error: participantError} = await supabase
             .from("dm_conversation_participants")
             .select("conversation_id,user_id,last_read_at")
@@ -134,6 +268,7 @@ export function useDirectMessages(session: Session | null) {
         const participants = (participantsResult.data ?? []) as ParticipantRow[];
         const messages = (messagesResult.data ?? []) as MessageRow[];
         const profileIds = new Set<string>();
+        const messageIds = messages.map((message) => message.id);
 
         participants.forEach((participant) => profileIds.add(participant.user_id));
         messages.forEach((message) => profileIds.add(message.sender_id));
@@ -151,8 +286,37 @@ export function useDirectMessages(session: Session | null) {
             return;
         }
 
+        const [recipientResult, publicKeyResult] = await Promise.all([
+            messageIds.length
+                ? supabase
+                    .from("dm_message_recipients")
+                    .select("message_id,user_id,body_encrypted")
+                    .eq("user_id", userId)
+                    .in("message_id", messageIds)
+                : {data: [], error: null},
+            profileIds.size
+                ? supabase
+                    .from("dm_encryption_public_keys")
+                    .select("user_id,public_key")
+                    .in("user_id", Array.from(profileIds))
+                : {data: [], error: null},
+        ]);
+
+        const encryptionLoadError = recipientResult.error ?? publicKeyResult.error;
+        if (encryptionLoadError) {
+            setError(encryptionLoadError.message);
+            setIsLoaded(true);
+            return;
+        }
+
         const profiles = new Map(
             ((profileResult.data ?? []) as ProfileRow[]).map((profile) => [profile.id, profile]),
+        );
+        const recipientRows = new Map(
+            ((recipientResult.data ?? []) as MessageRecipientRow[]).map((row) => [row.message_id, row]),
+        );
+        const publicKeys = new Map(
+            ((publicKeyResult.data ?? []) as DmPublicKeyRow[]).map((row) => [row.user_id, row.public_key]),
         );
         const ownReadByConversation = new Map(
             ownParticipants.map((participant) => [participant.conversation_id, participant.last_read_at]),
@@ -168,11 +332,25 @@ export function useDirectMessages(session: Session | null) {
         });
 
         messages.forEach((message) => {
+            const recipientRow = recipientRows.get(message.id);
+            const senderPublicKey = publicKeys.get(message.sender_id);
+            let body = message.body;
+            if (recipientRow?.body_encrypted && senderPublicKey && ownDmKeyPair) {
+                try {
+                    body = decryptDmBody(ownDmKeyPair, senderPublicKey, recipientRow.body_encrypted);
+                } catch (decryptError) {
+                    console.warn("[directMessages] decrypt error", decryptError);
+                    body = ENCRYPTED_DM_PLACEHOLDER;
+                }
+            } else if (message.body === ENCRYPTED_DM_PLACEHOLDER) {
+                body = ENCRYPTED_DM_PLACEHOLDER;
+            }
+
             const mapped: DirectMessage = {
                 id: message.id,
                 conversationId: message.conversation_id,
                 senderId: message.sender_id,
-                body: message.body,
+                body,
                 createdAt: message.created_at,
                 author: makeAuthor(profiles.get(message.sender_id), message.sender_id),
             };
@@ -180,6 +358,36 @@ export function useDirectMessages(session: Session | null) {
                 ...(messagesByConversation.get(message.conversation_id) ?? []),
                 mapped,
             ]);
+
+            if (message.sender_id === userId && message.body !== ENCRYPTED_DM_PLACEHOLDER && ownDmKeyPair) {
+                const conversationParticipantIds = (participantsByConversation.get(message.conversation_id) ?? [])
+                    .map((participant) => participant.user_id);
+                const canMigrate = conversationParticipantIds.length > 0 &&
+                    conversationParticipantIds.every((participantId) => publicKeys.has(participantId));
+                if (canMigrate) {
+                    const recipientCiphertexts = buildRecipientCiphertexts(
+                        ownDmKeyPair,
+                        conversationParticipantIds,
+                        publicKeys,
+                        message.body,
+                        message.id,
+                    );
+                    void (async () => {
+                        try {
+                            await supabase
+                                .from("dm_message_recipients")
+                                .upsert(recipientCiphertexts, {onConflict: "message_id,user_id"});
+                            await supabase
+                                .from("dm_messages")
+                                .update({body: ENCRYPTED_DM_PLACEHOLDER, body_encrypted: null})
+                                .eq("id", message.id)
+                                .eq("sender_id", userId);
+                        } catch (migrationError) {
+                            console.warn("[directMessages] legacy message migration error", migrationError);
+                        }
+                    })();
+                }
+            }
         });
 
         const nextConversations = rawConversations.map((conversation) => {
@@ -196,6 +404,7 @@ export function useDirectMessages(session: Session | null) {
             return {
                 id: conversation.id,
                 participant: makeAuthor(profiles.get(otherParticipant?.user_id), otherParticipant?.user_id ?? "unknown"),
+                participantLastReadAt: otherParticipant?.last_read_at ?? null,
                 messages: conversationMessages,
                 lastMessage: conversationMessages[conversationMessages.length - 1] ?? null,
                 unreadCount,
@@ -205,7 +414,7 @@ export function useDirectMessages(session: Session | null) {
 
         setConversations(nextConversations.sort(byMostRecent));
         setIsLoaded(true);
-    }, [userId]);
+    }, [buildRecipientCiphertexts, ensureDmKeyPair, userId]);
 
     useEffect(() => {
         let mounted = true;
@@ -237,6 +446,7 @@ export function useDirectMessages(session: Session | null) {
             .on("postgres_changes", {event: "*", schema: "public", table: "dm_conversations"}, scheduleRealtimeRefresh)
             .on("postgres_changes", {event: "*", schema: "public", table: "dm_conversation_participants"}, scheduleRealtimeRefresh)
             .on("postgres_changes", {event: "*", schema: "public", table: "dm_messages"}, scheduleRealtimeRefresh)
+            .on("postgres_changes", {event: "*", schema: "public", table: "dm_message_recipients"}, scheduleRealtimeRefresh)
             .on("postgres_changes", {event: "UPDATE", schema: "public", table: "profiles"}, scheduleRealtimeRefresh)
             .subscribe();
 
@@ -334,22 +544,44 @@ export function useDirectMessages(session: Session | null) {
 
         setBusy(true);
         setError(null);
-        const profileResult = await ensureOwnProfile({expectedUserId: userId});
-        if (profileResult.error || profileResult.skipped) {
-            setBusy(false);
-            const message = profileResult.error?.message ?? "Your profile is still loading. Try again in a moment.";
-            setError(message);
-            throw new Error(message);
-        }
-        const now = new Date().toISOString();
-        const {error: insertError} = await supabase.from("dm_messages").insert({
-            id: createId(),
-            conversation_id: conversationId,
-            sender_id: userId,
-            body: trimmed,
-        });
+        try {
+            const profileResult = await ensureOwnProfile({expectedUserId: userId});
+            if (profileResult.error || profileResult.skipped) {
+                throw new Error(profileResult.error?.message ?? "Your profile is still loading. Try again in a moment.");
+            }
+            const ownDmKeyPair = await ensureDmKeyPair();
+            const participants = await loadConversationParticipants(conversationId);
+            const participantIds = participants.map((participant) => participant.user_id);
+            const publicKeys = await loadPublicKeys(participantIds);
+            const messageId = createId();
+            const recipientCiphertexts = buildRecipientCiphertexts(
+                ownDmKeyPair,
+                participantIds,
+                publicKeys,
+                trimmed,
+                messageId,
+            );
+            const now = new Date().toISOString();
+            const {error: insertError} = await supabase.from("dm_messages").insert({
+                id: messageId,
+                conversation_id: conversationId,
+                sender_id: userId,
+                body: ENCRYPTED_DM_PLACEHOLDER,
+                body_encrypted: null,
+            });
+            if (insertError) throw insertError;
 
-        if (!insertError) {
+            const {error: recipientError} = await supabase
+                .from("dm_message_recipients")
+                .insert(recipientCiphertexts);
+            if (recipientError) {
+                await supabase
+                    .from("dm_messages")
+                    .delete()
+                    .eq("id", messageId)
+                    .eq("sender_id", userId);
+                throw recipientError;
+            }
             await supabase
                 .from("dm_conversations")
                 .update({updated_at: now})
@@ -359,15 +591,15 @@ export function useDirectMessages(session: Session | null) {
                 .update({last_read_at: now})
                 .eq("conversation_id", conversationId)
                 .eq("user_id", userId);
+            await refresh();
+        } catch (sendError) {
+            const message = sendError instanceof Error ? sendError.message : "Your message could not be sent.";
+            setError(message);
+            throw sendError;
+        } finally {
+            setBusy(false);
         }
-
-        setBusy(false);
-        if (insertError) {
-            setError(insertError.message);
-            throw insertError;
-        }
-        await refresh();
-    }, [refresh, userId]);
+    }, [buildRecipientCiphertexts, ensureDmKeyPair, loadConversationParticipants, loadPublicKeys, refresh, userId]);
 
     const editMessage = useCallback(async (messageId: string, body: string) => {
         if (!userId) return;
@@ -375,18 +607,48 @@ export function useDirectMessages(session: Session | null) {
         if (!trimmed) return;
         setBusy(true);
         setError(null);
-        const {error: updateError} = await supabase
-            .from("dm_messages")
-            .update({body: trimmed})
-            .eq("id", messageId)
-            .eq("sender_id", userId);
-        setBusy(false);
-        if (updateError) {
-            setError(updateError.message);
-            throw updateError;
+        try {
+            const ownDmKeyPair = await ensureDmKeyPair();
+            const {data: messageData, error: messageLoadError} = await supabase
+                .from("dm_messages")
+                .select("id,conversation_id,sender_id")
+                .eq("id", messageId)
+                .eq("sender_id", userId)
+                .maybeSingle();
+            if (messageLoadError) throw messageLoadError;
+            const messageRow = messageData as Pick<MessageRow, "id" | "conversation_id" | "sender_id"> | null;
+            if (!messageRow) throw new Error("Message not found.");
+
+            const participants = await loadConversationParticipants(messageRow.conversation_id);
+            const participantIds = participants.map((participant) => participant.user_id);
+            const publicKeys = await loadPublicKeys(participantIds);
+            const recipientCiphertexts = buildRecipientCiphertexts(
+                ownDmKeyPair,
+                participantIds,
+                publicKeys,
+                trimmed,
+                messageId,
+            );
+
+            const {error: updateError} = await supabase
+                .from("dm_messages")
+                .update({body: ENCRYPTED_DM_PLACEHOLDER, body_encrypted: null})
+                .eq("id", messageId)
+                .eq("sender_id", userId);
+            if (updateError) throw updateError;
+            const {error: recipientUpdateError} = await supabase
+                .from("dm_message_recipients")
+                .upsert(recipientCiphertexts, {onConflict: "message_id,user_id"});
+            if (recipientUpdateError) throw recipientUpdateError;
+            await refresh();
+        } catch (editError) {
+            const message = editError instanceof Error ? editError.message : "Your message could not be updated.";
+            setError(message);
+            throw editError;
+        } finally {
+            setBusy(false);
         }
-        await refresh();
-    }, [refresh, userId]);
+    }, [buildRecipientCiphertexts, ensureDmKeyPair, loadConversationParticipants, loadPublicKeys, refresh, userId]);
 
     const deleteMessage = useCallback(async (messageId: string) => {
         if (!userId) return;

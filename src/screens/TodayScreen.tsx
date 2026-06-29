@@ -100,16 +100,6 @@ export function TodayScreen({
         <ImageBackground source={bg} style={tw`flex-1`}
                          imageStyle={visualMode === "sunset" ? tw`opacity-27` : tw`opacity-40`}>
             <View style={[tw`flex-1 bg-black/3 3`, {paddingHorizontal: 1}]}>
-                <View style={tw`absolute inset-0 items-center justify-center`}>
-                    <Text
-                        style={[
-                            tw`mb-117 text-3xl text-slate-300/7 tracking-[7px] p-1 rounded-lg`,
-                            {fontFamily: fonts.display},
-                        ]}
-                    >
-                        RHODIE
-                    </Text>
-                </View>
                 <View style={tw`absolute right-4 top-4 z-20 items-end gap-2`}>
                     <Pressable
                         accessibilityRole="button"
@@ -128,9 +118,37 @@ export function TodayScreen({
                         />
                     </Pressable>
                 </View>
+                <View pointerEvents="none" style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
+                    <Text style={[tw`text-xs font-semibold`, {
+                        fontFamily: fonts.body,
+                        color: "rgba(228,224,212,0.6)"
+                    }]}>Today • {today}</Text>
+                    {profile?.birthday && isToday(profile.birthday) ? (
+                        <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>
+                            Happy birthday!
+                        </Text>
+                    ) : null}
+                </View>
+                <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Open today's journal prompt"
+                    onPress={() => onOpenJournalPrompt(latestPrompt?.id ?? null)}
+                    style={({pressed}) => [
+                        tw`absolute left-4 right-4 top-[57px] z-10 items-center`,
+                        pressed && tw`opacity-85`,
+                    ]}
+                >
+                    <Text style={[tw`text-center px-4 py-1 text-lg font-semibold`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                        QUOTE OF THE DAY
+                    </Text>
+                    <Text style={[tw`mt-3 pb-[7px] text-center text-lg leading-snug`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
+                          numberOfLines={3}>
+                        {todaysQuote}
+                    </Text>
+                </Pressable>
                 <ScrollView
                     style={tw`flex-1`}
-                    contentContainerStyle={tw`flex-grow justify-end px-4 pb-28 pt-24 gap-4`}
+                    contentContainerStyle={tw`flex-grow justify-end px-4 pb-28 pt-32 gap-4`}
                     showsVerticalScrollIndicator={false}
                 >
                     {showTutorial && onDismissTutorial ? (
@@ -140,33 +158,6 @@ export function TodayScreen({
                             onDismiss={onDismissTutorial}
                         />
                     ) : null}
-
-                    <Pressable
-                        onPress={() => onOpenJournalPrompt(latestPrompt?.id ?? null)}
-                        style={({pressed}) => [
-                            tw`rounded-3xl border border-[#F5DBC9]/33 bg-black/43 p-4`,
-                            pressed && tw`opacity-85`,
-                        ]}
-                    >
-                        <View style={tw`flex-row items-center justify-between`}>
-                            <Text style={[tw`text-xs font-semibold`, {
-                                fontFamily: fonts.body,
-                                color: "rgba(228,224,212,0.6)"
-                            }]}>Today
-                                • {today}</Text>
-                            {profile?.birthday && isToday(profile.birthday) ? (
-                                <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>Happy
-                                    birthday!</Text>
-                            ) : null}
-                        </View>
-                        <Text style={[tw`mt-1 text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
-                            {profile?.full_name ? `Welcome, ${profile.full_name}` : "Welcome back"}
-                        </Text>
-                        <Text style={[tw`mt-2 text-lg leading-snug`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
-                              numberOfLines={3}>
-                            {todaysQuote}
-                        </Text>
-                    </Pressable>
 
                     <Pressable
                         onPress={onOpenWeeklyGoal}

@@ -1,6 +1,7 @@
 import {useEffect, useMemo, useState} from "react";
 import {ImageBackground, Linking, Pressable, ScrollView, Text, View} from "react-native";
 import {LinearGradient} from "expo-linear-gradient";
+import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {
@@ -54,6 +55,10 @@ const buttonShadow = {
     elevation: 6,
 };
 
+interface InsightsScreenProps {
+    onBackToPeers?: () => void;
+}
+
 function ButtonShine() {
     return (
         <>
@@ -74,7 +79,7 @@ function ButtonShine() {
     );
 }
 
-export function InsightsScreen() {
+export function InsightsScreen({onBackToPeers}: InsightsScreenProps) {
     const [articles, setArticles] = useState<ExternalArticle[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -127,15 +132,40 @@ export function InsightsScreen() {
                             },
                         ]}
                     >
-                        <Text style={[tw`text-xs font-semibold`, {
-                            fontFamily: fonts.body,
-                            color: "rgba(43,43,43,0.7)"
-                        }]}>
-                            Insights • Official sources
-                        </Text>
-                        <Text style={[tw`mt-1 text-2xl font-black`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
-                            The Rhodie Brief
-                        </Text>
+                        <View style={tw`flex-row items-start justify-between gap-3`}>
+                            <View style={tw`flex-1`}>
+                                <Text style={[tw`text-xs font-semibold`, {
+                                    fontFamily: fonts.body,
+                                    color: "rgba(43,43,43,0.7)"
+                                }]}>
+                                    Insights • Official sources
+                                </Text>
+                                <Text style={[tw`mt-1 text-2xl font-black`, {fontFamily: fonts.heading, color: "#2B2B2B"}]}>
+                                    The Rhodie Brief
+                                </Text>
+                            </View>
+                            {onBackToPeers ? (
+                                <Pressable
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Back to Connect"
+                                    onPress={() => {
+                                        haptics.navigation();
+                                        onBackToPeers();
+                                    }}
+                                    style={({pressed}) => [
+                                        tw`flex-row items-center gap-1.5 overflow-hidden rounded-full px-3 py-2`,
+                                        {backgroundColor: "#000000", ...buttonShadow},
+                                        pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                                    ]}
+                                >
+                                    <ButtonShine/>
+                                    <Ionicons name="chevron-back" size={15} color="#E4E0D4"/>
+                                    <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                                        Connect
+                                    </Text>
+                                </Pressable>
+                            ) : null}
+                        </View>
                         <Text style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, color: "#2B2B2B"}]}>
                             Curated for men's mental health from official public-health and expert-reviewed sources.
                         </Text>

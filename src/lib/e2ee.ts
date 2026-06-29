@@ -60,7 +60,7 @@ type CachedEncryptionKeyPayload = {
 
 const BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-function bytesToBase64(bytes: Uint8Array): string {
+export function bytesToBase64(bytes: Uint8Array): string {
     let output = "";
     let index = 0;
     for (; index + 2 < bytes.length; index += 3) {
@@ -88,7 +88,7 @@ function bytesToBase64(bytes: Uint8Array): string {
     return output;
 }
 
-function base64ToBytes(value: string): Uint8Array {
+export function base64ToBytes(value: string): Uint8Array {
     const clean = value.replace(/\s/g, "");
     const padding = clean.endsWith("==") ? 2 : clean.endsWith("=") ? 1 : 0;
     const length = Math.floor((clean.length * 3) / 4) - padding;

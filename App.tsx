@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, AppState, PanResponder, Platform, SafeAreaView, Text, View} from "react-native";
+import {Alert, Animated, AppState, Easing, PanResponder, Platform, SafeAreaView, Text, View} from "react-native";
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -60,7 +60,7 @@ type HomeActionInput =
     | { target: "weeklyGoal" }
     | { target: "tasks" };
 
-const TAB_ORDER: Tab[] = ["today", "plan", "journal", "board", "calendar", "community", "insights"];
+const TAB_ORDER: Tab[] = ["today", "plan", "journal", "calendar", "community"];
 const SWIPE_DISTANCE_THRESHOLD = 70;
 const SWIPE_VERTICAL_LIMIT = 55;
 
@@ -69,6 +69,7 @@ function AppContent() {
     const [accountOpen, setAccountOpen] = useState(false);
     const [messagesOpen, setMessagesOpen] = useState(false);
     const [messageStartTarget, setMessageStartTarget] = useState<DmStartTarget | null>(null);
+    const [journalPromptEntryOpen, setJournalPromptEntryOpen] = useState(false);
     const [subscriptionOfferOpen, setSubscriptionOfferOpen] = useState(false);
     const [homeAction, setHomeAction] = useState<HomeAction | null>(null);
     const [goalCheckVisible, setGoalCheckVisible] = useState(false);
@@ -79,6 +80,8 @@ function AppContent() {
     const birthdayBurstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const appStateRef = useRef(AppState.currentState);
     const lastHandledGoalCheckRunKeyRef = useRef(0);
+    const screenRouteOpacity = useRef(new Animated.Value(1)).current;
+    const screenRouteTranslateY = useRef(new Animated.Value(0)).current;
     const {
         session,
         loading: authLoading,
@@ -97,7 +100,7 @@ function AppContent() {
     const journalState = useJournal(session, encryption);
     const plannerState = usePlannerEvents(session, encryption);
     const communityState = useCommunity(session);
-    const directMessagesState = useDirectMessages(session);
+    const directMessagesState = useDirectMessages(session, encryption);
     const onboarding = useOnboarding(session?.user.id);
     const stickyNoteState = useStickyNote(session?.user.id, encryption);
     const visualModeState = useVisualMode(session?.user.id);
@@ -119,6 +122,26 @@ function AppContent() {
             setGoalFeedbackVisible(false);
         }
     }, [session]);
+
+    useEffect(() => {
+        screenRouteOpacity.setValue(0);
+        screenRouteTranslateY.setValue(-14);
+
+        Animated.parallel([
+            Animated.timing(screenRouteOpacity, {
+                toValue: 1,
+                duration: 260,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+            Animated.timing(screenRouteTranslateY, {
+                toValue: 0,
+                duration: 260,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [accountOpen, screenRouteOpacity, screenRouteTranslateY, tab]);
 
     useEffect(() => {
         if (!session || appLoading) return;
@@ -215,6 +238,7 @@ function AppContent() {
     function handleTabChange(nextTab: Tab) {
         haptics.navigation();
         setHomeAction(null);
+        setJournalPromptEntryOpen(false);
         setMessagesOpen(false);
         setMessageStartTarget(null);
 
@@ -252,7 +276,7 @@ function AppContent() {
                     const verticalMovement = Math.abs(gestureState.dy);
                     if (horizontalMovement < SWIPE_DISTANCE_THRESHOLD || verticalMovement > SWIPE_VERTICAL_LIMIT) return;
 
-                    const currentIndex = TAB_ORDER.indexOf(tab);
+                    const currentIndex = TAB_ORDER.indexOf(tab === "board" ? "calendar" : tab === "insights" ? "community" : tab);
                     if (currentIndex < 0) return;
 
                     const nextIndex = gestureState.dx < 0 ? currentIndex + 1 : currentIndex - 1;
@@ -290,6 +314,30 @@ function AppContent() {
         }
 
         setTab("journal");
+    }
+
+    function openTasksRoute() {
+        setHomeAction(null);
+        setAccountOpen(false);
+        setMessagesOpen(false);
+        setMessageStartTarget(null);
+        setTab("board");
+    }
+
+    function openInsightsRoute() {
+        setHomeAction(null);
+        setAccountOpen(false);
+        setMessagesOpen(false);
+        setMessageStartTarget(null);
+        setTab("insights");
+    }
+
+    function openPeersRoute() {
+        setHomeAction(null);
+        setAccountOpen(false);
+        setMessagesOpen(false);
+        setMessageStartTarget(null);
+        setTab("community");
     }
 
     async function handleSignOut() {
@@ -496,6 +544,12 @@ function AppContent() {
                     style={tw`relative flex-1 bg-[#0f0f0f] rounded-t-3xl overflow-hidden`}
                     {...screenSwipeResponder.panHandlers}
                 >
+                    <Animated.View
+                        style={[
+                            tw`flex-1`,
+                            {opacity: screenRouteOpacity, transform: [{translateY: screenRouteTranslateY}]},
+                        ]}
+                    >
                     {accountOpen ? (
                         <AccountScreen
                             session={session}
@@ -561,6 +615,7 @@ function AppContent() {
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("journal");
                             }}
+                            onPromptEntryOpenChange={setJournalPromptEntryOpen}
                         />
                     ) : null}
                     {!accountOpen && tab === "board" ? (
@@ -581,7 +636,13 @@ function AppContent() {
                             googleCalendar={tasksState.googleCalendar}
                             weeklyGoal={weeklyGoalState.goal}
                             weeklyGoalPresets={weeklyGoalState.presets}
+                            weeklyGoalProgress={weeklyGoalState.progress}
                             onSaveWeeklyGoal={weeklyGoalState.saveGoal}
+                            onMarkGoalAchieved={() => {
+                                void handleGoalCheck(true);
+                            }}
+                            loadRecentAchievedGoals={weeklyGoalState.loadRecentAchievedGoals}
+                            onOpenTasks={openTasksRoute}
                             focusWeeklyGoalKey={homeAction?.target === "weeklyGoal" ? homeAction.key : undefined}
                             visualMode={visualModeState.mode}
                             showTutorial={onboarding.visibleTutorials.calendar}
@@ -596,15 +657,19 @@ function AppContent() {
                             unreadMessageCount={directMessagesState.unreadCount}
                             onOpenMessages={() => handleOpenMessages()}
                             onOpenDirectMessage={(author) => handleOpenMessages(author)}
+                            onOpenInsights={openInsightsRoute}
                         />
                     ) : null}
-                    {!accountOpen && tab === "insights" ? <InsightsScreen/> : null}
-                    <BottomTabBar
-                        activeTab={tab}
-                        accountOpen={accountOpen}
-                        visualMode={visualModeState.mode}
-                        onTabPress={handleTabChange}
-                    />
+                    {!accountOpen && tab === "insights" ? <InsightsScreen onBackToPeers={openPeersRoute}/> : null}
+                    </Animated.View>
+                    {!journalPromptEntryOpen ? (
+                        <BottomTabBar
+                            activeTab={tab === "board" ? "calendar" : tab === "insights" ? "community" : tab}
+                            accountOpen={accountOpen}
+                            visualMode={visualModeState.mode}
+                            onTabPress={handleTabChange}
+                        />
+                    ) : null}
                     {messagesOpen ? (
                         <DirectMessagesScreen
                             dm={directMessagesState}

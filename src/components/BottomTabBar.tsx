@@ -16,10 +16,8 @@ const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; act
     {key: "today", label: "Home", icon: "home-outline", activeIcon: "home"},
     {key: "plan", label: "Plan", icon: "time-outline", activeIcon: "time"},
     {key: "journal", label: "Journal", icon: "book-outline", activeIcon: "book"},
-    {key: "board", label: "Tasks", icon: "checkbox-outline", activeIcon: "checkbox"},
     {key: "calendar", label: "Calendar", icon: "calendar-outline", activeIcon: "calendar"},
-    {key: "community", label: "Community", icon: "people-outline", activeIcon: "people"},
-    {key: "insights", label: "Insights", icon: "bar-chart-outline", activeIcon: "bar-chart"},
+    {key: "community", label: "Connect", icon: "people-outline", activeIcon: "people"},
 ];
 
 const ACTIVE_NAV_COLOR = "#B55941";

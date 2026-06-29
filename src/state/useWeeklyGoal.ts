@@ -24,6 +24,15 @@ export type WeeklyGoalPreset = {
     id: string;
     title: string;
     description: string;
+    icon?: string;
+    category?: "body" | "mind" | "discipline" | "connection";
+};
+
+export type ArchivedWeeklyGoal = {
+    text: string;
+    presetId: string | null;
+    weekStartDate: string;
+    achievedAt: string;
 };
 
 type WeeklyGoalRow = {
@@ -52,21 +61,57 @@ export const WEEKLY_GOAL_PRESETS: WeeklyGoalPreset[] = [
         id: "move-three-times",
         title: "Move 3 times",
         description: "Complete three intentional movement sessions.",
+        icon: "barbell-outline",
+        category: "body",
     },
     {
         id: "daily-plan",
         title: "Plan each day",
         description: "Set a simple plan before the day gets moving.",
+        icon: "list-outline",
+        category: "discipline",
     },
     {
         id: "one-priority",
         title: "Finish one priority",
         description: "Complete one meaningful task each day.",
+        icon: "flag-outline",
+        category: "discipline",
     },
     {
         id: "journal-check-in",
         title: "Journal check-in",
         description: "Write one honest journal entry this week.",
+        icon: "create-outline",
+        category: "mind",
+    },
+    {
+        id: "read-thirty",
+        title: "Read 30 minutes",
+        description: "Sit with a book for 30 minutes, five days this week.",
+        icon: "book-outline",
+        category: "mind",
+    },
+    {
+        id: "evening-walk",
+        title: "Evening walk",
+        description: "Step outside for a walk after dinner four times.",
+        icon: "walk-outline",
+        category: "body",
+    },
+    {
+        id: "phone-down",
+        title: "Phone down by 10pm",
+        description: "Put the phone away by 10pm every weeknight.",
+        icon: "moon-outline",
+        category: "discipline",
+    },
+    {
+        id: "reach-out",
+        title: "Reach out to someone",
+        description: "Call or text a friend or family member you've been meaning to.",
+        icon: "chatbubbles-outline",
+        category: "connection",
     },
 ];
 
@@ -459,6 +504,41 @@ export function useWeeklyGoal(userId: string | null | undefined, encryption?: En
         [encryptionKey, userId],
     );
 
+    const loadRecentAchievedGoals = useCallback(
+        async (limit = 4): Promise<ArchivedWeeklyGoal[]> => {
+            if (!userId) return [];
+            try {
+                const {data, error} = await supabase
+                    .from("weekly_goals")
+                    .select("*")
+                    .eq("user_id", userId)
+                    .not("achieved_at", "is", null)
+                    .neq("week_start_date", weekStartDate)
+                    .order("week_start_date", {ascending: false})
+                    .limit(limit);
+                if (error) {
+                    console.warn("[weeklyGoal] loadRecentAchievedGoals error", error.message);
+                    return [];
+                }
+                return (data as WeeklyGoalRow[] | null ?? [])
+                    .filter((row) => Boolean(row.achieved_at))
+                    .map((row) => {
+                        const decrypted = mapGoalRow(row, encryptionKey);
+                        return {
+                            text: decrypted.text,
+                            presetId: decrypted.presetId,
+                            weekStartDate: decrypted.weekStartDate,
+                            achievedAt: row.achieved_at as string,
+                        };
+                    });
+            } catch (error) {
+                console.warn("[weeklyGoal] loadRecentAchievedGoals threw", error);
+                return [];
+            }
+        },
+        [encryptionKey, userId, weekStartDate],
+    );
+
     const clearGoal = useCallback(async () => {
         setGoal(null);
         await AsyncStorage.removeItem(goalStorageKey(userId));
@@ -477,5 +557,6 @@ export function useWeeklyGoal(userId: string | null | undefined, encryption?: En
         saveGoal,
         recordGoalCheck,
         clearGoal,
+        loadRecentAchievedGoals,
     };
 }

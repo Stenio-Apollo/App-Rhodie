@@ -1,53 +1,67 @@
 import {useEffect, useMemo, useRef, useState} from "react";
 import {
     Animated,
+    Easing,
     ImageBackground,
     Pressable,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     View,
 } from "react-native";
-import {BlurView} from "expo-blur";
-import {LinearGradient} from "expo-linear-gradient";
+import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import type {Task} from "../types";
 import {TranslucentCalendar} from "../components/TranslucentCalendar";
 import {fonts} from "../theme/fonts";
-import {Input} from "../components/ui/Input";
-import type {WeeklyGoal, WeeklyGoalPreset} from "../state/useWeeklyGoal";
+import type {ArchivedWeeklyGoal, WeeklyGoal, WeeklyGoalPreset, WeeklyGoalProgress} from "../state/useWeeklyGoal";
 import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
 import {TutorialCard} from "../components/TutorialCard";
+import {GoalsRoute} from "../components/GoalsRoute";
 import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 
-const buttonDepthStyle = {
-    shadowColor: "#000000",
-    shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.24,
-    shadowRadius: 8,
-    elevation: 6,
-};
+function CalendarRouteEntry({
+                                label,
+                                icon,
+                                onPress,
+                                disabled = false,
+                                active = false,
+                            }: {
+    label: string;
+    icon: React.ComponentProps<typeof Ionicons>["name"];
+    onPress: () => void;
+    disabled?: boolean;
+    active?: boolean;
+}) {
+    const color = disabled ? "rgba(228,224,212,0.35)" : active ? "#000000" : "#E4E0D4";
 
-function ButtonShine() {
     return (
-        <>
-            <LinearGradient
-                colors={["rgba(255,255,255,0.07)", "rgba(255,255,255,0.01)", "rgba(0,0,0,0.14)"]}
-                locations={[0, 0.48, 1]}
-                pointerEvents="none"
-                style={tw`absolute inset-0`}
-            />
-            <View
-                pointerEvents="none"
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            disabled={disabled}
+            onPress={() => {
+                haptics.navigation();
+                onPress();
+            }}
+            style={({pressed}) => [
+                tw`items-center justify-center px-1 py-0.5`,
+                pressed && !disabled && {transform: [{scale: 0.94}], opacity: 0.85},
+            ]}
+        >
+            <Text
+                numberOfLines={1}
                 style={[
-                    tw`absolute left-2 right-2 top-0.5 h-1 rounded-full`,
-                    {backgroundColor: "rgba(255,255,255,0.035)"},
+                    tw`mb-1 text-[10px] font-bold`,
+                    {fontFamily: fonts.heading, color},
                 ]}
-            />
-        </>
+            >
+                {label}
+            </Text>
+            <Ionicons name={icon} size={22} color={color}/>
+        </Pressable>
     );
 }
 
@@ -65,7 +79,11 @@ interface CalendarScreenProps {
     };
     weeklyGoal: WeeklyGoal | null;
     weeklyGoalPresets: WeeklyGoalPreset[];
+    weeklyGoalProgress: WeeklyGoalProgress;
     onSaveWeeklyGoal: (payload: { text: string; presetId?: string | null }) => Promise<void>;
+    onMarkGoalAchieved: () => void;
+    loadRecentAchievedGoals?: (limit?: number) => Promise<ArchivedWeeklyGoal[]>;
+    onOpenTasks: () => void;
     focusWeeklyGoalKey?: number;
     visualMode: VisualMode;
     showTutorial?: boolean;
@@ -77,17 +95,24 @@ export function CalendarScreen({
                                    googleCalendar,
                                    weeklyGoal,
                                    weeklyGoalPresets,
+                                   weeklyGoalProgress,
                                    onSaveWeeklyGoal,
+                                   onMarkGoalAchieved,
+                                   loadRecentAchievedGoals,
+                                   onOpenTasks,
                                    focusWeeklyGoalKey,
                                    visualMode,
                                    showTutorial,
                                    onDismissTutorial,
                                }: CalendarScreenProps) {
     const [selectedDate, setSelectedDate] = useState(toLocalISODate());
+    const [route, setRoute] = useState<"calendar" | "goals">("calendar");
     const [customGoal, setCustomGoal] = useState("");
     const [goalSaveError, setGoalSaveError] = useState<string | null>(null);
     const scrollRef = useRef<ScrollView>(null);
     const customGoalInputRef = useRef<TextInput>(null);
+    const routeOpacity = useRef(new Animated.Value(1)).current;
+    const routeTranslateY = useRef(new Animated.Value(0)).current;
     const bg = visualMode === "sunset"
         ? require("../../public/images/rhram1.jpg")
         : require("../../public/images/rh211.jpg");
@@ -111,17 +136,66 @@ export function CalendarScreen({
 
     useEffect(() => {
         if (!focusWeeklyGoalKey) return;
+        focusWeeklyGoal();
+    }, [focusWeeklyGoalKey, weeklyGoal]);
+
+    function focusWeeklyGoal() {
+        openGoalsRoute(true);
+    }
+
+    function openCalendarRoute() {
+        playRouteTransition();
+        setRoute("calendar");
+
+        requestAnimationFrame(() => {
+            scrollRef.current?.scrollTo({y: 0, animated: false});
+        });
+    }
+
+    function openGoalsRoute(focusInput = false) {
+        playRouteTransition();
+        setRoute("goals");
         if (weeklyGoal && !weeklyGoal.achievedAt) {
             setCustomGoal(weeklyGoal.text);
         }
 
         setTimeout(() => {
-            scrollRef.current?.scrollToEnd({animated: true});
-            if (!weeklyGoal?.achievedAt) {
+            scrollRef.current?.scrollTo({y: 0, animated: false});
+            if (focusInput && !weeklyGoal?.achievedAt) {
                 customGoalInputRef.current?.focus();
             }
         }, 100);
-    }, [focusWeeklyGoalKey, weeklyGoal]);
+    }
+
+    function playRouteTransition() {
+        routeOpacity.setValue(0);
+        routeTranslateY.setValue(-14);
+
+        Animated.parallel([
+            Animated.timing(routeOpacity, {
+                toValue: 1,
+                duration: 260,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+            Animated.timing(routeTranslateY, {
+                toValue: 0,
+                duration: 260,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }
+
+    function handleGoogleRoutePress() {
+        if (!googleCalendar.available || googleCalendar.busy) return;
+        if (googleCalendar.connected) {
+            void googleCalendar.syncNow();
+            return;
+        }
+
+        void googleCalendar.connect();
+    }
 
     async function saveWeeklyGoal(payload: { text: string; presetId?: string | null }) {
         setGoalSaveError(null);
@@ -137,322 +211,125 @@ export function CalendarScreen({
             <Animated.View
                 style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1, paddingBottom: keyboardInset}]}
             >
+                <View style={tw`absolute right-3 top-16 z-20 items-center gap-5`}>
+                    <CalendarRouteEntry
+                        label="Calendar"
+                        icon="calendar-outline"
+                        onPress={openCalendarRoute}
+                        active={route === "calendar"}
+                    />
+                    <CalendarRouteEntry
+                        label="Google"
+                        icon="logo-google"
+                        onPress={handleGoogleRoutePress}
+                        disabled={!googleCalendar.available || googleCalendar.busy}
+                    />
+                    <CalendarRouteEntry
+                        label="Tasks"
+                        icon="checkbox-outline"
+                        onPress={onOpenTasks}
+                    />
+                    <CalendarRouteEntry
+                        label="Goals"
+                        icon="flag-outline"
+                        onPress={() => openGoalsRoute()}
+                        active={route === "goals"}
+                    />
+                </View>
                 <ScrollView
                     ref={scrollRef}
                     style={tw`flex-1`}
-                    contentContainerStyle={tw`px-4 pt-2 pb-28`}
+                    contentContainerStyle={tw`pl-4 pr-20 pt-2 pb-28`}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="interactive"
                 >
-                    <Text
-                        style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
-                    <Text style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Tap
-                        a day to filter due tasks.</Text>
+                    <Animated.View style={{opacity: routeOpacity, transform: [{translateY: routeTranslateY}]}}>
+                        {route === "calendar" ? (
+                            <View style={tw`mt-[49px]`}>
+                                <Text
+                                    style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
+                                <Text
+                                    style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Tap
+                                    a day to filter due tasks.</Text>
 
-                    {showTutorial && onDismissTutorial ? (
-                        <View style={tw`mt-3`}>
-                            <TutorialCard
-                                title="Calendar"
-                                body="Set your weekly goal here and I'll hold you accountable. Completed goals earns you 1pt. Every 3pts earns you a badge"
-                                onDismiss={onDismissTutorial}
-                            />
-                        </View>
-                    ) : null}
-
-                    <View style={tw`mt-3 rounded-2xl border border-orange-50/19 bg-black/47 p-3`}>
-                        <Text style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Google
-                            Calendar Sync</Text>
-                        {!googleCalendar.available ? (
-                            <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
-                                Set the Google OAuth client ID for this platform to enable sync.
-                            </Text>
-                        ) : (
-                            <>
-                                <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
-                                    {googleCalendar.connected ? "Connected. Events import automatically." : "Connect Google to import events."}
-                                </Text>
-                                {googleCalendar.lastSyncedAt ? (
-                                    <Text style={[tw`mt-1 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>
-                                        Last sync: {new Date(googleCalendar.lastSyncedAt).toLocaleString()}
-                                    </Text>
+                                {showTutorial && onDismissTutorial ? (
+                                    <View style={tw`mt-3`}>
+                                        <TutorialCard
+                                            title="Calendar"
+                                            body="Set your weekly goal here and I'll hold you accountable. Completed goals earns you 1pt. Every 3pts earns you a badge"
+                                            onDismiss={onDismissTutorial}
+                                        />
+                                    </View>
                                 ) : null}
+
                                 {googleCalendar.error ? (
                                     <Text
-                                        style={[tw`mt-1 text-[11px] text-red-300`, {fontFamily: fonts.body}]}>{googleCalendar.error}</Text>
-                                ) : null}
-                                <View style={tw`mt-2 flex-row gap-2`}>
-                                    {!googleCalendar.connected ? (
-                                        <Pressable
-                                            onPress={() => {
-                                                haptics.selection();
-                                                void googleCalendar.connect();
-                                            }}
-                                            style={({pressed}) => [
-                                                tw`overflow-hidden rounded-lg border px-3 py-2`,
-                                                {
-                                                    borderColor: "#B55941",
-                                                    backgroundColor: "transparent", ...buttonDepthStyle
-                                                },
-                                                (pressed || googleCalendar.busy) && {
-                                                    opacity: 0.78,
-                                                    transform: [{translateY: 1}]
-                                                },
-                                            ]}
-                                        >
-                                            <ButtonShine/>
-                                            <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
-                                                {googleCalendar.busy ? "Connecting..." : "Connect"}
-                                            </Text>
-                                        </Pressable>
-                                    ) : (
-                                        <>
-                                            <Pressable
-                                                onPress={() => {
-                                                    haptics.selection();
-                                                    void googleCalendar.syncNow();
-                                                }}
-                                                style={({pressed}) => [
-                                                    tw`overflow-hidden rounded-lg px-3 py-2`,
-                                                    {backgroundColor: "#2B2B2B", ...buttonDepthStyle},
-                                                    (pressed || googleCalendar.busy) && {
-                                                        opacity: 0.78,
-                                                        transform: [{translateY: 1}]
-                                                    },
-                                                ]}
-                                            >
-                                                <ButtonShine/>
-                                                <Text style={[tw`text-xs`, {
-                                                    fontFamily: fonts.heading,
-                                                    color: "#E4E0D4"
-                                                }]}>
-                                                    {googleCalendar.busy ? "Syncing..." : "Sync now"}
-                                                </Text>
-                                            </Pressable>
-                                            <Pressable
-                                                onPress={() => {
-                                                    haptics.selection();
-                                                    void googleCalendar.disconnect();
-                                                }}
-                                                style={({pressed}) => [
-                                                    tw`overflow-hidden rounded-lg border border-slate-300 px-3 py-2`,
-                                                    {...buttonDepthStyle},
-                                                    (pressed || googleCalendar.busy) && {
-                                                        opacity: 0.78,
-                                                        transform: [{translateY: 1}]
-                                                    },
-                                                ]}
-                                            >
-                                                <ButtonShine/>
-                                                <Text style={[tw`text-xs`, {
-                                                    fontFamily: fonts.heading,
-                                                    color: "#E4E0D4"
-                                                }]}>Disconnect</Text>
-                                            </Pressable>
-                                        </>
-                                    )}
-                                </View>
-                            </>
-                        )}
-                    </View>
-
-                    <TranslucentCalendar
-                        markedDates={markedDates}
-                        onDayPress={(day) => {
-                            haptics.calendarDateSelected();
-                            setSelectedDate(day.dateString);
-                        }}
-                    />
-
-                    <Text
-                        style={[tw`mt-3 text-lg font-extrabold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{selectedDate}</Text>
-                    {selectedTasks.length === 0 ? (
-                        <View style={tw`mt-2 rounded-2xl border border-[#2c2c2c] bg-black/69 p-3`}>
-                            <Text style={[tw`text-slate-300`, {fontFamily: fonts.body}]}>No tasks due this day.</Text>
-                        </View>
-                    ) : (
-                        selectedTasks.map((task) => (
-                            <View key={task.id} style={tw`mt-2 rounded-2xl border border-[#2c2c2c] bg-[#111111] p-3`}>
-                                <Text
-                                    style={[tw`self-center text-center text-base font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{task.title}</Text>
-                                {!!task.description &&
-                                    <Text
-                                        style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>{task.description}</Text>}
-                                <Text
-                                    style={[tw`self-center text-center mt-2 text-xs font-bold uppercase text-slate-400`, {fontFamily: fonts.body}]}>
-                                    {task.status.replace("_", " ")} • {task.priority}
-                                </Text>
-                                {task.source === "google_calendar" ? (
-                                    <Text
-                                        style={[tw`self-center text-center mt-1 text-[10px] font-bold uppercase text-blue-300`, {fontFamily: fonts.body}]}>
-                                        Google Calendar
+                                        style={[tw`mt-3 rounded-2xl bg-black/70 px-4 py-3 text-xs text-red-300`, {fontFamily: fonts.body}]}>
+                                        {googleCalendar.error}
                                     </Text>
                                 ) : null}
-                            </View>
-                        ))
-                    )}
 
-                    <View style={tw`mt-3 overflow-hidden rounded-[28px] bg-black/10 p-1`}>
-                        <BlurView
-                            intensity={72}
-                            tint="dark"
-                            style={tw`overflow-hidden rounded-[24px] border border-slate-700`}
-                        >
-                            <View
-                                pointerEvents="none"
-                                style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.77)"}]}
-                            />
-                            <LinearGradient
-                                colors={["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
-                                locations={[0, 0.5, 1]}
-                                pointerEvents="none"
-                                style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
-                            />
-                            <LinearGradient
-                                colors={["transparent", "rgba(0,0,0,0.35)"]}
-                                pointerEvents="none"
-                                style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
-                            />
+                                <TranslucentCalendar
+                                    markedDates={markedDates}
+                                    onDayPress={(day) => {
+                                        haptics.calendarDateSelected();
+                                        setSelectedDate(day.dateString);
+                                    }}
+                                />
 
-                            <View style={tw`p-3`}>
-                                <View style={tw`flex-row items-start justify-between gap-3`}>
-                                    <View style={tw`flex-1`}>
-                                        <Text
-                                            style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                            This week's goal
-                                        </Text>
-                                        <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
-                                            {isGoalLocked
-                                                ? "Completed this week. Goal changes unlock Sunday."
-                                                : "Pick a focus for the week or write your own."}
-                                        </Text>
+                                <Text
+                                    style={[tw`mt-3 text-center text-lg font-extrabold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{selectedDate}</Text>
+                                {selectedTasks.length === 0 ? (
+                                    <View style={tw`mt-2 rounded-2xl border border-[#2c2c2c] bg-black/69 p-3`}>
+                                        <Text style={[tw`text-slate-300`, {fontFamily: fonts.body}]}>No tasks due this day.</Text>
                                     </View>
-                                    {weeklyGoal ? (
-                                        <Text
-                                            style={[
-                                                tw`rounded-lg border border-[#B55941] px-2 py-1 text-[10px] font-bold uppercase text-[#E4E0D4]`,
-                                                {fontFamily: fonts.body},
-                                            ]}
-                                        >
-                                            Set
-                                        </Text>
-                                    ) : null}
-                                </View>
-
-                                {weeklyGoal ? (
-                                    <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-black/35 px-3 py-2`}>
-                                        <Text
-                                            style={[tw`text-xs font-semibold text-slate-400`, {fontFamily: fonts.body}]}>
-                                            Current focus
-                                        </Text>
-                                        <Text style={[tw`mt-1 text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                            {weeklyGoal.text}
-                                        </Text>
-                                        <Text
-                                            style={[
-                                                tw`mt-2 text-[11px] font-semibold`,
-                                                {
-                                                    fontFamily: fonts.body,
-                                                    color: weeklyGoal.achievedAt ? "#B55941" : "rgba(228,224,212,0.68)",
-                                                },
-                                            ]}
-                                        >
-                                            {weeklyGoal.achievedAt
-                                                ? `Achieved ${new Date(weeklyGoal.achievedAt).toLocaleDateString(undefined, {
-                                                    month: "short",
-                                                    day: "numeric"
-                                                })}`
-                                                : weeklyGoal.lastCheckedAt
-                                                    ? "Still in progress"
-                                                    : "Not checked yet"}
-                                        </Text>
-                                    </View>
-                                ) : null}
-
-                                <View style={tw`mt-3 flex-row flex-wrap gap-2`}>
-                                    {weeklyGoalPresets.map((goal) => {
-                                        const selected = weeklyGoal?.presetId === goal.id;
-                                        return (
-                                            <Pressable
-                                                key={goal.id}
-                                                disabled={isGoalLocked}
-                                                onPress={() => {
-                                                    if (isGoalLocked) return;
-                                                    haptics.selection();
-                                                    setCustomGoal("");
-                                                    void saveWeeklyGoal({text: goal.title, presetId: goal.id});
-                                                }}
-                                                style={({pressed}) => [
-                                                    tw`w-[48%] overflow-hidden rounded-xl border px-3 py-3`,
-                                                    selected
-                                                        ? {
-                                                            borderColor: "#B55941",
-                                                            backgroundColor: "rgba(181,89,65,0.18)"
-                                                        }
-                                                        : {borderColor: "#2c2c2c", backgroundColor: "rgba(0,0,0,0.35)"},
-                                                    buttonDepthStyle,
-                                                    isGoalLocked && tw`opacity-45`,
-                                                    pressed && {opacity: 0.78, transform: [{translateY: 1}]},
-                                                ]}
-                                            >
-                                                <ButtonShine/>
+                                ) : (
+                                    selectedTasks.map((task) => (
+                                        <View key={task.id} style={tw`mt-2 rounded-2xl border border-[#2c2c2c] bg-[#111111] p-3`}>
+                                            <Text
+                                                style={[tw`self-center text-center text-base font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{task.title}</Text>
+                                            {!!task.description &&
                                                 <Text
-                                                    style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                                    {goal.title}
-                                                </Text>
+                                                    style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>{task.description}</Text>}
+                                            <Text
+                                                style={[tw`self-center text-center mt-2 text-xs font-bold uppercase text-slate-400`, {fontFamily: fonts.body}]}>
+                                                {task.status.replace("_", " ")} • {task.priority}
+                                            </Text>
+                                            {task.source === "google_calendar" ? (
                                                 <Text
-                                                    style={[tw`mt-1 text-[11px] leading-4 text-slate-300`, {fontFamily: fonts.body}]}>
-                                                    {goal.description}
+                                                    style={[tw`self-center text-center mt-1 text-[10px] font-bold uppercase text-blue-300`, {fontFamily: fonts.body}]}>
+                                                    Google Calendar
                                                 </Text>
-                                            </Pressable>
-                                        );
-                                    })}
-                                </View>
-
-                                <View style={tw`mt-3`}>
-                                    {goalSaveError ? (
-                                        <Text
-                                            style={[tw`mb-2 text-xs font-bold text-red-200`, {fontFamily: fonts.body}]}>
-                                            {goalSaveError}
-                                        </Text>
-                                    ) : null}
-                                    <Input
-                                        ref={customGoalInputRef}
-                                        value={customGoal}
-                                        onChangeText={setCustomGoal}
-                                        placeholder="Write your own weekly goal"
-                                        returnKeyType="done"
-                                        maxLength={120}
-                                        editable={!isGoalLocked}
-                                    />
-                                    <Pressable
-                                        disabled={!customGoalReady || isGoalLocked}
-                                        onPress={() => {
-                                            if (!customGoalReady || isGoalLocked) return;
-                                            haptics.selection();
-                                            const text = customGoal.trim();
-                                            setCustomGoal("");
-                                            void saveWeeklyGoal({text, presetId: null});
-                                        }}
-                                        style={({pressed}) => [
-                                            tw`mt-2 overflow-hidden rounded-xl px-3 py-2.5 items-center`,
-                                            {backgroundColor: "#B55941", ...buttonDepthStyle},
-                                            (!customGoalReady || isGoalLocked) && tw`opacity-50`,
-                                            pressed && customGoalReady ? {
-                                                opacity: 0.78,
-                                                transform: [{translateY: 1}]
-                                            } : null,
-                                        ]}
-                                    >
-                                        <ButtonShine/>
-                                        <Text
-                                            style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                            Use custom goal
-                                        </Text>
-                                    </Pressable>
-                                </View>
+                                            ) : null}
+                                        </View>
+                                    ))
+                                )}
                             </View>
-                        </BlurView>
-                    </View>
+                        ) : (
+                            <GoalsRoute
+                                ref={customGoalInputRef}
+                                weeklyGoal={weeklyGoal}
+                                weeklyGoalProgress={weeklyGoalProgress}
+                                weeklyGoalPresets={weeklyGoalPresets}
+                                customGoal={customGoal}
+                                setCustomGoal={setCustomGoal}
+                                customGoalReady={customGoalReady}
+                                isGoalLocked={isGoalLocked}
+                                goalSaveError={goalSaveError}
+                                onSavePreset={(preset) => {
+                                    setCustomGoal("");
+                                    void saveWeeklyGoal({text: preset.title, presetId: preset.id});
+                                }}
+                                onSaveCustom={() => {
+                                    const text = customGoal.trim();
+                                    setCustomGoal("");
+                                    void saveWeeklyGoal({text, presetId: null});
+                                }}
+                                onMarkGoalAchieved={onMarkGoalAchieved}
+                                loadRecentAchievedGoals={loadRecentAchievedGoals}
+                            />
+                        )}
+                    </Animated.View>
                 </ScrollView>
             </Animated.View>
         </ImageBackground>
