@@ -168,7 +168,7 @@ export function KanbanScreen({
     const [filterDate, setFilterDate] = useState<string | null>(null);
     const titleInputRef = useRef<TextInput>(null);
     const {keyboardInset} = useKeyboardInset();
-    const fabBottom = useMemo(() => Animated.add(keyboardInset, 80), [keyboardInset]);
+    const fabBottom = useMemo(() => Animated.add(keyboardInset, 47), [keyboardInset]);
 
     const filteredGrouped = useMemo(() => {
         if (!filterDate) return grouped;
@@ -230,7 +230,7 @@ export function KanbanScreen({
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-30`}>
             <View style={[tw`flex-1 bg-black/19`, {paddingHorizontal: 1}]}>
-                <View style={tw`flex-1 px-2 pt-[33px]`}>
+                <View style={tw`flex-1 px-2 pt-[51px]`}>
                         {showTutorial && onDismissTutorial ? (
                             <View style={tw`mb-3`}>
                                 <TutorialCard

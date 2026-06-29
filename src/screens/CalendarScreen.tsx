@@ -88,6 +88,7 @@ interface CalendarScreenProps {
     visualMode: VisualMode;
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
+    onGoalsRouteChange?: (open: boolean) => void;
 }
 
 export function CalendarScreen({
@@ -104,6 +105,7 @@ export function CalendarScreen({
                                    visualMode,
                                    showTutorial,
                                    onDismissTutorial,
+                                   onGoalsRouteChange,
                                }: CalendarScreenProps) {
     const [selectedDate, setSelectedDate] = useState(toLocalISODate());
     const [route, setRoute] = useState<"calendar" | "goals">("calendar");
@@ -138,6 +140,11 @@ export function CalendarScreen({
         if (!focusWeeklyGoalKey) return;
         focusWeeklyGoal();
     }, [focusWeeklyGoalKey, weeklyGoal]);
+
+    useEffect(() => {
+        onGoalsRouteChange?.(route === "goals");
+        return () => onGoalsRouteChange?.(false);
+    }, [onGoalsRouteChange, route]);
 
     function focusWeeklyGoal() {
         openGoalsRoute(true);

@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Animated, AppState, Easing, PanResponder, Platform, SafeAreaView, Text, View} from "react-native";
-import {SafeAreaProvider} from "react-native-safe-area-context";
+import {Alert, Animated, AppState, Easing, PanResponder, Platform, Text, View} from "react-native";
+import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
 import * as Updates from "expo-updates";
 import {CalendarScreen} from "./src/screens/CalendarScreen";
@@ -70,6 +70,8 @@ function AppContent() {
     const [messagesOpen, setMessagesOpen] = useState(false);
     const [messageStartTarget, setMessageStartTarget] = useState<DmStartTarget | null>(null);
     const [journalPromptEntryOpen, setJournalPromptEntryOpen] = useState(false);
+    const [journalMemoryOpen, setJournalMemoryOpen] = useState(false);
+    const [calendarGoalsOpen, setCalendarGoalsOpen] = useState(false);
     const [subscriptionOfferOpen, setSubscriptionOfferOpen] = useState(false);
     const [homeAction, setHomeAction] = useState<HomeAction | null>(null);
     const [goalCheckVisible, setGoalCheckVisible] = useState(false);
@@ -520,7 +522,7 @@ function AppContent() {
         >
             <SafeAreaProvider>
             <GradientBackground>
-                <SafeAreaView style={tw`bg-black flex-1`}>
+                <SafeAreaView edges={["top", "left", "right"]} style={tw`bg-black flex-1`}>
                     <StatusBar style="light"/>
 
                 <AppHeader
@@ -616,6 +618,7 @@ function AppContent() {
                                 void onboarding.dismissTutorial("journal");
                             }}
                             onPromptEntryOpenChange={setJournalPromptEntryOpen}
+                            onMemoryRouteChange={setJournalMemoryOpen}
                         />
                     ) : null}
                     {!accountOpen && tab === "board" ? (
@@ -652,6 +655,7 @@ function AppContent() {
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("calendar");
                             }}
+                            onGoalsRouteChange={setCalendarGoalsOpen}
                         />
                     ) : null}
                     {!accountOpen && tab === "community" ? (
@@ -665,9 +669,9 @@ function AppContent() {
                     ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen onBackToPeers={openPeersRoute}/> : null}
                     </Animated.View>
-                    {!journalPromptEntryOpen ? (
+                    {!journalPromptEntryOpen && tab !== "board" && !journalMemoryOpen && !calendarGoalsOpen ? (
                         <BottomTabBar
-                            activeTab={tab === "board" ? "calendar" : tab === "insights" ? "community" : tab}
+                            activeTab={tab === "insights" ? "community" : tab}
                             accountOpen={accountOpen}
                             visualMode={visualModeState.mode}
                             onTabPress={handleTabChange}

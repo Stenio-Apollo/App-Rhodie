@@ -30,6 +30,7 @@ interface JournalScreenProps {
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
     onPromptEntryOpenChange?: (open: boolean) => void;
+    onMemoryRouteChange?: (open: boolean) => void;
 }
 
 function JournalRouteEntry({
@@ -79,6 +80,7 @@ export function JournalScreen({
                                   showTutorial,
                                   onDismissTutorial,
                                   onPromptEntryOpenChange,
+                                  onMemoryRouteChange,
                               }: JournalScreenProps) {
     const {byDate, addEntry} = journal;
     const [selectedDate, setSelectedDate] = useState<string>(isoToday());
@@ -164,6 +166,11 @@ export function JournalScreen({
         onPromptEntryOpenChange?.(route === "promptEntry" || route === "gratitudeEntry");
         return () => onPromptEntryOpenChange?.(false);
     }, [onPromptEntryOpenChange, route]);
+
+    useEffect(() => {
+        onMemoryRouteChange?.(route === "memory");
+        return () => onMemoryRouteChange?.(false);
+    }, [onMemoryRouteChange, route]);
 
     useEffect(() => {
         if (!homeAction) return;
