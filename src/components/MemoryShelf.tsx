@@ -396,255 +396,316 @@ export function MemoryShelf({
     const isFiltered = Boolean(searchTerm.trim()) || categoryFilter !== "all" || scopeToDate;
 
     return (
-        <View style={tw`rounded-[28px] border border-[#F5DBC9]/33 bg-black/39 p-4`}>
-            <View style={tw`flex-row items-center justify-between`}>
-                <View style={tw`flex-1`}>
-                    <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
-                        Memory shelf
-                    </Text>
-                    <Text style={[tw`mt-1 text-xs`, {
-                        fontFamily: fonts.body,
-                        color: "rgba(228,224,212,0.68)",
-                    }]}>
-                        Search, revisit, and reflect on what you've written.
-                    </Text>
-                </View>
-                {hasAnyEntries ? (
-                    <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Surprise me with a random memory"
-                        onPress={handleSurpriseMe}
-                        style={({pressed}) => [
-                            tw`items-center justify-center rounded-full border border-[#F5DBC9]/33 px-3 py-2`,
-                            {backgroundColor: "rgba(181,89,65,0.18)"},
-                            pressed && {opacity: 0.78, transform: [{translateY: 1}]},
-                        ]}
-                    >
-                        <View style={tw`flex-row items-center gap-1`}>
-                            <Ionicons name="shuffle" size={14} color="#F4E8D8"/>
-                            <Text style={[tw`text-[11px] font-semibold`, {
-                                fontFamily: fonts.strong,
-                                color: "#F4E8D8",
+        <View style={tw`overflow-hidden rounded-[28px] bg-black/10 p-1`}>
+            <BlurView
+                intensity={72}
+                tint="dark"
+                style={tw`overflow-hidden rounded-[24px] border border-slate-700`}
+            >
+                <View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.77)"}]}
+                />
+                <LinearGradient
+                    colors={["rgba(181,89,65,0.08)", "rgba(255,255,255,0.02)", "transparent"]}
+                    locations={[0, 0.5, 1]}
+                    pointerEvents="none"
+                    style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
+                />
+                <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.35)"]}
+                    pointerEvents="none"
+                    style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
+                />
+
+                <View style={tw`p-3`}>
+                    <View style={tw`flex-row items-center justify-between`}>
+                        <View style={tw`flex-1`}>
+                            <Text style={[tw`text-base font-bold`, {fontFamily: fonts.heading, color: TEXT_PRIMARY}]}>
+                                Memory shelf
+                            </Text>
+                            <Text style={[tw`mt-1 text-xs`, {
+                                fontFamily: fonts.body,
+                                color: "rgba(223,196,170,0.7)",
                             }]}>
-                                Surprise me
+                                Search, revisit, and reflect on what you've written.
                             </Text>
                         </View>
-                    </Pressable>
-                ) : null}
-            </View>
-
-            {hasAnyEntries ? (
-                <>
-                    <View style={tw`mt-4 flex-row gap-2`}>
-                        <StatPill label="Entries" value={stats.total}/>
-                        <StatPill label="Streak" value={`${stats.streak}d`}/>
-                        <StatPill label="This month" value={`${stats.monthDays}d`}/>
-                    </View>
-
-                    <View style={tw`mt-3 flex-row gap-2`}>
-                        <StatPill label="Prompts" value={stats.promptCount}/>
-                        <StatPill label="Gratitudes" value={stats.gratitudeCount}/>
-                    </View>
-
-                    <View
-                        style={tw`mt-4 flex-row items-center gap-2 rounded-2xl border border-[#F5DBC9]/22 bg-black/45 px-3 py-2`}>
-                        <Ionicons name="search" size={16} color="rgba(228,224,212,0.65)"/>
-                        <TextInput
-                            value={searchTerm}
-                            onChangeText={setSearchTerm}
-                            placeholder="Search your entries"
-                            placeholderTextColor="rgba(228,224,212,0.45)"
-                            keyboardAppearance="dark"
-                            returnKeyType="search"
-                            style={[tw`flex-1 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
-                        />
-                        {searchTerm.length > 0 ? (
+                        {hasAnyEntries ? (
                             <Pressable
                                 accessibilityRole="button"
-                                accessibilityLabel="Clear search"
-                                onPress={() => setSearchTerm("")}
-                                hitSlop={8}
+                                accessibilityLabel="Surprise me with a random memory"
+                                onPress={handleSurpriseMe}
+                                style={({pressed}) => [
+                                    tw`overflow-hidden flex-row items-center gap-1 rounded-full border px-3 py-2`,
+                                    {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle},
+                                    pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                                ]}
                             >
-                                <Ionicons name="close-circle" size={16} color="rgba(228,224,212,0.65)"/>
+                                <ButtonShine/>
+                                <Ionicons name="shuffle" size={14} color="#FFF6E8"/>
+                                <Text style={[tw`text-[11px] font-semibold`, {
+                                    fontFamily: fonts.strong,
+                                    color: "#FFF6E8",
+                                }]}>
+                                    Surprise me
+                                </Text>
                             </Pressable>
                         ) : null}
                     </View>
 
-                    <View style={tw`mt-3 flex-row flex-wrap gap-2`}>
-                        <FilterChip label="All" active={categoryFilter === "all"} onPress={() => setCategoryFilter("all")}/>
-                        <FilterChip label="Prompts" active={categoryFilter === "prompt"} onPress={() => setCategoryFilter("prompt")}/>
-                        <FilterChip label="Gratitude" active={categoryFilter === "gratitude"} onPress={() => setCategoryFilter("gratitude")}/>
-                    </View>
-
-                    <View style={tw`mt-4 rounded-2xl border border-orange-50/13 bg-black/33 p-3`}>
-                        <View style={tw`flex-row items-center justify-between`}>
-                            <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                Recent days
-                            </Text>
-                            {scopeToDate ? (
-                                <Pressable
-                                    accessibilityRole="button"
-                                    accessibilityLabel="Show all dates"
-                                    onPress={handleClearDateScope}
-                                    style={({pressed}) => [
-                                        tw`rounded-full border border-[#F5DBC9]/33 px-3 py-1`,
-                                        pressed && {opacity: 0.78},
-                                    ]}
-                                >
-                                    <Text style={[tw`text-[10px] font-semibold`, {
-                                        fontFamily: fonts.strong,
-                                        color: "#F4E8D8",
-                                    }]}>
-                                        Show all dates
-                                    </Text>
-                                </Pressable>
-                            ) : null}
-                        </View>
-                        <View style={tw`mt-2 flex-row flex-wrap gap-2`}>
-                            {uniqueDatesDescending.slice(0, 7).map((date) => {
-                                const isSelected = scopeToDate && date === selectedDate;
-                                const isToday = date === today;
-                                return (
-                                    <Pressable
-                                        key={date}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={`View entries from ${date}`}
-                                        onPress={() => handleSelectDate(date)}
-                                        style={({pressed}) => [
-                                            tw`rounded-full border px-3 py-1.5`,
-                                            isSelected
-                                                ? {borderColor: "#B55941", backgroundColor: "rgba(181,89,65,0.32)"}
-                                                : {borderColor: "rgba(245,219,201,0.22)", backgroundColor: "rgba(10,10,10,0.6)"},
-                                            pressed && {opacity: 0.78, transform: [{translateY: 1}]},
-                                        ]}
-                                    >
-                                        <Text style={[tw`text-[11px] font-semibold`, {
-                                            fontFamily: fonts.strong,
-                                            color: isSelected ? "#FFF6E8" : "#E4E0D4",
-                                        }]}>
-                                            {isToday ? `${date} • today` : date}
-                                        </Text>
-                                    </Pressable>
-                                );
-                            })}
-                        </View>
-                    </View>
-
-                    {lookback.length > 0 ? (
-                        <View style={tw`mt-4`}>
-                            <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                Looking back
-                            </Text>
-                            <View style={tw`mt-2 gap-2`}>
-                                {lookback.map((item) => (
-                                    <Pressable
-                                        key={item.date}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={`View entries from ${formatLookbackLabel(item.delta)}`}
-                                        onPress={() => handleSelectDate(item.date)}
-                                        style={({pressed}) => [
-                                            tw`rounded-2xl border border-[#F5DBC9]/22 px-3 py-3`,
-                                            {backgroundColor: "rgba(10,10,10,0.4)"},
-                                            pressed && {opacity: 0.78, transform: [{translateY: 1}]},
-                                        ]}
-                                    >
-                                        <View style={tw`flex-row items-center justify-between`}>
-                                            <Text style={[tw`text-[11px] uppercase tracking-[1px]`, {
-                                                fontFamily: fonts.strong,
-                                                color: "rgba(228,224,212,0.55)",
-                                            }]}>
-                                                {formatLookbackLabel(item.delta)}
-                                            </Text>
-                                            <Text style={[tw`text-[11px] font-semibold`, {
-                                                fontFamily: fonts.strong,
-                                                color: "#F4E8D8",
-                                            }]}>
-                                                {item.date}
-                                            </Text>
-                                        </View>
-                                        <Text
-                                            style={[tw`mt-2 text-sm leading-5`, {
-                                                fontFamily: fonts.body,
-                                                color: "#E4E0D4",
-                                            }]}
-                                            numberOfLines={2}
-                                        >
-                                            {item.sample.text}
-                                        </Text>
-                                        <Text style={[tw`mt-1 text-[10px]`, {
-                                            fontFamily: fonts.body,
-                                            color: "rgba(228,224,212,0.55)",
-                                        }]}>
-                                            {item.count} {item.count === 1 ? "entry" : "entries"}
-                                        </Text>
-                                    </Pressable>
-                                ))}
+                    {hasAnyEntries ? (
+                        <>
+                            <View style={tw`mt-4 flex-row gap-2`}>
+                                <StatPill label="Entries" value={stats.total}/>
+                                <StatPill label="Streak" value={`${stats.streak}d`}/>
+                                <StatPill label="This month" value={`${stats.monthDays}d`}/>
                             </View>
-                        </View>
-                    ) : null}
-                </>
-            ) : null}
 
-            <View style={tw`mt-4`}>
-                {!hasAnyEntries ? (
-                    <View style={tw`rounded-2xl border border-[#F5DBC9]/22 bg-black/35 px-3 py-5`}>
-                        <Text style={[tw`text-center text-sm`, {
-                            fontFamily: fonts.heading,
-                            color: "#E4E0D4",
-                        }]}>
-                            Your shelf is empty.
-                        </Text>
-                        <Text style={[tw`mt-2 text-center text-xs leading-5`, {
-                            fontFamily: fonts.body,
-                            color: "rgba(228,224,212,0.65)",
-                        }]}>
-                            Write a prompt response or list three good things to add your first memory here.
-                        </Text>
-                    </View>
-                ) : visibleEntries.length === 0 ? (
-                    <View style={tw`rounded-2xl border border-[#F5DBC9]/22 bg-black/35 px-3 py-5`}>
-                        <Text style={[tw`text-center text-sm`, {
-                            fontFamily: fonts.body,
-                            color: "rgba(228,224,212,0.78)",
-                        }]}>
-                            {isFiltered
-                                ? "Nothing matches the current filters."
-                                : "Nothing saved for this date yet."}
-                        </Text>
-                    </View>
-                ) : (
-                    <View style={tw`gap-3`}>
-                        {visibleEntries.map((entry) => {
-                            const isEditing = editingId === entry.id;
-                            return (
-                                <EntryCard
-                                    key={entry.id}
-                                    entry={entry}
-                                    isEditing={isEditing}
-                                    editingText={editingText}
-                                    setEditingText={setEditingText}
-                                    onStartEdit={() => {
-                                        haptics.selection();
-                                        setEditingId(entry.id);
-                                        setEditingText(entry.text);
-                                    }}
-                                    onCancelEdit={() => {
-                                        setEditingId(null);
-                                        setEditingText("");
-                                    }}
-                                    onSaveEdit={() => {
-                                        if (!editingId) return;
-                                        editEntry(editingId, editingText);
-                                        setEditingId(null);
-                                        setEditingText("");
-                                    }}
-                                    onDelete={() => deleteEntry(entry.id)}
+                            <View style={tw`mt-2 flex-row gap-2`}>
+                                <StatPill label="Prompts" value={stats.promptCount}/>
+                                <StatPill label="Gratitudes" value={stats.gratitudeCount}/>
+                            </View>
+
+                            <View
+                                style={[
+                                    tw`mt-4 overflow-hidden flex-row items-center gap-2 rounded-2xl border border-[#2c2c2c] px-3 py-2.5`,
+                                    {backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
+                                ]}
+                            >
+                                <ButtonShine/>
+                                <Ionicons name="search" size={16} color={CREAM}/>
+                                <TextInput
+                                    value={searchTerm}
+                                    onChangeText={setSearchTerm}
+                                    placeholder="Search your entries"
+                                    placeholderTextColor="rgba(223,196,170,0.5)"
+                                    keyboardAppearance="dark"
+                                    returnKeyType="search"
+                                    style={[tw`flex-1 text-sm`, {fontFamily: fonts.body, color: TEXT_PRIMARY}]}
                                 />
-                            );
-                        })}
+                                {searchTerm.length > 0 ? (
+                                    <Pressable
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Clear search"
+                                        onPress={() => setSearchTerm("")}
+                                        hitSlop={8}
+                                    >
+                                        <Ionicons name="close-circle" size={16} color={CREAM}/>
+                                    </Pressable>
+                                ) : null}
+                            </View>
+
+                            <View style={tw`mt-3 flex-row flex-wrap gap-2`}>
+                                <FilterChip label="All" active={categoryFilter === "all"} onPress={() => setCategoryFilter("all")}/>
+                                <FilterChip label="Prompts" active={categoryFilter === "prompt"} onPress={() => setCategoryFilter("prompt")}/>
+                                <FilterChip label="Gratitude" active={categoryFilter === "gratitude"} onPress={() => setCategoryFilter("gratitude")}/>
+                            </View>
+
+                            <View
+                                style={[
+                                    tw`mt-4 overflow-hidden rounded-2xl border border-[#2c2c2c] p-3`,
+                                    {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                ]}
+                            >
+                                <ButtonShine/>
+                                <View style={tw`flex-row items-center justify-between`}>
+                                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
+                                        fontFamily: fonts.strong,
+                                        color: CREAM,
+                                        opacity: 0.7,
+                                    }]}>
+                                        Recent days
+                                    </Text>
+                                    {scopeToDate ? (
+                                        <Pressable
+                                            accessibilityRole="button"
+                                            accessibilityLabel="Show all dates"
+                                            onPress={handleClearDateScope}
+                                            style={({pressed}) => [
+                                                tw`overflow-hidden rounded-full border px-3 py-1`,
+                                                {borderColor: CREAM, backgroundColor: "rgba(223,196,170,0.14)"},
+                                                pressed && {opacity: 0.78},
+                                            ]}
+                                        >
+                                            <Text style={[tw`text-[10px] font-semibold`, {
+                                                fontFamily: fonts.strong,
+                                                color: CREAM,
+                                            }]}>
+                                                Show all dates
+                                            </Text>
+                                        </Pressable>
+                                    ) : null}
+                                </View>
+                                <View style={tw`mt-2 flex-row flex-wrap gap-2`}>
+                                    {uniqueDatesDescending.slice(0, 7).map((date) => {
+                                        const isSelected = scopeToDate && date === selectedDate;
+                                        const isToday = date === today;
+                                        return (
+                                            <Pressable
+                                                key={date}
+                                                accessibilityRole="button"
+                                                accessibilityLabel={`View entries from ${date}`}
+                                                onPress={() => handleSelectDate(date)}
+                                                style={({pressed}) => [
+                                                    tw`overflow-hidden rounded-full border px-3 py-1.5`,
+                                                    isSelected
+                                                        ? {borderColor: ACCENT, backgroundColor: "rgba(181,89,65,0.42)", ...buttonDepthStyle}
+                                                        : {borderColor: "rgba(223,196,170,0.32)", backgroundColor: "rgba(10,10,10,0.85)", ...buttonDepthStyle},
+                                                    pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                                                ]}
+                                            >
+                                                <ButtonShine/>
+                                                <Text style={[tw`text-[11px] font-semibold`, {
+                                                    fontFamily: fonts.strong,
+                                                    color: isSelected ? "#FFF6E8" : CREAM,
+                                                }]}>
+                                                    {isToday ? `${date} • today` : date}
+                                                </Text>
+                                            </Pressable>
+                                        );
+                                    })}
+                                </View>
+                            </View>
+
+                            {lookback.length > 0 ? (
+                                <View style={tw`mt-4`}>
+                                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
+                                        fontFamily: fonts.strong,
+                                        color: CREAM,
+                                        opacity: 0.7,
+                                    }]}>
+                                        Looking back
+                                    </Text>
+                                    <View style={tw`mt-2 gap-2`}>
+                                        {lookback.map((item) => (
+                                            <Pressable
+                                                key={item.date}
+                                                accessibilityRole="button"
+                                                accessibilityLabel={`View entries from ${formatLookbackLabel(item.delta)}`}
+                                                onPress={() => handleSelectDate(item.date)}
+                                                style={({pressed}) => [
+                                                    tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-3`,
+                                                    {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                                    pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                                                ]}
+                                            >
+                                                <ButtonShine/>
+                                                <View style={tw`flex-row items-center justify-between`}>
+                                                    <View style={tw`flex-row items-center gap-1.5`}>
+                                                        <Ionicons name="time-outline" size={12} color={ACCENT}/>
+                                                        <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
+                                                            fontFamily: fonts.strong,
+                                                            color: CREAM,
+                                                            opacity: 0.7,
+                                                        }]}>
+                                                            {formatLookbackLabel(item.delta)}
+                                                        </Text>
+                                                    </View>
+                                                    <Text style={[tw`text-[11px] font-semibold`, {
+                                                        fontFamily: fonts.strong,
+                                                        color: CREAM,
+                                                    }]}>
+                                                        {item.date}
+                                                    </Text>
+                                                </View>
+                                                <Text
+                                                    style={[tw`mt-2 text-sm leading-5`, {
+                                                        fontFamily: fonts.body,
+                                                        color: TEXT_PRIMARY,
+                                                    }]}
+                                                    numberOfLines={2}
+                                                >
+                                                    {item.sample.text}
+                                                </Text>
+                                                <Text style={[tw`mt-1 text-[10px]`, {
+                                                    fontFamily: fonts.body,
+                                                    color: "rgba(223,196,170,0.55)",
+                                                }]}>
+                                                    {item.count} {item.count === 1 ? "entry" : "entries"}
+                                                </Text>
+                                            </Pressable>
+                                        ))}
+                                    </View>
+                                </View>
+                            ) : null}
+                        </>
+                    ) : null}
+
+                    <View style={tw`mt-4`}>
+                        {!hasAnyEntries ? (
+                            <View
+                                style={[
+                                    tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-5`,
+                                    {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                ]}
+                            >
+                                <ButtonShine/>
+                                <Text style={[tw`text-center text-sm`, {
+                                    fontFamily: fonts.heading,
+                                    color: TEXT_PRIMARY,
+                                }]}>
+                                    Your shelf is empty.
+                                </Text>
+                                <Text style={[tw`mt-2 text-center text-xs leading-5`, {
+                                    fontFamily: fonts.body,
+                                    color: "rgba(223,196,170,0.65)",
+                                }]}>
+                                    Write a prompt response or list three good things to add your first memory here.
+                                </Text>
+                            </View>
+                        ) : visibleEntries.length === 0 ? (
+                            <View
+                                style={[
+                                    tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-5`,
+                                    {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                ]}
+                            >
+                                <ButtonShine/>
+                                <Text style={[tw`text-center text-sm`, {
+                                    fontFamily: fonts.body,
+                                    color: "rgba(223,196,170,0.78)",
+                                }]}>
+                                    {isFiltered
+                                        ? "Nothing matches the current filters."
+                                        : "Nothing saved for this date yet."}
+                                </Text>
+                            </View>
+                        ) : (
+                            <View style={tw`gap-3`}>
+                                {visibleEntries.map((entry) => {
+                                    const isEditing = editingId === entry.id;
+                                    return (
+                                        <EntryCard
+                                            key={entry.id}
+                                            entry={entry}
+                                            isEditing={isEditing}
+                                            editingText={editingText}
+                                            setEditingText={setEditingText}
+                                            onStartEdit={() => {
+                                                haptics.selection();
+                                                setEditingId(entry.id);
+                                                setEditingText(entry.text);
+                                            }}
+                                            onCancelEdit={() => {
+                                                setEditingId(null);
+                                                setEditingText("");
+                                            }}
+                                            onSaveEdit={() => {
+                                                if (!editingId) return;
+                                                editEntry(editingId, editingText);
+                                                setEditingId(null);
+                                                setEditingText("");
+                                            }}
+                                            onDelete={() => deleteEntry(entry.id)}
+                                        />
+                                    );
+                                })}
+                            </View>
+                        )}
                     </View>
-                )}
-            </View>
+                </View>
+            </BlurView>
         </View>
     );
 }
