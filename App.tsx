@@ -514,6 +514,13 @@ function AppContent() {
         );
     }
 
+    const showBottomTabBar =
+        !journalPromptEntryOpen &&
+        tab !== "board" &&
+        tab !== "insights" &&
+        !journalMemoryOpen &&
+        !calendarGoalsOpen;
+
     return (
         <AppErrorBoundary
             onReset={() => {
@@ -669,9 +676,9 @@ function AppContent() {
                     ) : null}
                     {!accountOpen && tab === "insights" ? <InsightsScreen onBackToPeers={openPeersRoute}/> : null}
                     </Animated.View>
-                    {!journalPromptEntryOpen && tab !== "board" && !journalMemoryOpen && !calendarGoalsOpen ? (
+                    {showBottomTabBar ? (
                         <BottomTabBar
-                            activeTab={tab === "insights" ? "community" : tab}
+                            activeTab={tab}
                             accountOpen={accountOpen}
                             visualMode={visualModeState.mode}
                             onTabPress={handleTabChange}

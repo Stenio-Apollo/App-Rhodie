@@ -26,7 +26,7 @@ const INACTIVE_COLOR = "#E4E0D4";
 const ROW_HORIZONTAL_PADDING = 3;
 const PILL_HORIZONTAL_INSET = 3;
 const PILL_VERTICAL_INSET = 3;
-const BAR_VERTICAL_OFFSET = 33;
+const BAR_VERTICAL_OFFSET = 27;
 
 interface BottomTabBarProps {
     activeTab: Tab;

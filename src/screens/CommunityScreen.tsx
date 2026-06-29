@@ -7,13 +7,17 @@ import {
     Pressable,
     ScrollView,
     Share,
+    StyleSheet,
     Text,
     TextInput,
     View
 } from "react-native";
+import {BlurView} from "expo-blur";
+import {LinearGradient} from "expo-linear-gradient";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {Button} from "../components/ui/Button";
+import {TranslucentCard} from "../components/TranslucentCard";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import {toLocalISODate} from "../lib/date-utils";
@@ -288,7 +292,7 @@ function CommentItem({
                     </Text>
                 </View>
             ) : null}
-            <View style={tw`rounded-2xl border border-[#B55941]/33 bg-black/45 px-3 py-2.5`}>
+            <TranslucentCard radius={16} style={tw`px-3 py-2.5`}>
                 <View style={tw`flex-row items-start gap-2`}>
                     <Avatar author={comment.author} size={26} currentUserId={currentUserId}/>
                     <View style={tw`flex-1`}>
@@ -316,7 +320,7 @@ function CommentItem({
                             placeholderTextColor="rgba(228,224,212,0.45)"
                             keyboardAppearance="dark"
                             multiline
-                            style={[tw`max-h-24 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-xs text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                            style={[tw`max-h-24 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2 text-xs text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                         />
                         <View style={tw`flex-row items-center gap-3`}>
                             <Pressable
@@ -389,7 +393,7 @@ function CommentItem({
                         </Text>
                     </View>
                 </View>
-            </View>
+            </TranslucentCard>
 
             {comment.replies.map((reply, index) => {
                 const previousReply = comment.replies[index - 1];
@@ -488,7 +492,7 @@ function PostCard({
 
     return (
         <View style={tw`gap-1`}>
-            <View style={tw`rounded-3xl border border-slate-700 bg-black/77 p-4`}>
+            <TranslucentCard radius={24} style={tw`p-4`}>
                 <View style={tw`flex-row gap-3`}>
                     <Avatar author={post.author} currentUserId={currentUserId}/>
                     <View style={tw`flex-1`}>
@@ -515,7 +519,7 @@ function PostCard({
                                     placeholderTextColor="rgba(228,224,212,0.45)"
                                     keyboardAppearance="dark"
                                     multiline
-                                    style={[tw`max-h-32 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                    style={[tw`max-h-32 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                                 />
                                 <View style={tw`flex-row items-center gap-3`}>
                                     <Pressable
@@ -641,7 +645,7 @@ function PostCard({
                                 placeholderTextColor="rgba(228,224,212,0.45)"
                                 keyboardAppearance="dark"
                                 multiline
-                                style={[tw`max-h-24 flex-1 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                style={[tw`max-h-24 flex-1 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                             />
                             <Pressable
                                 disabled={busy || commentText.trim().length === 0}
@@ -669,7 +673,7 @@ function PostCard({
                     onEdit={() => setPostEditing(true)}
                     onDelete={() => onDeletePost(post)}
                 />
-            </View>
+            </TranslucentCard>
             <Text style={[tw`self-end pr-2 text-[11px] text-slate-700`, {fontFamily: fonts.body}]}>
                 {formatTime(post.createdAt)}
             </Text>
@@ -806,12 +810,33 @@ export function CommunityScreen({
                     keyboardDismissMode="interactive"
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={tw`rounded-3xl border border-slate-700 bg-black/70 p-4`}>
+                    <View style={tw`overflow-hidden rounded-[28px] bg-black/10 p-1`}>
+                        <BlurView
+                            intensity={30}
+                            tint="dark"
+                            style={tw`overflow-hidden rounded-[24px] border border-slate-700/60`}
+                        >
+                            <View
+                                pointerEvents="none"
+                                style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.22)"}]}
+                            />
+                            <LinearGradient
+                                colors={["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
+                                locations={[0, 0.5, 1]}
+                                pointerEvents="none"
+                                style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
+                            />
+                            <LinearGradient
+                                colors={["transparent", "rgba(0,0,0,0.18)"]}
+                                pointerEvents="none"
+                                style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
+                            />
+                            <View style={tw`p-4`}>
                         <Text style={[tw`text-2xl text-white`, {fontFamily: fonts.heading}]}>Connect</Text>
                         <Text style={[tw`mt-1 text-sm leading-5 text-[#E4E0D4]/70`, {fontFamily: fonts.body}]}>
                             Post a prompt response, gratitude, or a positive note with your peers.
                         </Text>
-                        <View style={tw`mt-4 flex-row rounded-2xl border border-slate-700 bg-black/45 p-1`}>
+                        <View style={tw`mt-4 flex-row rounded-2xl border border-slate-700/60 bg-black/22 p-1`}>
                             {COMPOSER_MODES.map((mode) => {
                                 const active = mode.key === composerMode;
                                 return (
@@ -852,7 +877,7 @@ export function CommunityScreen({
                             })}
                         </View>
                         {composerMode === "prompt" ? (
-                            <View style={tw`mt-3 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2.5`}>
+                            <View style={tw`mt-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2.5`}>
                                 <Text style={[tw`text-[11px] text-white`, {fontFamily: fonts.heading}]}>
                                     Today's prompt
                                 </Text>
@@ -868,7 +893,7 @@ export function CommunityScreen({
                             placeholderTextColor="rgba(228,224,212,0.45)"
                             keyboardAppearance="dark"
                             multiline
-                            style={[tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700 bg-black/45 px-4 py-3 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                            style={[tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700/60 bg-black/22 px-4 py-3 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                         />
                         <View style={tw`mt-3 flex-row justify-end`}>
                             <Button
@@ -882,23 +907,25 @@ export function CommunityScreen({
                                 textStyle={{color: "#FFF6E8"}}
                             />
                         </View>
+                            </View>
+                        </BlurView>
                     </View>
 
                     {community.error ? (
                         <Text
-                            style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-sm text-rose-200`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl bg-black/22 border border-slate-700/60 px-4 py-3 text-sm text-rose-200`, {fontFamily: fonts.body}]}>
                             {community.error}
                         </Text>
                     ) : null}
 
                     {!community.isLoaded ? (
                         <Text
-                            style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl bg-black/22 border border-slate-700/60 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
                             Loading peers...
                         </Text>
                     ) : community.posts.length === 0 ? (
                         <Text
-                            style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl bg-black/22 border border-slate-700/60 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
                             No posts yet.
                         </Text>
                     ) : (

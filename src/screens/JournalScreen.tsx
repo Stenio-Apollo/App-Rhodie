@@ -10,6 +10,7 @@ import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
 import {TutorialCard} from "../components/TutorialCard";
 import {MemoryShelf} from "../components/MemoryShelf";
+import {TranslucentCard} from "../components/TranslucentCard";
 import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 
@@ -252,6 +253,23 @@ export function JournalScreen({
                         onPress={() => setRoute("audio")}
                     />
                 </View>
+                {route === "memory" || route === "audio" ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={route === "memory" ? "Close memory shelf" : "Close audio journal"}
+                        onPress={() => {
+                            haptics.navigation();
+                            setRoute("write");
+                        }}
+                        hitSlop={10}
+                        style={({pressed}) => [
+                            tw`absolute right-4 top-2 z-30 h-9 w-9 items-center justify-center`,
+                            pressed && {opacity: 0.6, transform: [{translateY: 1}]},
+                        ]}
+                    >
+                        <Ionicons name="close" size={18} color="#E4E0D4"/>
+                    </Pressable>
+                ) : null}
                 {route === "write" ? (
                     <View pointerEvents="none" style={tw`absolute left-3 right-20 top-3 z-10 items-center`}>
                         <Text
@@ -295,7 +313,7 @@ export function JournalScreen({
                                     </View>
                                 ) : null}
 
-                                <View style={tw`rounded-3xl bg-black/63 border border-[#2c2c2c] p-3`}>
+                                <TranslucentCard radius={24} style={tw`p-3`}>
                                     <View style={tw`flex-row items-start justify-between gap-3`}>
                                         <View style={tw`flex-1`}>
                                             <Text
@@ -331,9 +349,9 @@ export function JournalScreen({
                                             <Ionicons name="create-outline" size={22} color="#E4E0D4"/>
                                         </Pressable>
                                     </View>
-                                </View>
+                                </TranslucentCard>
 
-                                <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/63 p-3`}>
+                                <TranslucentCard radius={16} style={tw`mt-4 p-3`}>
                                     <View style={tw`flex-row items-start justify-between gap-3`}>
                                         <View style={tw`flex-1`}>
                                             <Text
@@ -365,7 +383,7 @@ export function JournalScreen({
                                             <Ionicons name="create-outline" size={22} color="#E4E0D4"/>
                                         </Pressable>
                                     </View>
-                                </View>
+                                </TranslucentCard>
 
                             </>
                         ) : null}
@@ -383,29 +401,23 @@ export function JournalScreen({
                         ) : null}
 
                         {route === "audio" ? (
-                            <View style={tw`rounded-[28px] border border-[#F5DBC9]/33 bg-black/39 p-4`}>
-                                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                            <TranslucentCard radius={28} style={tw`items-center p-4`}>
+                                <Text style={[tw`text-center text-xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
                                     Audio Journal
                                 </Text>
-                                <Text style={[tw`mt-1 text-xs`, {
-                                    fontFamily: fonts.body,
-                                    color: "rgba(228,224,212,0.68)"
-                                }]}>
-                                    Record voice reflections here when audio journaling is ready.
-                                </Text>
                                 <View
-                                    style={tw`mt-5 items-center justify-center rounded-[24px] border border-[#F5DBC9]/33 bg-black/35 px-4 py-8`}>
+                                    style={tw`mt-4 w-full items-center justify-center rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-6`}>
                                     <Ionicons name="mic-outline" size={34} color="#E4E0D4"/>
                                     <Text
-                                        style={[tw`mt-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                        Audio entry point
+                                        style={[tw`mt-3 text-center text-md text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        Coming Soon...
                                     </Text>
                                     <Text
                                         style={[tw`mt-1 text-center text-xs leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
-                                        This route is ready for the recorder controls.
+                                        This route is for audio journaling.
                                     </Text>
                                 </View>
-                            </View>
+                            </TranslucentCard>
                         ) : null}
 
                     </Animated.View>
@@ -447,7 +459,7 @@ export function JournalScreen({
                                 <View style={tw`flex-1 px-4 pb-4 pt-4`}>
                                     {route === "promptEntry" ? (
                                         <>
-                                            <View style={tw`rounded-[24px] border border-[#F5DBC9]/33 bg-black/70 p-4`}>
+                                            <View style={tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`}>
                                                 <View style={tw`flex-row items-start justify-between gap-3`}>
                                                     <Text style={[tw`flex-1 text-sm`, {
                                                         fontFamily: fonts.heading,
@@ -478,12 +490,12 @@ export function JournalScreen({
                                                 multiline
                                                 autoFocus
                                                 textAlignVertical="top"
-                                                style={[tw`mt-4 flex-1 rounded-[24px] border border-[#2c2c2c] bg-black/79 px-4 py-4 text-base leading-6 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                                style={[tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4 text-base leading-6 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                                             />
                                         </>
                                     ) : (
                                         <>
-                                            <View style={tw`rounded-[24px] border border-[#F5DBC9]/33 bg-black/70 p-4`}>
+                                            <View style={tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`}>
                                                 <View style={tw`flex-row items-start justify-between gap-3`}>
                                                     <Text style={[tw`flex-1 text-sm`, {
                                                         fontFamily: fonts.heading,
@@ -501,7 +513,7 @@ export function JournalScreen({
                                             </View>
 
                                             <View
-                                                style={tw`mt-4 flex-1 rounded-[24px] border border-[#2c2c2c] bg-black/79 px-4 py-4`}>
+                                                style={tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`}>
                                                 {[0, 1, 2].map((idx) => (
                                                     <TextInput
                                                         ref={idx === 0 ? gratitudeInputRef : undefined}
@@ -515,7 +527,7 @@ export function JournalScreen({
                                                         keyboardAppearance="dark"
                                                         placeholder="•"
                                                         placeholderTextColor="#6b7280"
-                                                        style={[tw`mb-3 rounded-2xl border border-slate-50/15 bg-black/35 px-3 py-3 text-base text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                                        style={[tw`mb-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-3 text-base text-[#E4E0D4]`, {fontFamily: fonts.body}]}
                                                     />
                                                 ))}
                                             </View>

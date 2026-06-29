@@ -1,6 +1,7 @@
-import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, ImageBackground, Linking, ScrollView, Text, View,} from "react-native";
+import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
+import {Alert, ImageBackground, Linking, Pressable, ScrollView, Text, View,} from "react-native";
 import type {Session} from "@supabase/supabase-js";
+import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {Button} from "../components/ui/Button";
 import {Input} from "../components/ui/Input";
@@ -8,6 +9,50 @@ import {fonts} from "../theme/fonts";
 import type {Profile} from "../state/useProfile";
 import {BirthdayPicker, formatBirthday, parseBirthdayParts} from "../components/BirthdayPicker";
 import type {VisualMode} from "../state/useVisualMode";
+import {TranslucentCard} from "../components/TranslucentCard";
+import {haptics} from "../lib/haptics";
+
+type AccountRoute = "account" | "support" | "guide" | "subscription";
+
+function AccountRouteEntry({
+                               label,
+                               icon,
+                               active,
+                               onPress,
+                           }: {
+    label: string;
+    icon: ComponentProps<typeof Ionicons>["name"];
+    active: boolean;
+    onPress: () => void;
+}) {
+    const color = active ? "#000000" : "#E4E0D4";
+
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            onPress={() => {
+                haptics.navigation();
+                onPress();
+            }}
+            style={({pressed}) => [
+                tw`items-center justify-center px-1 py-0.5`,
+                pressed && {transform: [{scale: 0.94}], opacity: 0.85},
+            ]}
+        >
+            <Text
+                numberOfLines={1}
+                style={[
+                    tw`mb-1 text-[10px] font-bold`,
+                    {fontFamily: fonts.heading, color},
+                ]}
+            >
+                {label}
+            </Text>
+            <Ionicons name={icon} size={22} color={color}/>
+        </Pressable>
+    );
+}
 
 interface AccountScreenProps {
     session: Session;
@@ -36,7 +81,11 @@ interface AccountScreenProps {
     };
     onClose: () => void;
     onSignOut: () => void;
-    onSaveProfile: (payload: { full_name: string; birthday: string | null; avatar_url?: string | null }) => Promise<string | null>;
+    onSaveProfile: (payload: {
+        full_name: string;
+        birthday: string | null;
+        avatar_url?: string | null
+    }) => Promise<string | null>;
     onDeleteAccount: () => Promise<string | null>;
     onResetOnboarding: () => Promise<void>;
     visualMode: VisualMode;
@@ -107,9 +156,10 @@ export function AccountScreen({
     const [deleteBusy, setDeleteBusy] = useState(false);
     const [notice, setNotice] = useState<string | null>(null);
     const [noticeTone, setNoticeTone] = useState<"success" | "error">("success");
+    const [route, setRoute] = useState<AccountRoute>("account");
     const bg = visualMode === "sunset"
-        ? require("../../public/images/rhelk1.jpg")
-        : require("../../public/images/rh11.jpg");
+        ? require("../../public/images/news paper.jpg")
+        : require("../../public/images/newspaper 1.jpg");
     const accountButtonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},
@@ -137,12 +187,13 @@ export function AccountScreen({
     };
     const deleteButtonStyle = {
         ...accountButtonDepthStyle,
-        backgroundColor: "#f43f5e",
+        backgroundColor: "#111111",
         borderWidth: 1,
-        borderColor: "rgba(43,43,43,0.18)",
+        borderColor: "rgba(255,255,255,0.16)",
     };
     const lightButtonTextStyle = {color: "#FFF6E8"};
     const darkButtonTextStyle = {color: "#111111"};
+    const accountHeaderColorStyle = {color: "#DFC4AA", opacity: 0.7};
 
     useEffect(() => {
         mountedRef.current = true;
@@ -289,231 +340,287 @@ export function AccountScreen({
             : null;
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-60`}>
-            <View style={[tw`flex-1 bg-black/49`, {paddingHorizontal: 1}]}>
+        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
+            <View style={[tw`flex-1 bg-black/79`, {paddingHorizontal: 1}]}>
+                <View style={tw`absolute right-3 top-16 z-20 items-center gap-5`}>
+                    <AccountRouteEntry
+                        label="Support"
+                        icon="mail-outline"
+                        active={route === "support"}
+                        onPress={() => setRoute("support")}
+                    />
+                    <AccountRouteEntry
+                        label="Replay"
+                        icon="refresh-circle-outline"
+                        active={route === "guide"}
+                        onPress={() => setRoute("guide")}
+                    />
+                    <AccountRouteEntry
+                        label="Subscription"
+                        icon="card-outline"
+                        active={route === "subscription"}
+                        onPress={() => setRoute("subscription")}
+                    />
+                </View>
+                {route !== "account" ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Close account route"
+                        onPress={() => {
+                            haptics.navigation();
+                            setRoute("account");
+                        }}
+                        hitSlop={10}
+                        style={({pressed}) => [
+                            tw`absolute right-4 top-2 z-30 h-9 w-9 items-center justify-center`,
+                            pressed && {opacity: 0.6, transform: [{translateY: 1}]},
+                        ]}
+                    >
+                        <Ionicons name="close" size={18} color="#E4E0D4"/>
+                    </Pressable>
+                ) : null}
                 <ScrollView
                     style={tw`flex-1`}
-                    contentContainerStyle={tw`px-4 pb-32 pt-4 gap-4`}
+                    contentContainerStyle={tw`pl-4 pr-20 pb-32 pt-4 gap-4`}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/70 p-4`}>
-                        <View>
-                            <Text style={[tw`text-2xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Account</Text>
-                            <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
-                                Manage your Rhodie profile, subscription, and support from one place.
+                    {route === "account" ? (
+                        <>
+                            <TranslucentCard radius={24} style={tw`p-4`}>
+                                <View>
+                                    <Text style={[tw`text-2xl`, {
+                                        fontFamily: fonts.heading,
+                                        ...accountHeaderColorStyle,
+                                    }]}>Account</Text>
+                                    <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                                        Manage your Rhodie profile and account security from one place.
+                                    </Text>
+                                </View>
+                            </TranslucentCard>
+
+                            <TranslucentCard radius={24} style={tw`p-4`}>
+                                <Text
+                                    style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Profile</Text>
+                                <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>Update the
+                                    name and
+                                    birthday used across the app.</Text>
+
+                                <Input
+                                    placeholder="Your name"
+                                    value={name}
+                                    onChangeText={setName}
+                                    style={tw`mt-4 px-4 py-3 opacity-49`}
+                                />
+
+                                <Input
+                                    placeholder="Email"
+                                    value={session.user.email ?? "No email on file"}
+                                    editable={false}
+                                    style={tw`mt-3 px-4 py-3 opacity-49`}
+                                />
+
+                                <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/44 px-4 py-3`}>
+                                    <BirthdayPicker
+                                        month={birthdayMonth}
+                                        day={birthdayDay}
+                                        onChange={({month, day}) => {
+                                            setBirthdayMonth(month);
+                                            setBirthdayDay(day);
+                                        }}
+                                        placeholder="Optional birthday"
+                                        showClear
+                                        pickerBackgroundClass="bg-black/47"
+
+                                    />
+                                </View>
+
+                                <View style={tw`mt-4 flex-row justify-end`}>
+                                    <Button
+                                        label={saveBusy ? "Saving..." : "Save changes"}
+                                        onPress={() => {
+                                            void handleSaveProfile();
+                                        }}
+                                        variant="outlineAccent"
+                                        disabled={saveBusy}
+                                        shine
+                                        style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                        textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                    />
+                                </View>
+
+                                {notice ? (
+                                    <Text style={[tw`mt-3 text-xs`, {
+                                        fontFamily: fonts.body,
+                                        color: noticeTone === "success" ? "#86efac" : "#fca5a5",
+                                    }]}>
+                                        {notice}
+                                    </Text>
+                                ) : null}
+                            </TranslucentCard>
+
+                            <TranslucentCard radius={24} style={[tw`p-4`, {borderColor: "#7f1d1d"}]}>
+                                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Account
+                                    security</Text>
+                                <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Deleting your
+                                    account
+                                    is permanent. It removes your app data, but store subscriptions still need to be
+                                    managed in
+                                    the App Store if they are active.</Text>
+                                <View style={tw`mt-4 flex-row flex-wrap gap-2`}>
+                                    <Button
+                                        label="Sign out"
+                                        onPress={confirmSignOut}
+                                        variant="secondary"
+                                        shine
+                                        style={blackButtonStyle}
+                                        textStyle={lightButtonTextStyle}
+                                    />
+                                    <Button
+                                        label={deleteBusy ? "Deleting..." : "Delete account"}
+                                        onPress={confirmDeleteAccount}
+                                        variant="danger"
+                                        disabled={deleteBusy}
+                                        shine
+                                        style={deleteButtonStyle}
+                                        textStyle={accountHeaderColorStyle}
+                                    />
+                                </View>
+                            </TranslucentCard>
+                        </>
+                    ) : null}
+
+                    {route === "support" ? (
+                        <TranslucentCard radius={24} style={tw`p-4`}>
+                            <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Support</Text>
+                            <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Need help with
+                                billing, syncing, or your account? Reach out directly and we’ll open your email
+                                app.</Text>
+                            <Text
+                                style={[tw`mt-3 text-xs text-slate-400`, {fontFamily: fonts.body}]}>s3.gerlin@gmail.com</Text>
+                            <View style={tw`mt-4 flex-row justify-end`}>
+                                <Button
+                                    label="Email support"
+                                    onPress={() => {
+                                        void handleOpenSupportEmail();
+                                    }}
+                                    variant="outlineAccent"
+                                    shine
+                                    style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                    textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                />
+                            </View>
+                        </TranslucentCard>
+                    ) : null}
+
+                    {route === "guide" ? (
+                        <TranslucentCard radius={24} style={tw`p-4`}>
+                            <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>App guide</Text>
+                            <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                                Replay the first-run onboarding and restore the in-app tutorial cards.
                             </Text>
-                        </View>
-                    </View>
+                            <View style={tw`mt-4 flex-row justify-end`}>
+                                <Button
+                                    label="Replay guide"
+                                    onPress={confirmResetOnboarding}
+                                    variant="outlineAccent"
+                                    shine
+                                    style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                    textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                />
+                            </View>
+                        </TranslucentCard>
+                    ) : null}
 
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/75 p-4`}>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Profile</Text>
-                        <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>Update the name and
-                            birthday used across the app.</Text>
+                    {route === "subscription" ? (
+                        <TranslucentCard radius={24} style={tw`p-4`}>
+                            <Text
+                                style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Subscription</Text>
+                            <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>View your current
+                                billing state and manage the store subscription.</Text>
 
-                        <Input
-                            placeholder="Your name"
-                            value={name}
-                            onChangeText={setName}
-                            style={tw`mt-4 px-4 py-3 opacity-49`}
-                        />
-
-                        <Input
-                            placeholder="Email"
-                            value={session.user.email ?? "No email on file"}
-                            editable={false}
-                            style={tw`mt-3 px-4 py-3 opacity-49`}
-                        />
-
-                        <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/44 px-4 py-3`}>
-                            <BirthdayPicker
-                                month={birthdayMonth}
-                                day={birthdayDay}
-                                onChange={({month, day}) => {
-                                    setBirthdayMonth(month);
-                                    setBirthdayDay(day);
-                                }}
-                                placeholder="Optional birthday"
-                                showClear
-                                pickerBackgroundClass="bg-black/47"
-
-                            />
-                        </View>
-
-                        <View style={tw`mt-4 flex-row justify-end`}>
-                            <Button
-                                label={saveBusy ? "Saving..." : "Save changes"}
-                                onPress={() => {
-                                    void handleSaveProfile();
-                                }}
-                                variant="outlineAccent"
-                                disabled={saveBusy}
-                                shine
-                                style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
-                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
-                            />
-                        </View>
-
-                        {notice ? (
-                            <Text style={[tw`mt-3 text-xs`, {
-                                fontFamily: fonts.body,
-                                color: noticeTone === "success" ? "#86efac" : "#fca5a5",
-                            }]}>
-                                {notice}
-                            </Text>
-                        ) : null}
-                    </View>
-
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/79 p-4`}>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Support</Text>
-                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Need help with
-                            billing, syncing, or your account? Reach out directly and we’ll open your email app.</Text>
-                        <Text
-                            style={[tw`mt-3 text-xs text-slate-400`, {fontFamily: fonts.body}]}>s3.gerlin@gmail.com</Text>
-                        <View style={tw`mt-4 flex-row justify-end`}>
-                            <Button
-                                label="Email support"
-                                onPress={() => {
-                                    void handleOpenSupportEmail();
-                                }}
-                                variant="outlineAccent"
-                                shine
-                                style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
-                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={tw`rounded-3xl border border-[#2c2c2c] bg-black/79 p-4`}>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>App guide</Text>
-                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
-                            Replay the first-run onboarding and restore the in-app tutorial cards.
-                        </Text>
-                        <View style={tw`mt-4 flex-row justify-end`}>
-                            <Button
-                                label="Replay guide"
-                                onPress={confirmResetOnboarding}
-                                variant="outlineAccent"
-                                shine
-                                style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
-                                textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={tw`rounded-3xl border border-[#DFC4AA]/33 bg-black/79 p-4`}>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Subscription</Text>
-                        <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>View your current
-                            billing state and manage the store subscription.</Text>
-
-                        <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/33 px-4 py-3`}>
-                            <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Status</Text>
-                            <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
-                                {getSubscriptionStatusLabel(subscription)}
-                            </Text>
-                            <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
-                                {getSubscriptionDetail(subscription)}
-                            </Text>
-                            {subscriptionWarning ? (
-                                <Text style={[tw`mt-3 text-xs text-orange-200`, {fontFamily: fonts.body}]}>
-                                    {subscriptionWarning}
+                            <TranslucentCard radius={16} style={tw`mt-4 px-4 py-3`}>
+                                <Text style={[tw`text-xs`, {fontFamily: fonts.body, ...accountHeaderColorStyle}]}>Status</Text>
+                                <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                                    {getSubscriptionStatusLabel(subscription)}
                                 </Text>
-                            ) : null}
-                            {subscription.error ? (
-                                <Text style={[tw`mt-3 text-xs text-rose-300`, {fontFamily: fonts.body}]}>
-                                    {subscription.error}
+                                <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                                    {getSubscriptionDetail(subscription)}
                                 </Text>
-                            ) : null}
-                        </View>
+                                {subscriptionWarning ? (
+                                    <Text style={[tw`mt-3 text-xs text-orange-200`, {fontFamily: fonts.body}]}>
+                                        {subscriptionWarning}
+                                    </Text>
+                                ) : null}
+                                {subscription.error ? (
+                                    <Text style={[tw`mt-3 text-xs text-rose-300`, {fontFamily: fonts.body}]}>
+                                        {subscription.error}
+                                    </Text>
+                                ) : null}
+                            </TranslucentCard>
 
-                        <View style={tw`mt-4 flex-row justify-start gap-2`}>
-                            <Button
-                                label="Plans"
-                                onPress={onOpenSubscriptionOffers}
-                                variant="secondary"
-                                shine
-                                style={[tw`rounded-xl px-4 py-2`, subscriptionAccentButtonStyle]}
-                                textStyle={[tw`text-xs`, darkButtonTextStyle]}
-                            />
-                            <Button
-                                label="Manage"
-                                onPress={() => {
-                                    void handleManageSubscription();
-                                }}
-                                variant="outlineAccent"
-                                disabled={subscription.manageBusy}
-                                shine
-                                style={[tw`rounded-xl px-4 py-2`, subscriptionAccentButtonStyle]}
-                                textStyle={[tw`text-xs`, darkButtonTextStyle]}
-                            />
-                            <Button
-                                label={subscription.restoreBusy ? "Restoring..." : "Restore"}
-                                onPress={subscription.restore}
-                                variant="secondary"
-                                disabled={subscription.restoreBusy}
-                                shine
-                                style={[tw`rounded-xl px-4 py-2`, sunsetButtonStyle]}
-                                textStyle={[tw`text-xs`, darkButtonTextStyle]}
-                            />
-                        </View>
-                        <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
-                            By continuing, you agree to the{" "}
-                            <Text
-                                onPress={() => {
-                                    void handleOpenExternalUrl(termsOfUseUrl, "Terms of Use");
-                                }}
-                                style={{color: "#B55941"}}
-                            >
-                                Terms of Use
+                            <View style={tw`mt-4 flex-row flex-wrap justify-center gap-2`}>
+                                <Button
+                                    label="Plans"
+                                    onPress={onOpenSubscriptionOffers}
+                                    variant="secondary"
+                                    shine
+                                    style={[tw`rounded-xl px-4 py-2`, subscriptionAccentButtonStyle]}
+                                    textStyle={[tw`text-xs`, darkButtonTextStyle]}
+                                />
+                                <Button
+                                    label="Manage"
+                                    onPress={() => {
+                                        void handleManageSubscription();
+                                    }}
+                                    variant="outlineAccent"
+                                    disabled={subscription.manageBusy}
+                                    shine
+                                    style={[tw`rounded-xl px-4 py-2`, subscriptionAccentButtonStyle]}
+                                    textStyle={[tw`text-xs`, darkButtonTextStyle]}
+                                />
+                                <Button
+                                    label={subscription.restoreBusy ? "Restoring..." : "Restore"}
+                                    onPress={subscription.restore}
+                                    variant="secondary"
+                                    disabled={subscription.restoreBusy}
+                                    shine
+                                    style={[tw`rounded-xl px-4 py-2`, sunsetButtonStyle]}
+                                    textStyle={[tw`text-xs`, darkButtonTextStyle]}
+                                />
+                            </View>
+                            <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
+                                By continuing, you agree to the{" "}
+                                <Text
+                                    onPress={() => {
+                                        void handleOpenExternalUrl(termsOfUseUrl, "Terms of Use");
+                                    }}
+                                    style={{color: "#B55941"}}
+                                >
+                                    Terms of Use
+                                </Text>
+                                {" "}(
+                                <Text
+                                    onPress={() => {
+                                        void handleOpenExternalUrl(termsOfUseUrl, "EULA");
+                                    }}
+                                    style={{color: "#B55941"}}
+                                >
+                                    EULA
+                                </Text>
+                                )
+                                {" "}and{" "}
+                                <Text
+                                    onPress={() => {
+                                        void handleOpenExternalUrl(privacyPolicyUrl, "Privacy Policy");
+                                    }}
+                                    style={{color: "#B55941"}}
+                                >
+                                    Privacy Policy
+                                </Text>
+                                .
                             </Text>
-                            {" "}(
-                            <Text
-                                onPress={() => {
-                                    void handleOpenExternalUrl(termsOfUseUrl, "EULA");
-                                }}
-                                style={{color: "#B55941"}}
-                            >
-                                EULA
-                            </Text>
-                            )
-                            {" "}and{" "}
-                            <Text
-                                onPress={() => {
-                                    void handleOpenExternalUrl(privacyPolicyUrl, "Privacy Policy");
-                                }}
-                                style={{color: "#B55941"}}
-                            >
-                                Privacy Policy
-                            </Text>
-                            .
-                        </Text>
-                    </View>
-
-                    <View style={tw`rounded-3xl border border-[#7f1d1d] bg-black/49 p-4`}>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>Account
-                            security</Text>
-                        <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Deleting your account
-                            is permanent. It removes your app data, but store subscriptions still need to be managed in
-                            the App Store if they are active.</Text>
-                        <View style={tw`mt-4 flex-row flex-wrap gap-2`}>
-                            <Button
-                                label="Sign out"
-                                onPress={confirmSignOut}
-                                variant="secondary"
-                                shine
-                                style={blackButtonStyle}
-                                textStyle={lightButtonTextStyle}
-                            />
-                            <Button
-                                label={deleteBusy ? "Deleting..." : "Delete account"}
-                                onPress={confirmDeleteAccount}
-                                variant="danger"
-                                disabled={deleteBusy}
-                                shine
-                                style={deleteButtonStyle}
-                                textStyle={darkButtonTextStyle}
-                            />
-                        </View>
-                    </View>
+                        </TranslucentCard>
+                    ) : null}
                 </ScrollView>
             </View>
         </ImageBackground>

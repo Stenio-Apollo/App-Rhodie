@@ -19,6 +19,7 @@ import {toLocalISODate} from "../lib/date-utils";
 import {haptics} from "../lib/haptics";
 import {TutorialCard} from "../components/TutorialCard";
 import {GoalsRoute} from "../components/GoalsRoute";
+import {TranslucentCard} from "../components/TranslucentCard";
 import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 
@@ -243,6 +244,23 @@ export function CalendarScreen({
                         active={route === "goals"}
                     />
                 </View>
+                {route === "goals" ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Close goals"
+                        onPress={() => {
+                            haptics.navigation();
+                            openCalendarRoute();
+                        }}
+                        hitSlop={10}
+                        style={({pressed}) => [
+                            tw`absolute right-4 top-2 z-30 h-9 w-9 items-center justify-center`,
+                            pressed && {opacity: 0.6, transform: [{translateY: 1}]},
+                        ]}
+                    >
+                        <Ionicons name="close" size={18} color="#E4E0D4"/>
+                    </Pressable>
+                ) : null}
                 <ScrollView
                     ref={scrollRef}
                     style={tw`flex-1`}
@@ -271,7 +289,7 @@ export function CalendarScreen({
 
                                 {googleCalendar.error ? (
                                     <Text
-                                        style={[tw`mt-3 rounded-2xl bg-black/70 px-4 py-3 text-xs text-red-300`, {fontFamily: fonts.body}]}>
+                                        style={[tw`mt-3 rounded-2xl border border-slate-700/60 bg-black/22 px-4 py-3 text-xs text-red-300`, {fontFamily: fonts.body}]}>
                                         {googleCalendar.error}
                                     </Text>
                                 ) : null}
@@ -287,12 +305,13 @@ export function CalendarScreen({
                                 <Text
                                     style={[tw`mt-3 text-center text-lg font-extrabold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{selectedDate}</Text>
                                 {selectedTasks.length === 0 ? (
-                                    <View style={tw`mt-2 rounded-2xl border border-[#2c2c2c] bg-black/69 p-3`}>
+                                    <TranslucentCard radius={16} style={tw`mt-2 p-3`}>
                                         <Text style={[tw`text-slate-300`, {fontFamily: fonts.body}]}>No tasks due this day.</Text>
-                                    </View>
+                                    </TranslucentCard>
                                 ) : (
                                     selectedTasks.map((task) => (
-                                        <View key={task.id} style={tw`mt-2 rounded-2xl border border-[#2c2c2c] bg-[#111111] p-3`}>
+                                        <View key={task.id}>
+                                        <TranslucentCard radius={16} style={tw`mt-2 p-3`}>
                                             <Text
                                                 style={[tw`self-center text-center text-base font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{task.title}</Text>
                                             {!!task.description &&
@@ -308,6 +327,7 @@ export function CalendarScreen({
                                                     Google Calendar
                                                 </Text>
                                             ) : null}
+                                        </TranslucentCard>
                                         </View>
                                     ))
                                 )}
