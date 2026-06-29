@@ -89,15 +89,14 @@ function StatPill({label, value}: {label: string; value: string | number}) {
     return (
         <View
             style={[
-                tw`flex-1 overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-2.5`,
-                {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                tw`flex-1 overflow-hidden rounded-2xl border border-[#F5DBC9]/22 px-3 py-2.5`,
+                {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
             ]}
         >
             <ButtonShine/>
             <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                 fontFamily: fonts.strong,
-                color: CREAM,
-                opacity: 0.7,
+                color: "rgba(228,224,212,0.55)",
             }]}>
                 {label}
             </Text>
@@ -171,7 +170,7 @@ function EntryCard({
                 tw`overflow-hidden rounded-2xl border p-4`,
                 {
                     borderColor: isPrompt ? "rgba(181,89,65,0.55)" : "rgba(223,196,170,0.28)",
-                    backgroundColor: "rgba(15,15,15,0.94)",
+                    backgroundColor: "rgba(0,0,0,0.35)",
                     ...buttonDepthStyle,
                 },
             ]}
@@ -199,7 +198,7 @@ function EntryCard({
             </View>
             <Text style={[tw`mt-2 text-[11px]`, {
                 fontFamily: fonts.body,
-                color: "rgba(223,196,170,0.58)",
+                color: "rgba(228,224,212,0.58)",
             }]}>
                 {new Date(entry.createdAt).toLocaleString([], {
                     month: "short",
@@ -241,7 +240,7 @@ function EntryCard({
                 </Text>
             )}
             <View style={tw`mt-3 flex-row items-center justify-between`}>
-                <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: "rgba(223,196,170,0.55)"}]}>
+                <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: "rgba(228,224,212,0.55)"}]}>
                     {new Date(entry.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -286,7 +285,7 @@ function ActionPill({
                 tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
                 accent
                     ? {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle}
-                    : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                    : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
             ]}
         >
@@ -316,7 +315,7 @@ export function MemoryShelf({
     const {entries, byDate, deleteEntry, editEntry} = journal;
     const [searchTerm, setSearchTerm] = useState("");
     const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-    const [scopeToDate, setScopeToDate] = useState(false);
+    const [scopeToDate, setScopeToDate] = useState<boolean>(() => Boolean(editingId));
 
     const today = toLocalISODate();
 
@@ -426,7 +425,7 @@ export function MemoryShelf({
                             </Text>
                             <Text style={[tw`mt-1 text-xs`, {
                                 fontFamily: fonts.body,
-                                color: "rgba(223,196,170,0.7)",
+                                color: "rgba(228,224,212,0.7)",
                             }]}>
                                 Search, revisit, and reflect on what you've written.
                             </Text>
@@ -470,7 +469,7 @@ export function MemoryShelf({
                             <View
                                 style={[
                                     tw`mt-4 overflow-hidden flex-row items-center gap-2 rounded-2xl border border-[#2c2c2c] px-3 py-2.5`,
-                                    {backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
+                                    {backgroundColor: "rgba(0,0,0,0.35)", ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
@@ -479,7 +478,7 @@ export function MemoryShelf({
                                     value={searchTerm}
                                     onChangeText={setSearchTerm}
                                     placeholder="Search your entries"
-                                    placeholderTextColor="rgba(223,196,170,0.5)"
+                                    placeholderTextColor="rgba(228,224,212,0.5)"
                                     keyboardAppearance="dark"
                                     returnKeyType="search"
                                     style={[tw`flex-1 text-sm`, {fontFamily: fonts.body, color: TEXT_PRIMARY}]}
@@ -505,15 +504,14 @@ export function MemoryShelf({
                             <View
                                 style={[
                                     tw`mt-4 overflow-hidden rounded-2xl border border-[#2c2c2c] p-3`,
-                                    {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                    {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
                                 <View style={tw`flex-row items-center justify-between`}>
                                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                         fontFamily: fonts.strong,
-                                        color: CREAM,
-                                        opacity: 0.7,
+                                        color: "rgba(228,224,212,0.55)",
                                     }]}>
                                         Recent days
                                     </Text>
@@ -551,7 +549,7 @@ export function MemoryShelf({
                                                     tw`overflow-hidden rounded-full border px-3 py-1.5`,
                                                     isSelected
                                                         ? {borderColor: ACCENT, backgroundColor: "rgba(181,89,65,0.42)", ...buttonDepthStyle}
-                                                        : {borderColor: "rgba(223,196,170,0.32)", backgroundColor: "rgba(10,10,10,0.85)", ...buttonDepthStyle},
+                                                        : {borderColor: "rgba(223,196,170,0.32)", backgroundColor: "rgba(0,0,0,0.35)", ...buttonDepthStyle},
                                                     pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
@@ -572,8 +570,7 @@ export function MemoryShelf({
                                 <View style={tw`mt-4`}>
                                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                         fontFamily: fonts.strong,
-                                        color: CREAM,
-                                        opacity: 0.7,
+                                        color: "rgba(228,224,212,0.55)",
                                     }]}>
                                         Looking back
                                     </Text>
@@ -586,7 +583,7 @@ export function MemoryShelf({
                                                 onPress={() => handleSelectDate(item.date)}
                                                 style={({pressed}) => [
                                                     tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-3`,
-                                                    {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                                    {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
                                                     pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
@@ -596,8 +593,7 @@ export function MemoryShelf({
                                                         <Ionicons name="time-outline" size={12} color={ACCENT}/>
                                                         <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                                             fontFamily: fonts.strong,
-                                                            color: CREAM,
-                                                            opacity: 0.7,
+                                                            color: "rgba(228,224,212,0.55)",
                                                         }]}>
                                                             {formatLookbackLabel(item.delta)}
                                                         </Text>
@@ -620,7 +616,7 @@ export function MemoryShelf({
                                                 </Text>
                                                 <Text style={[tw`mt-1 text-[10px]`, {
                                                     fontFamily: fonts.body,
-                                                    color: "rgba(223,196,170,0.55)",
+                                                    color: "rgba(228,224,212,0.55)",
                                                 }]}>
                                                     {item.count} {item.count === 1 ? "entry" : "entries"}
                                                 </Text>
@@ -637,7 +633,7 @@ export function MemoryShelf({
                             <View
                                 style={[
                                     tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-5`,
-                                    {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                    {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
@@ -649,7 +645,7 @@ export function MemoryShelf({
                                 </Text>
                                 <Text style={[tw`mt-2 text-center text-xs leading-5`, {
                                     fontFamily: fonts.body,
-                                    color: "rgba(223,196,170,0.65)",
+                                    color: "rgba(228,224,212,0.65)",
                                 }]}>
                                     Write a prompt response or list three good things to add your first memory here.
                                 </Text>
@@ -658,13 +654,13 @@ export function MemoryShelf({
                             <View
                                 style={[
                                     tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-5`,
-                                    {backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                    {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
                                 <Text style={[tw`text-center text-sm`, {
                                     fontFamily: fonts.body,
-                                    color: "rgba(223,196,170,0.78)",
+                                    color: "rgba(228,224,212,0.78)",
                                 }]}>
                                     {isFiltered
                                         ? "Nothing matches the current filters."

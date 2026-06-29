@@ -84,7 +84,7 @@ export function TodayScreen({
 
     const bg = visualMode === "sunset"
         ? require("../../public/images/rhhorse1.jpg")
-        : require("../../public/images/rh19.jpg");
+        : require("../../public/images/rh14.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const stickyNoteIcon = require("../../public/images/notes (1).png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
@@ -118,7 +118,8 @@ export function TodayScreen({
                         />
                     </Pressable>
                 </View>
-                <View pointerEvents="none" style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
+                <View pointerEvents="none"
+                      style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
                     <Text style={[tw`text-xs font-semibold`, {
                         fontFamily: fonts.body,
                         color: "rgba(228,224,212,0.6)"
@@ -138,10 +139,16 @@ export function TodayScreen({
                         pressed && tw`opacity-85`,
                     ]}
                 >
-                    <Text style={[tw`text-center px-4 py-1 text-lg font-semibold`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                    <Text style={[tw`text-center px-4 py-1 text-lg font-semibold`, {
+                        fontFamily: fonts.heading,
+                        color: "#E4E0D4"
+                    }]}>
                         QUOTE OF THE DAY
                     </Text>
-                    <Text style={[tw`mt-3 pb-[7px] text-center text-lg leading-snug`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
+                    <Text style={[tw`mt-3 pb-[7px] text-center text-lg leading-snug`, {
+                        fontFamily: fonts.body,
+                        color: "#E4E0D4"
+                    }]}
                           numberOfLines={3}>
                         {todaysQuote}
                     </Text>

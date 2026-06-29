@@ -621,12 +621,15 @@ function AppContent() {
                     {!accountOpen && tab === "board" ? (
                         <KanbanScreen
                             tasksState={tasksState}
-                            session={session}
                             focusTaskFormKey={homeAction?.target === "tasks" ? homeAction.key : undefined}
                             visualMode={visualModeState.mode}
                             showTutorial={onboarding.visibleTutorials.tasks}
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("tasks");
+                            }}
+                            onBack={() => {
+                                setHomeAction(null);
+                                setTab("calendar");
                             }}
                         />
                     ) : null}

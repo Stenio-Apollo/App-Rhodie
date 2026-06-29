@@ -7,7 +7,6 @@ import tw from "../lib/tw";
 import type {Task, TaskPriority, TaskStatus} from "../types";
 import {KanbanColumn} from "../components/KanbanColumn";
 import {TranslucentCalendar} from "../components/TranslucentCalendar";
-import type {Session} from "@supabase/supabase-js";
 import {haptics} from "../lib/haptics";
 import {toLocalISODate} from "../lib/date-utils";
 import {TutorialCard} from "../components/TutorialCard";
@@ -141,11 +140,11 @@ interface KanbanScreenProps {
         deleteTask: (taskId: string) => void;
         move: (taskId: string, toStatus: TaskStatus, toIndex: number) => void;
     };
-    session: Session | null;
     focusTaskFormKey?: number;
     visualMode: VisualMode;
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
+    onBack?: () => void;
 }
 
 export function KanbanScreen({
@@ -154,6 +153,7 @@ export function KanbanScreen({
                                  visualMode,
                                  showTutorial,
                                  onDismissTutorial,
+                                 onBack,
                              }: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
     const bg = visualMode === "sunset"
@@ -166,10 +166,9 @@ export function KanbanScreen({
     const [priority, setPriority] = useState<TaskPriority>("medium");
     const [showCalendar, setShowCalendar] = useState(false);
     const [filterDate, setFilterDate] = useState<string | null>(null);
-    const scrollRef = useRef<ScrollView>(null);
     const titleInputRef = useRef<TextInput>(null);
     const {keyboardInset} = useKeyboardInset();
-    const fabBottom = useMemo(() => Animated.add(keyboardInset, 100), [keyboardInset]);
+    const fabBottom = useMemo(() => Animated.add(keyboardInset, 80), [keyboardInset]);
 
     const filteredGrouped = useMemo(() => {
         if (!filterDate) return grouped;
@@ -209,7 +208,6 @@ export function KanbanScreen({
         setDueDate(today);
         setFilterDate(today);
         setTimeout(() => {
-            scrollRef.current?.scrollTo({y: 0, animated: true});
             titleInputRef.current?.focus();
         }, 80);
     }, [focusTaskFormKey]);
@@ -232,12 +230,7 @@ export function KanbanScreen({
     return (
         <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-30`}>
             <View style={[tw`flex-1 bg-black/19`, {paddingHorizontal: 1}]}>
-                <ScrollView
-                    ref={scrollRef}
-                    style={tw`flex-1`}
-                    contentContainerStyle={tw`pb-40`}
-                >
-                    <View style={tw`px-2 pt-2`}>
+                <View style={tw`flex-1 px-2 pt-[33px]`}>
                         {showTutorial && onDismissTutorial ? (
                             <View style={tw`mb-3`}>
                                 <TutorialCard
@@ -393,7 +386,7 @@ export function KanbanScreen({
                             </BlurView>
                         </View>
 
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`pt-3`}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`pt-[5px]`}>
                             <View style={tw`flex-row gap-3`}>
                                 <KanbanColumn
                                     status="todo"
@@ -410,8 +403,25 @@ export function KanbanScreen({
                                 />
                             </View>
                         </ScrollView>
-                    </View>
-                </ScrollView>
+                </View>
+
+                {onBack ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Close tasks"
+                        onPress={() => {
+                            haptics.navigation();
+                            onBack();
+                        }}
+                        hitSlop={10}
+                        style={({pressed}) => [
+                            tw`absolute right-4 top-2 z-30 h-9 w-9 items-center justify-center`,
+                            pressed && {opacity: 0.6, transform: [{translateY: 1}]},
+                        ]}
+                    >
+                        <Ionicons name="close" size={18} color={TEXT_PRIMARY}/>
+                    </Pressable>
+                ) : null}
 
                 <Animated.View
                     pointerEvents="box-none"
