@@ -128,7 +128,7 @@ function FilterChip({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-full border px-3.5 py-1.5`,
                 active
-                    ? {borderColor: ACCENT, backgroundColor: "rgba(181,89,65,0.32)", ...buttonDepthStyle}
+                    ? {borderColor: CREAM, backgroundColor: CREAM, ...buttonDepthStyle}
                     : {borderColor: "rgba(223,196,170,0.28)", backgroundColor: "rgba(15,15,15,0.85)", ...buttonDepthStyle},
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
             ]}
@@ -136,7 +136,7 @@ function FilterChip({
             <ButtonShine/>
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: active ? "#FFF6E8" : CREAM,
+                color: active ? "#0f0f0f" : CREAM,
             }]}>
                 {label}
             </Text>
@@ -185,13 +185,13 @@ function EntryCard({
                     style={[
                         tw`rounded-full border px-3 py-1`,
                         isPrompt
-                            ? {borderColor: ACCENT, backgroundColor: "rgba(181,89,65,0.32)"}
-                            : {borderColor: "rgba(223,196,170,0.45)", backgroundColor: "rgba(223,196,170,0.16)"},
+                            ? {borderColor: ACCENT, backgroundColor: ACCENT}
+                            : {borderColor: CREAM, backgroundColor: CREAM},
                     ]}
                 >
                     <Text style={[tw`text-[10px] tracking-[1px]`, {
                         fontFamily: fonts.strong,
-                        color: isPrompt ? "#FFF6E8" : CREAM,
+                        color: isPrompt ? "#FFF6E8" : "#0f0f0f",
                     }]}>
                         {isPrompt ? "PROMPT" : "GRATITUDE"}
                     </Text>
@@ -209,7 +209,7 @@ function EntryCard({
                 })}
             </Text>
             {entryPrompt ? (
-                <View style={tw`mt-3 rounded-xl border border-[#B55941]/45 p-3`}>
+                <View style={tw`mt-3 rounded-xl p-3`}>
                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: CREAM}]}>
                         Prompt responded to
                     </Text>
