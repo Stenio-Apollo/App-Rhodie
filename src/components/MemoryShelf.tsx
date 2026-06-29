@@ -209,7 +209,7 @@ function EntryCard({
                 })}
             </Text>
             {entryPrompt ? (
-                <View style={tw`mt-3 rounded-xl border border-[#B55941]/45 bg-[#B55941]/15 p-3`}>
+                <View style={tw`mt-3 rounded-xl border border-[#B55941]/45 p-3`}>
                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: CREAM}]}>
                         Prompt responded to
                     </Text>

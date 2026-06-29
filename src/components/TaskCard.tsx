@@ -1,23 +1,93 @@
 import {Pressable, Text, View} from "react-native";
+import {LinearGradient} from "expo-linear-gradient";
+import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import type {Task, TaskStatus} from "../types";
 import {Badge} from "./ui/Badge";
-import {Card} from "./ui/Card";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
-import {Button} from "./ui/Button";
+
+const ACCENT = "#B55941";
+const CREAM = "#DFC4AA";
+const TEXT_PRIMARY = "#E4E0D4";
+
+const buttonDepthStyle = {
+    shadowColor: "#000000",
+    shadowOffset: {width: 0, height: 5},
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    elevation: 6,
+};
+
+function ButtonShine() {
+    return (
+        <>
+            <LinearGradient
+                colors={["rgba(255,255,255,0.07)", "rgba(255,255,255,0.01)", "rgba(0,0,0,0.14)"]}
+                locations={[0, 0.48, 1]}
+                pointerEvents="none"
+                style={tw`absolute inset-0`}
+            />
+            <View
+                pointerEvents="none"
+                style={[
+                    tw`absolute left-2 right-2 top-0.5 h-1 rounded-full`,
+                    {backgroundColor: "rgba(255,255,255,0.035)"},
+                ]}
+            />
+        </>
+    );
+}
+
+function priorityDotColor(priority: Task["priority"]): string {
+    if (priority === "high") return "#B56941";
+    if (priority === "low") return "#6BAA75";
+    return CREAM;
+}
+
+function ActionPill({
+                        label,
+                        icon,
+                        onPress,
+                        accent = false,
+                    }: {
+    label: string;
+    icon?: React.ComponentProps<typeof Ionicons>["name"];
+    onPress: () => void;
+    accent?: boolean;
+}) {
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            onPress={onPress}
+            style={({pressed}) => [
+                tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
+                accent
+                    ? {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle}
+                    : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+            ]}
+        >
+            <ButtonShine/>
+            {icon ? (
+                <Ionicons name={icon} size={12} color={accent ? "#FFF6E8" : CREAM}/>
+            ) : null}
+            <Text style={[tw`text-[11px] font-semibold`, {
+                fontFamily: fonts.strong,
+                color: accent ? "#FFF6E8" : CREAM,
+            }]}>
+                {label}
+            </Text>
+        </Pressable>
+    );
+}
 
 interface TaskCardProps {
     task: Task;
     status: TaskStatus;
     onDelete: (taskId: string) => void;
     onComplete?: (taskId: string) => void;
-}
-
-function priorityDotColor(priority: Task["priority"]): string {
-    if (priority === "high") return "#B56941";
-    if (priority === "low") return "#6BAA75";
-    return "#E4E0D4";
 }
 
 export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
@@ -28,59 +98,69 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
             delayLongPress={320}
             style={tw`mb-2.5`}
         >
-            <Card>
+            <View
+                style={[
+                    tw`overflow-hidden rounded-2xl border border-[#2c2c2c] p-3`,
+                    {backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
+                ]}
+            >
+                <ButtonShine/>
                 <View style={tw`flex-row items-start justify-between gap-2`}>
                     <Text
-                        style={[tw`flex-1 text-base font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{task.title}</Text>
+                        style={[tw`flex-1 text-base font-bold`, {fontFamily: fonts.heading, color: TEXT_PRIMARY}]}>
+                        {task.title}
+                    </Text>
                     <View
                         style={[tw`mt-1 h-2.5 w-2.5 rounded-full`, {backgroundColor: priorityDotColor(task.priority)}]}/>
                 </View>
 
-                {task.description ?
+                {task.description ? (
                     <Text
-                        style={[tw`mt-2 text-sm text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>{task.description}</Text> : null}
+                        style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, color: "rgba(228,224,212,0.82)"}]}>
+                        {task.description}
+                    </Text>
+                ) : null}
 
                 <View style={tw`mt-2.5 flex-row items-center justify-between`}>
-                    <Badge label={task.priority.toUpperCase()}/>
-                    {task.dueDate ?
+                    <Badge
+                        label={task.priority.toUpperCase()}
+                        tone={task.priority === "high" ? "accent" : "default"}
+                    />
+                    {task.dueDate ? (
                         <Text
-                            style={[tw`text-xs font-semibold text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>
+                            style={[tw`text-xs font-semibold`, {fontFamily: fonts.body, color: CREAM}]}>
                             Due {task.dueDate}{task.dueTime ? ` ${task.dueTime}` : ""}
-                        </Text> : null}
+                        </Text>
+                    ) : null}
                 </View>
 
-                <View style={tw`mt-2.5 flex-row items-center justify-between gap-2`}>
+                <View style={tw`mt-3 flex-row items-center justify-between gap-2`}>
                     <View style={tw`flex-row items-center gap-1.5`}>
                         {status !== "completed" && onComplete ? (
-                            <Button
+                            <ActionPill
                                 label="Complete"
-                                hapticAction={false}
+                                icon="checkmark-circle-outline"
+                                accent
                                 onPress={() => {
                                     haptics.completeTask();
                                     onComplete(task.id);
                                 }}
-                                shine
-                                style={[tw`rounded-lg px-2 py-1`, {backgroundColor: "#B55941"}]}
-                                textStyle={[tw`text-xs`, {color: "#E4E0D4"}]}
                             />
                         ) : null}
                     </View>
 
                     <View style={tw`flex-row items-center gap-1.5`}>
-                        <Button
+                        <ActionPill
                             label="Delete"
-                            hapticAction={false}
+                            icon="trash-outline"
                             onPress={() => {
                                 haptics.deleteTask();
                                 onDelete(task.id);
                             }}
-                            shine
-                            style={[tw`rounded-lg bg-[#282828] px-2.5 py-1`]}
-                            textStyle={[tw`text-xs`, {color: "#E4E0D4"}]}
                         />
                     </View>
                 </View>
-            </Card>
+            </View>
         </Pressable>
     );
 }

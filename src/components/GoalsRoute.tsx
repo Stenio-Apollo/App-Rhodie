@@ -192,28 +192,16 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                             </View>
                         </View>
 
-                        <View style={tw`mt-4 flex-row items-start justify-between gap-3`}>
-                            <View style={tw`flex-1`}>
-                                <Text
-                                    style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
-                                    This week's goal
-                                </Text>
-                                <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
-                                    {isGoalLocked
-                                        ? "Completed this week. Goal changes unlock Sunday."
-                                        : "Pick a focus for the week or write your own."}
-                                </Text>
-                            </View>
-                            {weeklyGoal ? (
-                                <Text
-                                    style={[
-                                        tw`rounded-lg border border-[#B55941] px-2 py-1 text-[10px] font-bold uppercase text-[#E4E0D4]`,
-                                        {fontFamily: fonts.body},
-                                    ]}
-                                >
-                                    Set
-                                </Text>
-                            ) : null}
+                        <View style={tw`mt-4`}>
+                            <Text
+                                style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                This week's goal
+                            </Text>
+                            <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
+                                {isGoalLocked
+                                    ? "Completed this week. Goal changes unlock Sunday."
+                                    : "Pick a focus for the week or write your own."}
+                            </Text>
                         </View>
 
                         {weeklyGoal ? (
