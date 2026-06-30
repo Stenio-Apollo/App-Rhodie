@@ -19,6 +19,9 @@ const ACCENT = "#FF3800";
 const GEORGIA_ACCENT = "#FF3800";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
+const RIVER_SURFACE_COLOR = "#708090";
+const SONNY_SURFACE_COLOR = "#2F4F4F";
+const SONNY_PLACEHOLDER_COLOR = "rgba(247,247,247,0.77)";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -60,14 +63,23 @@ function ThemedField({
     inputRef?: React.RefObject<TextInput>;
 }) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide";
+    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const solidMode = river || sonny;
+    const georgia = visualMode === "georgia";
     return (
         <View
             style={[
                 tw`overflow-hidden rounded-xl border px-3 py-2.5`,
-                surfSide
-                    ? {borderColor: "rgba(17,17,17,0.14)", backgroundColor: "rgba(255,255,255,0.34)", ...buttonDepthStyle}
-                    : {borderColor: "#2c2c2c", backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
+                surfSide || sonny
+                    ? {
+                        borderColor: surfSide ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)",
+                        backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
+                        ...buttonDepthStyle,
+                    }
+                    : {borderColor: georgia ? "rgba(247,247,247,0.18)" : "#2c2c2c", backgroundColor: georgia ? "#000000" : "rgba(15,15,15,0.94)", ...buttonDepthStyle},
             ]}
         >
             <ButtonShine/>
@@ -76,9 +88,9 @@ function ThemedField({
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                placeholderTextColor={surfSide ? "rgba(17,17,17,0.45)" : visualMode === "overcast" ? "rgba(240,248,255,0.49)" : "rgba(223,196,170,0.5)"}
+                placeholderTextColor={sonny || georgia ? SONNY_PLACEHOLDER_COLOR : surfSide ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.5)"}
                 keyboardAppearance={surfSide ? "light" : "dark"}
-                style={[tw`text-sm`, {fontFamily: fonts.body, color: surfSide ? "#111111" : TEXT_PRIMARY}]}
+                style={[tw`text-sm`, {fontFamily: fonts.body, color: surfSide ? "#111111" : sonny || georgia ? "#FFFFFF" : TEXT_PRIMARY}]}
             />
         </View>
     );
@@ -98,8 +110,16 @@ function ThemedButton({
     disabled?: boolean;
 }) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide";
+    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const solidMode = river || sonny;
+    const georgia = visualMode === "georgia";
     const accentColor = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
+    const georgiaButtonTextColor = "#FFFFFF";
+    const pickDateButton = label === "Pick date" || label === "Hide";
+    const badgeButton = pickDateButton;
     return (
         <Pressable
             accessibilityRole="button"
@@ -110,21 +130,27 @@ function ThemedButton({
                 tw`overflow-hidden flex-row items-center justify-center gap-1.5 rounded-xl border px-3.5 py-2.5`,
                 accent
                     ? {borderColor: accentColor, backgroundColor: accentColor, ...buttonDepthStyle}
-                    : surfSide
-                        ? {borderColor: "rgba(17,17,17,0.14)", backgroundColor: "rgba(255,255,255,0.34)", ...buttonDepthStyle}
-                        : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                    : badgeButton
+                        ? {borderColor: "#ba885a", backgroundColor: "#ba885a", ...buttonDepthStyle}
+                    : surfSide || sonny
+                        ? {
+                            borderColor: surfSide ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)",
+                            backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
+                            ...buttonDepthStyle,
+                        }
+                        : {borderColor: georgia ? "rgba(247,247,247,0.18)" : "rgba(223,196,170,0.42)", backgroundColor: georgia ? "#000000" : "rgba(15,15,15,0.92)", ...buttonDepthStyle},
                 disabled && tw`opacity-50`,
                 pressed && !disabled && {opacity: 0.78, transform: [{translateY: 1}]},
             ]}
         >
             <ButtonShine/>
             {icon ? (
-                <Ionicons name={icon} size={14} color={accent ? "#FFF6E8" : surfSide ? "#111111" : CREAM}/>
+                <Ionicons name={icon} size={14} color={badgeButton ? "#0f0f0f" : accent ? "#FFF6E8" : surfSide ? "#111111" : sonny || georgia ? georgiaButtonTextColor : CREAM}/>
             ) : null}
             <Text
                 style={[tw`text-[12px] font-semibold`, {
                     fontFamily: fonts.strong,
-                    color: accent ? "#FFF6E8" : surfSide ? "#111111" : CREAM,
+                    color: badgeButton ? "#0f0f0f" : accent ? "#FFF6E8" : surfSide ? "#111111" : sonny || georgia ? georgiaButtonTextColor : CREAM,
                 }]}
             >
                 {label}
@@ -180,9 +206,14 @@ export function KanbanScreen({
     const titleInputRef = useRef<TextInput>(null);
     const {keyboardInset} = useKeyboardInset();
     const fabBottom = useMemo(() => Animated.add(keyboardInset, 47), [keyboardInset]);
-    const surfSide = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const solidMode = river || sonny;
+    const surfSide = visualMode === "surfSide" || river;
+    const georgia = visualMode === "georgia";
     const themeAccent = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
-    const primaryTextColor = surfSide ? "#111111" : TEXT_PRIMARY;
+    const primaryTextColor = surfSide ? "#111111" : sonny || georgia ? "#FFFFFF" : TEXT_PRIMARY;
     const accentTextColor = surfSide ? "#111111" : CREAM;
 
     const filteredGrouped = useMemo(() => {
@@ -243,10 +274,10 @@ export function KanbanScreen({
     }
 
     return (
-        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-30`}>
+        <ScreenBackground visualMode={visualMode} source={bg}>
             <View
                 style={[
-                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/19`,
+                    tw`flex-1`,
                     {paddingHorizontal: 1},
                 ]}
             >
@@ -261,7 +292,7 @@ export function KanbanScreen({
                             </View>
                         ) : null}
 
-                        <View style={[tw`mt-2 overflow-hidden rounded-[28px] p-1`, {backgroundColor: surfSide ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
+                        <View style={[tw`mt-2 overflow-hidden rounded-[28px] p-1`, {backgroundColor: solidMode ? solidSurfaceColor : surfSide ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
                             <BlurView
                                 intensity={30}
                                 tint={surfSide ? "light" : "dark"}
@@ -269,7 +300,7 @@ export function KanbanScreen({
                             >
                                 <View
                                     pointerEvents="none"
-                                    style={[StyleSheet.absoluteFill, {backgroundColor: surfSide ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
+                                    style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : surfSide ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
                                 />
                                 <LinearGradient
                                     colors={["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
@@ -307,18 +338,22 @@ export function KanbanScreen({
                                         <View
                                             style={[
                                                 tw`flex-1 overflow-hidden flex-row items-center gap-2 rounded-xl border px-3 py-2.5`,
-                                                surfSide
-                                                    ? {borderColor: "rgba(17,17,17,0.14)", backgroundColor: "rgba(255,255,255,0.34)", ...buttonDepthStyle}
-                                                    : {borderColor: "#2c2c2c", backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
+                                                surfSide || sonny
+                                                    ? {
+                                                        borderColor: surfSide ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)",
+                                                        backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
+                                                        ...buttonDepthStyle,
+                                                    }
+                                                    : {borderColor: georgia ? "rgba(247,247,247,0.18)" : "#2c2c2c", backgroundColor: georgia ? "#000000" : "rgba(15,15,15,0.94)", ...buttonDepthStyle},
                                             ]}
                                         >
                                             <ButtonShine/>
-                                            <Ionicons name="calendar-outline" size={14} color={surfSide ? "#111111" : CREAM}/>
+                                            <Ionicons name="calendar-outline" size={14} color={surfSide ? "#111111" : sonny || georgia ? "#FFFFFF" : CREAM}/>
                                             <Text style={[tw`flex-1 text-sm`, {
                                                 fontFamily: fonts.body,
                                                 color: dueDate
                                                     ? primaryTextColor
-                                                    : surfSide ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.55)",
+                                                    : sonny || georgia ? SONNY_PLACEHOLDER_COLOR : surfSide ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.55)",
                                             }]}>
                                                 {dueDate ? `Due ${formattedDueDate}` : "No due date"}
                                             </Text>
@@ -332,7 +367,7 @@ export function KanbanScreen({
                                                     }}
                                                     hitSlop={8}
                                                 >
-                                                    <Ionicons name="close-circle" size={16} color={surfSide ? "#111111" : CREAM}/>
+                                                    <Ionicons name="close-circle" size={16} color={surfSide ? "#111111" : sonny || georgia ? "#FFFFFF" : CREAM}/>
                                                 </Pressable>
                                             ) : null}
                                         </View>
@@ -368,7 +403,7 @@ export function KanbanScreen({
                                     <View style={tw`mt-1`}>
                                         <Text style={[tw`mb-2 text-[10px] uppercase tracking-[1px]`, {
                                             fontFamily: fonts.strong,
-                                            color: accentTextColor,
+                                            color: sonny || georgia ? "#FFFFFF" : accentTextColor,
                                             opacity: 0.7,
                                         }]}>
                                             Priority
@@ -388,18 +423,18 @@ export function KanbanScreen({
                                                                 tw`overflow-hidden rounded-xl border px-3.5 py-2`,
                                                                 isActive
                                                                     ? {
-                                                                        borderColor: surfSide ? "#8FBBD0" : CREAM,
-                                                                        backgroundColor: surfSide ? "#B9D8E8" : CREAM,
+                                                                        borderColor: surfSide || sonny ? "#8FBBD0" : georgia ? "#DAC8AE" : CREAM,
+                                                                        backgroundColor: surfSide || sonny ? "#B9D8E8" : georgia ? "#DAC8AE" : CREAM,
                                                                         ...buttonDepthStyle,
                                                                     }
-                                                                    : surfSide
+                                                                    : surfSide || sonny
                                                                         ? {
                                                                             borderColor: "rgba(17,17,17,0.14)",
                                                                             backgroundColor: "rgba(255,255,255,0.78)",
                                                                             ...buttonDepthStyle,
                                                                         }
-                                                                        : {
-                                                                            borderColor: "rgba(223,196,170,0.42)",
+                                                                : {
+                                                                            borderColor: georgia ? "rgba(247,247,247,0.18)" : "rgba(223,196,170,0.42)",
                                                                             backgroundColor: "rgba(15,15,15,0.92)",
                                                                             ...buttonDepthStyle,
                                                                         },
@@ -409,7 +444,7 @@ export function KanbanScreen({
                                                             <ButtonShine/>
                                                             <Text style={[tw`text-[11px] font-semibold uppercase tracking-[1px]`, {
                                                                 fontFamily: fonts.strong,
-                                                                color: surfSide || isActive ? "#0f0f0f" : CREAM,
+                                                                color: surfSide || sonny ? "#0f0f0f" : georgia ? (isActive ? "#0f0f0f" : "#FFFFFF") : isActive ? "#0f0f0f" : CREAM,
                                                             }]}>
                                                                 {item}
                                                             </Text>

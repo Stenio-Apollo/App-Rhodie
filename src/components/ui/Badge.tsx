@@ -10,6 +10,7 @@ interface BadgeProps {
 
 export function Badge({label, tone = "default"}: BadgeProps) {
     const visualMode = useScreenVisualMode();
+    const lightMode = visualMode === "surfSide" || visualMode === "overcast";
     const isAccent = tone === "accent";
     const isCount = tone === "count";
 
@@ -18,7 +19,7 @@ export function Badge({label, tone = "default"}: BadgeProps) {
             <Text
                 style={[
                     tw`px-2 py-1 text-[10px] font-bold tracking-[1px]`,
-                    {fontFamily: fonts.strong, color: visualMode === "surfSide" ? "#111111" : "#DFC4AA"},
+                    {fontFamily: fonts.strong, color: lightMode ? "#111111" : "#DFC4AA"},
                 ]}
             >
                 {label}

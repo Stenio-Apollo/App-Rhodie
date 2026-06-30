@@ -19,6 +19,8 @@ const DARK_BADGE_COLOR = "#ba885a";
 const COAST_BADGE_COLOR = "#FF8000";
 const CREAM = "#F0F8FF";
 const TEXT_PRIMARY = "#E4E0D4";
+const RIVER_SURFACE_COLOR = "#708090";
+const SONNY_SURFACE_COLOR = "#2F4F4F";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -90,14 +92,18 @@ function formatLookbackLabel(deltaDays: number): string {
 }
 
 function StatPill({label, value}: {label: string; value: string | number}) {
-    const coast = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const coast = visualMode === "surfSide" || river;
     return (
         <View
             style={[
                 tw`flex-1 overflow-hidden rounded-2xl border px-3 py-2.5`,
                 {
                     borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)",
-                    backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                    backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
                     ...buttonDepthStyle,
                 },
             ]}
@@ -126,7 +132,10 @@ function FilterChip({
     onPress: () => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const coast = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const coast = visualMode === "surfSide" || river;
     const accentColor = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
     const accentBorderColor = visualMode === "georgia" ? "#CB0000" : "#C82D00";
     return (
@@ -143,7 +152,7 @@ function FilterChip({
                     ? {borderColor: coast ? "#C82D00" : visualMode === "georgia" ? accentBorderColor : CREAM, backgroundColor: coast ? "#FF3800" : visualMode === "georgia" ? accentColor : CREAM, ...buttonDepthStyle}
                     : {
                         borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)",
-                        backgroundColor: coast ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)",
+                        backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)",
                         ...buttonDepthStyle,
                     },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
@@ -182,7 +191,10 @@ function EntryCard({
     const isPrompt = entry.category === "prompt";
     const entryPrompt = isPrompt ? getDailyJournalPrompt(entry.date) : null;
     const visualMode = useScreenVisualMode();
-    const coast = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const coast = visualMode === "surfSide" || river;
     const badgeColor = coast ? COAST_BADGE_COLOR : DARK_BADGE_COLOR;
     const cardBorderColor = coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
     const primaryTextColor = coast ? "#111111" : TEXT_PRIMARY;
@@ -193,7 +205,7 @@ function EntryCard({
                 tw`overflow-hidden rounded-2xl border p-4`,
                 {
                     borderColor: cardBorderColor,
-                    backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)",
+                    backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)",
                     ...buttonDepthStyle,
                 },
             ]}
@@ -248,7 +260,7 @@ function EntryCard({
                     keyboardAppearance={coast ? "light" : "dark"}
                     multiline
                     style={[
-                        coast ? tw`mt-3 rounded-xl border border-black/10 bg-white/34 px-3 py-2` : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
+                        coast || sonny ? [coast ? tw`mt-3 rounded-xl border border-black/10 px-3 py-2` : tw`mt-3 rounded-xl border border-[#2c2c2c] px-3 py-2`, {backgroundColor: river || sonny ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
                         {fontFamily: fonts.body, color: primaryTextColor},
                     ]}
                 />
@@ -298,7 +310,10 @@ function ActionPill({
     accent?: boolean;
 }) {
     const visualMode = useScreenVisualMode();
-    const coast = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const coast = visualMode === "surfSide" || river;
     const accentColor = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
     const accentBorderColor = visualMode === "georgia" ? "#CB0000" : ACCENT;
     return (
@@ -315,7 +330,7 @@ function ActionPill({
                     ? {borderColor: coast ? "#C82D00" : accentBorderColor, backgroundColor: coast ? "#FF3800" : accentColor, ...buttonDepthStyle}
                     : {
                         borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.42)",
-                        backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                        backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
                         ...buttonDepthStyle,
                     },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
@@ -426,20 +441,24 @@ export function MemoryShelf({
     const hasAnyEntries = entries.length > 0;
     const isFiltered = Boolean(searchTerm.trim()) || categoryFilter !== "all" || scopeToDate;
     const visualMode = useScreenVisualMode();
-    const coast = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const solidMode = river || sonny;
+    const coast = visualMode === "surfSide" || river;
     const georgia = visualMode === "georgia";
     const accentColor = georgia ? GEORGIA_ACCENT : coast ? "#FF3800" : ACCENT;
     const primaryTextColor = coast ? "#111111" : TEXT_PRIMARY;
     const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     const mutedTextColor = coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
     const panelBorderColor = coast ? "rgba(17,17,17,0.14)" : "#2c2c2c";
-    const panelBackgroundColor = coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
+    const panelBackgroundColor = solidMode ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
 
     return (
         <View
             style={[
                 tw`overflow-hidden rounded-[28px] p-1`,
-                {backgroundColor: coast ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                {backgroundColor: solidMode ? solidSurfaceColor : coast ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
             ]}
         >
             <BlurView
@@ -452,16 +471,16 @@ export function MemoryShelf({
             >
                 <View
                     pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, {backgroundColor: coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
+                    style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
                 />
                 <LinearGradient
-                    colors={coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
+                    colors={solidMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
                     locations={[0, 0.5, 1]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                 />
                 <LinearGradient
-                    colors={coast ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
+                    colors={solidMode ? ["transparent", "rgba(0,0,0,0.1)"] : coast ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                 />
@@ -518,7 +537,7 @@ export function MemoryShelf({
                             <View
                                 style={[
                                     tw`mt-4 overflow-hidden flex-row items-center gap-2 rounded-2xl border px-3 py-2.5`,
-                                    {borderColor: panelBorderColor, backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)", ...buttonDepthStyle},
+                                    {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
@@ -571,7 +590,7 @@ export function MemoryShelf({
                                             onPress={handleClearDateScope}
                                             style={({pressed}) => [
                                                 tw`overflow-hidden rounded-full border px-3 py-1`,
-                                                {borderColor: coast ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(223,196,170,0.14)"},
+                                                {borderColor: coast ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: panelBackgroundColor},
                                                 pressed && {opacity: 0.78},
                                             ]}
                                         >
@@ -598,7 +617,7 @@ export function MemoryShelf({
                                                     tw`overflow-hidden rounded-full border px-3 py-1.5`,
                                                     isSelected
                                                         ? {borderColor: accentColor, backgroundColor: coast ? "rgba(255,56,0,0.12)" : "rgba(255,56,0,0.42)", ...buttonDepthStyle}
-                                                        : {borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)", backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)", ...buttonDepthStyle},
+                                                        : {borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)", backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
                                                     pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >

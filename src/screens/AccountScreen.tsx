@@ -15,6 +15,9 @@ import {ScreenBackground} from "../components/ScreenBackground";
 
 type AccountRoute = "account" | "support" | "guide" | "subscription";
 
+const RIVER_SURFACE_COLOR = "#708090";
+const SONNY_SURFACE_COLOR = "#2F4F4F";
+
 function AccountRouteEntry({
                                label,
                                icon,
@@ -164,7 +167,11 @@ export function AccountScreen({
     const bg = visualMode === "sunset"
         ? require("../../public/images/news paper.jpg")
         : require("../../public/images/newspaper 1.jpg");
-    const surfSide = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const solidMode = river || sonny;
+    const surfSide = visualMode === "surfSide" || river;
     const georgia = visualMode === "georgia";
     const themeAccentColor = "#FF3800";
     const themeAccentBorderColor = georgia ? "#CB0000" : "#C82D00";
@@ -204,11 +211,19 @@ export function AccountScreen({
     const accountHeaderColorStyle = surfSide ? {color: "#111111"} : {color: "#DFC4AA", opacity: 0.7};
     const accountBodyTextStyle = {color: surfSide ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
     const accountMutedTextStyle = {color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"};
-    const profileInputStyle = surfSide
-        ? tw`mt-4 border-black/10 bg-white/34 px-4 py-3 text-[#111111] opacity-100`
+    const profileInputStyle = surfSide || sonny
+        ? [
+            tw`mt-4 px-4 py-3 opacity-100`,
+            surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
+        ]
         : tw`mt-4 px-4 py-3 opacity-49`;
-    const profileEmailInputStyle = surfSide
-        ? tw`mt-3 border-black/10 bg-white/34 px-4 py-3 text-[#111111] opacity-100`
+    const profileEmailInputStyle = surfSide || sonny
+        ? [
+            tw`mt-3 px-4 py-3 opacity-100`,
+            surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
+        ]
         : tw`mt-3 px-4 py-3 opacity-49`;
 
     useEffect(() => {
@@ -356,10 +371,10 @@ export function AccountScreen({
             : null;
 
     return (
-        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-33`}>
+        <ScreenBackground visualMode={visualMode} source={bg}>
             <View
                 style={[
-                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/79`,
+                    tw`flex-1`,
                     {paddingHorizontal: 1},
                 ]}
             >
@@ -449,8 +464,12 @@ export function AccountScreen({
 
                                 <View
                                     style={
-                                        surfSide
-                                            ? tw`mt-3 rounded-xl border border-black/10 bg-white/34 px-4 py-3`
+                                        surfSide || sonny
+                                            ? [
+                                                tw`mt-3 rounded-xl border px-4 py-3`,
+                                                surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+                                                {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
+                                            ]
                                             : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/44 px-4 py-3`
                                     }
                                 >

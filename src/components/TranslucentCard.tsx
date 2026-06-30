@@ -21,12 +21,20 @@ export function TranslucentCard({
                                 }: PropsWithChildren<TranslucentCardProps>) {
     const visualMode = useScreenVisualMode();
     const surfSide = visualMode === "surfSide";
-    const borderColor = surfSide ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)";
-    const surfaceColor = surfSide ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)";
-    const topGradient: GradientColors = surfSide
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const lightMode = surfSide || visualMode === "overcast";
+    const solidSurfaceColor = sonny ? "#2F4F4F" : "#708090";
+    const borderColor = lightMode ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)";
+    const surfaceColor = river || sonny ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)";
+    const topGradient: GradientColors = river || sonny
+        ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"]
+        : lightMode
         ? ["rgba(255,255,255,0.32)", "rgba(240,248,255,0.14)", "transparent"]
         : ["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"];
-    const bottomGradient: GradientColors = surfSide
+    const bottomGradient: GradientColors = river || sonny
+        ? ["transparent", "rgba(0,0,0,0.1)"]
+        : lightMode
         ? ["transparent", "rgba(223,196,170,0.18)"]
         : ["transparent", "rgba(0,0,0,0.18)"];
 
@@ -35,14 +43,14 @@ export function TranslucentCard({
             <View
                 style={[
                     tw`overflow-hidden p-1`,
-                    {backgroundColor: surfSide ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                    {backgroundColor: river || sonny ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
                     {borderRadius: radius + 4},
                     style,
                 ]}
             >
                 <BlurView
                     intensity={30}
-                    tint={surfSide ? "light" : "dark"}
+                    tint={lightMode ? "light" : "dark"}
                     style={[
                         tw`overflow-hidden border`,
                         {borderColor},

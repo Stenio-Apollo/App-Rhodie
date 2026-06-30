@@ -1,5 +1,5 @@
 import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
-import {Animated, Easing, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {getDailyStoicQuote} from "../lib/quotes";
@@ -15,6 +15,9 @@ import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {ScreenBackground} from "../components/ScreenBackground";
 
+const RIVER_SURFACE_COLOR = "#708090";
+const SONNY_SURFACE_COLOR = "#2F4F4F";
+
 function isoToday(): string {
     return toLocalISODate();
 }
@@ -29,6 +32,7 @@ interface JournalScreenProps {
         entryId?: string | null;
     } | null;
     visualMode: VisualMode;
+    badgeCount?: number;
     showTutorial?: boolean;
     onDismissTutorial?: () => void;
     onPromptEntryOpenChange?: (open: boolean) => void;
@@ -82,6 +86,7 @@ export function JournalScreen({
                                   journal,
                                   homeAction,
                                   visualMode,
+                                  badgeCount = 0,
                                   showTutorial,
                                   onDismissTutorial,
                                   onPromptEntryOpenChange,
@@ -102,17 +107,30 @@ export function JournalScreen({
     const bg = visualMode === "sunset"
         ? require("../../public/images/rhbull1.jpg")
         : require("../../public/images/rh201.jpg");
+    const badgeIcon = require("../../public/images/badge.png");
     const promptEntryBg = require("../../public/images/newspaper 1.jpg");
     const {keyboardInset} = useKeyboardInset();
-    const surfSide = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const solidMode = river || sonny;
+    const surfSide = visualMode === "surfSide" || river;
     const badgeColor = surfSide ? "#FF8000" : "#ba885a";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
     const mutedTextColor = surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
-    const entrySurfaceStyle = surfSide
-        ? tw`rounded-[24px] border border-black/10 bg-white/24 p-4`
+    const entrySurfaceStyle = surfSide || sonny
+        ? [
+            tw`rounded-[24px] border p-4`,
+            surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+            {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+        ]
         : tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`;
-    const entryInputStyle = surfSide
-        ? tw`mt-4 flex-1 rounded-[24px] border border-black/10 bg-white/24 px-4 py-4 text-base leading-6 text-[#111111]`
+    const entryInputStyle = surfSide || sonny
+        ? [
+            tw`mt-4 flex-1 rounded-[24px] border px-4 py-4 text-base leading-6`,
+            surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+        ]
         : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4 text-base leading-6 text-[#E4E0D4]`;
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
@@ -237,10 +255,10 @@ export function JournalScreen({
     }, [byDate, homeAction]);
 
     return (
-        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-39`}>
+        <ScreenBackground visualMode={visualMode} source={bg}>
             <Animated.View
                 style={[
-                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/47`,
+                    tw`flex-1`,
                     {
                         paddingHorizontal: 1,
                         paddingBottom: route === "promptEntry" || route === "gratitudeEntry" ? 0 : keyboardInset
@@ -289,17 +307,38 @@ export function JournalScreen({
                 ) : null}
                 {route === "write" ? (
                     <View pointerEvents="none" style={tw`absolute left-3 right-20 top-3 z-10 items-center`}>
-                        <Text
-                            style={[tw`text-center px-4 py-1 text-lg font-semibold`, {
-                                fontFamily: fonts.heading,
-                                color: primaryTextColor
-                            }]}>
-                            QUOTE OF THE DAY
-                        </Text>
+                        <View style={tw`flex-row items-center justify-center px-4 py-1`}>
+                            <Text
+                                style={[tw`text-center text-lg font-semibold`, {
+                                    fontFamily: fonts.heading,
+                                    color: primaryTextColor
+                                }]}>
+                                QUOTE OF THE DAY
+                            </Text>
+                            <View style={tw`ml-2 flex-row items-center`}>
+                                <Image
+                                    source={badgeIcon}
+                                    resizeMode="contain"
+                                    style={{
+                                        width: 25,
+                                        height: 18,
+                                        tintColor: badgeColor,
+                                    }}
+                                />
+                                <Text
+                                    style={[tw`ml-0.5 text-[11px] font-semibold`, {
+                                        fontFamily: fonts.body,
+                                        color: primaryTextColor,
+                                    }]}
+                                >
+                                    {badgeCount}
+                                </Text>
+                            </View>
+                        </View>
                         <Text
                             style={[tw`text-center text-xs font-semibold`, {
                                 fontFamily: fonts.body,
-                                color: badgeColor
+                                color: surfSide ? "rgba(0,0,0,0.79)" : badgeColor
                             }]}>{selectedDate}</Text>
 
                         <Text
@@ -455,12 +494,11 @@ export function JournalScreen({
                     <ScreenBackground
                         visualMode={visualMode}
                         source={promptEntryBg}
-                        style={tw`absolute inset-0 z-30 bg-black`}
-                        imageStyle={tw`opacity-11`}
+                        style={tw`absolute inset-0 z-30`}
                     >
                         <Animated.View
                             style={[
-                                surfSide ? tw`flex-1 bg-white/18` : tw`flex-1 bg-black/88`,
+                                tw`flex-1`,
                                 {paddingBottom: keyboardInset},
                             ]}
                         >
@@ -548,7 +586,14 @@ export function JournalScreen({
                                             </View>
 
                                             <View
-                                                style={surfSide ? tw`mt-4 flex-1 rounded-[24px] border border-black/10 bg-white/24 px-4 py-4` : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`}>
+                                                style={surfSide || sonny
+                                                    ? [
+                                                        tw`mt-4 flex-1 rounded-[24px] border px-4 py-4`,
+                                                        surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+                                                        {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+                                                    ]
+                                                    : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`}
+                                            >
                                                 {[0, 1, 2].map((idx) => (
                                                     <TextInput
                                                         ref={idx === 0 ? gratitudeInputRef : undefined}
@@ -563,8 +608,12 @@ export function JournalScreen({
                                                         placeholder="•"
                                                         placeholderTextColor="#6b7280"
                                                         style={[
-                                                            surfSide
-                                                                ? tw`mb-3 rounded-2xl border border-black/10 bg-white/24 px-3 py-3 text-base text-[#111111]`
+                                                            surfSide || sonny
+                                                                ? [
+                                                                    tw`mb-3 rounded-2xl border px-3 py-3 text-base`,
+                                                                    surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+                                                                    {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+                                                                ]
                                                                 : tw`mb-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-3 text-base text-[#E4E0D4]`,
                                                             {fontFamily: fonts.body},
                                                         ]}

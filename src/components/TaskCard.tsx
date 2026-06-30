@@ -6,10 +6,12 @@ import type {Task, TaskStatus} from "../types";
 import {Badge} from "./ui/Badge";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
+import {useScreenVisualMode} from "./ScreenBackground";
 
 const ACCENT = "#B55941";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
+const SONNY_SURFACE_COLOR = "#2F4F4F";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -56,6 +58,7 @@ function ActionPill({
     onPress: () => void;
     accent?: boolean;
 }) {
+    const sonny = useScreenVisualMode() === "sunset";
     return (
         <Pressable
             accessibilityRole="button"
@@ -65,7 +68,11 @@ function ActionPill({
                 tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
                 accent
                     ? {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle}
-                    : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                    : {
+                        borderColor: sonny ? "rgba(51,65,85,0.6)" : "rgba(223,196,170,0.42)",
+                        backgroundColor: sonny ? SONNY_SURFACE_COLOR : "rgba(15,15,15,0.92)",
+                        ...buttonDepthStyle,
+                    },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
             ]}
         >
@@ -91,6 +98,7 @@ interface TaskCardProps {
 }
 
 export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
+    const sonny = useScreenVisualMode() === "sunset";
     return (
         <Pressable
             onPress={haptics.tapTask}
@@ -100,8 +108,12 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
         >
             <View
                 style={[
-                    tw`overflow-hidden rounded-2xl border border-[#2c2c2c] p-3`,
-                    {backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
+                    tw`overflow-hidden rounded-2xl border p-3`,
+                    {
+                        borderColor: sonny ? "rgba(51,65,85,0.6)" : "#2c2c2c",
+                        backgroundColor: sonny ? SONNY_SURFACE_COLOR : "rgba(15,15,15,0.94)",
+                        ...buttonDepthStyle,
+                    },
                 ]}
             >
                 <ButtonShine/>

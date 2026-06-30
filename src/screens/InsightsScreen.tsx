@@ -123,8 +123,8 @@ export function InsightsScreen({onBackToPeers, visualMode}: InsightsScreenProps)
     );
 
     return (
-        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-58`}>
-            <View style={[tw`flex-1 bg-black/8`, {paddingHorizontal: 1}]}>
+        <ScreenBackground visualMode={visualMode} source={bg}>
+            <View style={[tw`flex-1`, {paddingHorizontal: 1}]}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-5 pb-28`}>
                     <View
                         style={[

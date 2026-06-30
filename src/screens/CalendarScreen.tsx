@@ -127,7 +127,7 @@ export function CalendarScreen({
         ? require("../../public/images/rhram1.jpg")
         : require("../../public/images/rh211.jpg");
     const {keyboardInset} = useKeyboardInset();
-    const surfSide = visualMode === "surfSide";
+    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
     const accentColor = "#FF3800";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
     const secondaryTextClass = surfSide ? tw`text-black/70` : tw`text-slate-300`;
@@ -226,10 +226,10 @@ export function CalendarScreen({
     }
 
     return (
-        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-33`}>
+        <ScreenBackground visualMode={visualMode} source={bg}>
             <Animated.View
                 style={[
-                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/33`,
+                    tw`flex-1`,
                     {paddingHorizontal: 1, paddingBottom: keyboardInset},
                 ]}
             >

@@ -16,30 +16,36 @@ interface TranslucentCalendarProps {
 export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalendarProps) {
     const visualMode = useScreenVisualMode();
     const surfSide = visualMode === "surfSide";
-    const todayTextColor = visualMode === "georgia" ? "#FF3800" : surfSide ? "#111111" : "#FF3800";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const georgia = visualMode === "georgia";
+    const lightMode = surfSide || river;
+    const solidMode = river || sonny || georgia;
+    const solidSurfaceColor = georgia ? "#000000" : sonny ? "#2F4F4F" : "#708090";
+    const todayTextColor = georgia ? "#FF3800" : lightMode ? "#111111" : "#FF3800";
     const calendarTheme = {
         calendarBackground: "transparent",
-        monthTextColor: surfSide ? "#111111" : "#E4E0D4",
+        monthTextColor: lightMode ? "#111111" : "#E4E0D4",
         textMonthFontFamily: fonts.heading,
         textDayFontFamily: fonts.body,
         textDayHeaderFontFamily: fonts.heading,
-        dayTextColor: surfSide ? "#111111" : "#E4E0D4",
-        textDisabledColor: surfSide ? "rgba(17,17,17,0.25)" : "rgba(228,224,212,0.25)",
+        dayTextColor: lightMode ? "#111111" : "#E4E0D4",
+        textDisabledColor: lightMode ? "rgba(17,17,17,0.25)" : "rgba(228,224,212,0.25)",
         selectedDayTextColor: "#FBF7F3",
         todayTextColor,
-        arrowColor: surfSide ? "#111111" : "#E4E0D4",
-        dotColor: surfSide ? "#111111" : "#E4E0D4",
+        arrowColor: lightMode ? "#111111" : "#E4E0D4",
+        dotColor: lightMode ? "#111111" : "#E4E0D4",
         selectedDotColor: "#FBF7F3",
-        textSectionTitleColor: surfSide ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)",
+        textSectionTitleColor: lightMode ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)",
     };
 
-    if (surfSide) {
+    if (lightMode || sonny || georgia) {
         return (
             <View
                 style={[
                     tw`mt-3 overflow-hidden rounded-[28px] p-1`,
                     {
-                        backgroundColor: "rgba(255,255,255,0.2)",
+                        backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.2)",
                         shadowColor: "#000000",
                         shadowOffset: {width: 0, height: 8},
                         shadowOpacity: 0.16,
@@ -50,21 +56,21 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
             >
                 <BlurView
                     intensity={72}
-                    tint="light"
-                    style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: "rgba(17,17,17,0.14)"}]}
+                    tint={lightMode ? "light" : "dark"}
+                    style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: lightMode ? "rgba(17,17,17,0.14)" : georgia ? "rgba(247,247,247,0.18)" : "rgba(51,65,85,0.6)"}]}
                 >
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(255,255,255,0.42)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.42)"}]}
                     />
                     <LinearGradient
-                        colors={["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"]}
+                        colors={solidMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"]}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 top-0`, {height: "55%"}]}
                     />
                     <LinearGradient
-                        colors={["transparent", "rgba(223,196,170,0.16)"]}
+                        colors={solidMode ? ["transparent", "rgba(0,0,0,0.1)"] : ["transparent", "rgba(223,196,170,0.16)"]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 bottom-0`, {height: "30%"}]}
                     />

@@ -30,7 +30,7 @@ const STEPS: OnboardingStep[] = [
     {
         eyebrow: "Start here",
         title: "Run the day from Home",
-        body: "Home keeps the essentials close: tap the sticky note to add quick notes, add it to Tasks when it becomes action, and use Sunset/Overcast in the header to switch the app's background mood.",
+        body: "Home keeps the essentials close: tap the sticky note to add quick notes, add it to Tasks when it becomes action, and use Sonny/River in the header to switch the app's background mood.",
     },
     {
         eyebrow: "Plan",
@@ -59,7 +59,7 @@ const STEPS: OnboardingStep[] = [
     {
         eyebrow: "Ready",
         title: "You are set.",
-        body: "You can replay this guide from Account any time. Start on Home, use the sticky note for quick capture, and tap the Sunset/Overcast pill in the header whenever you want a different visual feel.",
+        body: "You can replay this guide from Account any time. Start on Home, use the sticky note for quick capture, and tap the Sonny/River pill in the header whenever you want a different visual feel.",
     },
 ];
 

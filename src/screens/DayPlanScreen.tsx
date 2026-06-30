@@ -192,7 +192,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const bg = visualMode === "sunset"
         ? require("../../public/images/rhbull3.jpg")
         : require("../../public/images/rh16.jpg");
-    const surfSide = visualMode === "surfSide";
+    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
     const mutedTextColor = surfSide ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
 
@@ -239,10 +239,10 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const isToday = date === today;
 
     return (
-        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-39`}>
+        <ScreenBackground visualMode={visualMode} source={bg}>
             <View
                 style={[
-                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/47`,
+                    tw`flex-1`,
                     {paddingHorizontal: 1},
                 ]}
             >

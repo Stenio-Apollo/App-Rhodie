@@ -24,6 +24,9 @@ const ACTIVE_NAV_COLOR = "#B55941";
 const SUNSET_NAV_COLOR = "#B55941";
 const SURF_SIDE_NAV_COLOR = "#FF3800";
 const GEORGIA_NAV_COLOR = "#FF3800";
+const RIVER_NAV_COLOR = "#FF3800";
+const RIVER_SURFACE_COLOR = "#708090";
+const SONNY_SURFACE_COLOR = "#2F4F4F";
 const INACTIVE_COLOR = "#E4E0D4";
 const ROW_HORIZONTAL_PADDING = 3;
 const PILL_HORIZONTAL_INSET = 3;
@@ -51,9 +54,12 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
     const tabCount = TAB_ITEMS.length;
     const activeIndex = accountOpen ? -1 : TAB_ITEMS.findIndex((item) => item.key === activeTab);
     const surfSide = visualMode === "surfSide";
-    const activeNavColor = visualMode === "georgia" ? GEORGIA_NAV_COLOR : surfSide ? SURF_SIDE_NAV_COLOR : visualMode === "sunset" ? SUNSET_NAV_COLOR : ACTIVE_NAV_COLOR;
-    const navFrameColor = surfSide ? "#FFFFFF" : "#000000";
-    const inactiveColor = surfSide ? "#111111" : INACTIVE_COLOR;
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const lightMode = surfSide || visualMode === "overcast";
+    const activeNavColor = visualMode === "georgia" ? GEORGIA_NAV_COLOR : river ? RIVER_NAV_COLOR : surfSide ? SURF_SIDE_NAV_COLOR : visualMode === "sunset" ? SUNSET_NAV_COLOR : ACTIVE_NAV_COLOR;
+    const navFrameColor = river ? RIVER_SURFACE_COLOR : sonny ? SONNY_SURFACE_COLOR : lightMode ? "#FFFFFF" : "#000000";
+    const inactiveColor = lightMode ? "#111111" : INACTIVE_COLOR;
     const navBorderSoft = hexToRgba(navFrameColor, 0.23);
     const navBorderStrong = hexToRgba(navFrameColor, 0.39);
     const pillBorderColor = hexToRgba(navFrameColor, 0.43);
@@ -222,13 +228,13 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
             >
                 <BlurView
                     intensity={72}
-                    tint={surfSide ? "light" : "dark"}
+                    tint={lightMode ? "light" : "dark"}
                     style={[tw`overflow-hidden rounded-full border`, {borderColor: navBorderStrong}]}
                 >
                     {/* Base tint behind everything */}
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: surfSide ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.49)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: river ? RIVER_SURFACE_COLOR : sonny ? SONNY_SURFACE_COLOR : lightMode ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.49)"}]}
                     />
 
                     {/* Top rim highlight — the "shine" */}

@@ -45,7 +45,7 @@ function ButtonShine() {
 
 function ProgressDots({filled, total}: {filled: number; total: number}) {
     const visualMode = useScreenVisualMode();
-    const coast = visualMode === "surfSide";
+    const coast = visualMode === "surfSide" || visualMode === "overcast";
     const accentColor = "#FF3800";
     return (
         <View style={tw`flex-row items-center gap-2`}>
@@ -105,12 +105,15 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
 ) {
     const [history, setHistory] = useState<ArchivedWeeklyGoal[]>([]);
     const visualMode = useScreenVisualMode();
-    const coast = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const coast = visualMode === "surfSide" || river;
+    const solidSurfaceColor = sonny ? "#2F4F4F" : "#708090";
     const primaryTextColor = coast ? "#111111" : "#E4E0D4";
     const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "#cbd5e1";
     const mutedTextColor = coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
     const panelBorderColor = coast ? "rgba(17,17,17,0.14)" : "#2c2c2c";
-    const panelBackgroundColor = coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
+    const panelBackgroundColor = river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
     const accentColor = "#FF3800";
     const accentSoftColor = visualMode === "georgia" ? "rgba(255,56,0,0.18)" : "rgba(181,89,65,0.18)";
     const accentSelectedColor = "rgba(255,56,0,0.22)";
@@ -145,7 +148,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
             <View
                 style={[
                     tw`mt-4 overflow-hidden rounded-[28px] p-1`,
-                    {backgroundColor: coast ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                    {backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
                 ]}
             >
                 <BlurView
@@ -158,16 +161,16 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                 >
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
                     />
                     <LinearGradient
-                        colors={coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
+                        colors={river || sonny ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                     />
                     <LinearGradient
-                        colors={coast ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
+                        colors={river || sonny ? ["transparent", "rgba(0,0,0,0.1)"] : coast ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                     />
@@ -176,7 +179,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                         <View
                             style={[
                                 tw`rounded-2xl border p-3`,
-                                {borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)", backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)"},
+                                {borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)", backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)"},
                             ]}
                         >
                             <View style={tw`flex-row items-center justify-between`}>
@@ -322,7 +325,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <ButtonShine/>
                                         <View style={[
                                             tw`h-10 w-10 items-center justify-center rounded-full`,
-                                            {backgroundColor: selected ? accentSelectedColor : coast ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
+                                            {backgroundColor: selected ? accentSelectedColor : river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
                                         ]}>
                                             <Ionicons
                                                 name={(preset.icon ?? "flag-outline") as React.ComponentProps<typeof Ionicons>["name"]}
@@ -380,7 +383,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 keyboardAppearance={coast ? "light" : "dark"}
                                 style={[
                                     tw`mt-2`,
-                                    coast ? tw`border-black/10 bg-white/34 text-[#111111]` : null,
+                                    coast || sonny ? [coast ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`, {backgroundColor: river || sonny ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
                                 ]}
                             />
                             <Pressable

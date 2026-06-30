@@ -17,6 +17,9 @@ import type {VisualMode} from "../state/useVisualMode";
 import {TranslucentCard} from "../components/TranslucentCard";
 import {ScreenBackground} from "../components/ScreenBackground";
 
+const RIVER_SURFACE_COLOR = "#708090";
+const SONNY_SURFACE_COLOR = "#2F4F4F";
+
 interface TodayScreenProps {
     tasks: Task[];
     profile: Profile | null;
@@ -97,24 +100,32 @@ export function TodayScreen({
         shadowRadius: 8,
         elevation: 6,
     };
-    const surfSide = visualMode === "surfSide";
+    const river = visualMode === "overcast";
+    const sonny = visualMode === "sunset";
+    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
+    const solidMode = river || sonny;
+    const surfSide = visualMode === "surfSide" || river;
     const badgeColor = surfSide ? "#FF8000" : "#ba885a";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
+    const taskIconColor = visualMode === "surfSide" || river ? "#DAC8AE" : primaryTextColor;
     const mutedTextColor = surfSide ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
     const secondaryTextClass = surfSide ? tw`text-black/70` : tw`text-slate-300`;
-    const nestedItemStyle = surfSide
-        ? tw`mt-2 rounded-2xl border border-black/10 bg-white/24 px-3 py-2`
+    const nestedItemStyle = surfSide || sonny
+        ? [
+            tw`mt-2 rounded-2xl border px-3 py-2`,
+            surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+            {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+        ]
         : tw`mt-2 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2`;
 
     return (
         <ScreenBackground
             visualMode={visualMode}
             source={bg}
-            imageStyle={visualMode === "sunset" ? tw`opacity-27` : tw`opacity-40`}
         >
             <View
                 style={[
-                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/3 3`,
+                    tw`flex-1`,
                     {paddingHorizontal: 1},
                 ]}
             >
@@ -140,7 +151,7 @@ export function TodayScreen({
                       style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
                     <Text style={[tw`text-xs font-semibold`, {
                         fontFamily: fonts.body,
-                        color: badgeColor
+                        color: surfSide ? "rgba(17,17,17,0.62)" : badgeColor
                     }]}>Today • {today}</Text>
                     {profile?.birthday && isToday(profile.birthday) ? (
                         <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>
@@ -179,7 +190,7 @@ export function TodayScreen({
                     {showTutorial && onDismissTutorial ? (
                         <TutorialCard
                             title="Home is command center"
-                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Sunset/Overcast to change the mode."
+                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Sonny/River to change the mode."
                             onDismiss={onDismissTutorial}
                         />
                     ) : null}
@@ -270,7 +281,7 @@ export function TodayScreen({
                     >
                         <TranslucentCard radius={24} style={tw`p-4`}>
                             <View style={tw`flex-row items-center gap-2`}>
-                                <SvgUri width={16} height={16} uri={tasksIconUri} fill={primaryTextColor} stroke={primaryTextColor}/>
+                                <SvgUri width={16} height={16} uri={tasksIconUri} fill={taskIconColor} stroke={taskIconColor}/>
                                 <Text
                                     style={[tw`text-sm font-semibold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Tasks</Text>
                             </View>

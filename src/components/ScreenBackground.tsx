@@ -17,6 +17,8 @@ const surfSideGradientColors = [
 ] as const;
 
 const georgiaBackgroundColor = "#000000";
+const riverBackgroundColor = "#708090";
+const sonnyBackgroundColor = "#2F4F4F";
 
 const ScreenVisualModeContext = createContext<VisualMode>("overcast");
 
@@ -50,6 +52,22 @@ export function ScreenBackground({
         return (
             <ScreenVisualModeContext.Provider value={visualMode}>
                 <View style={[tw`flex-1`, {backgroundColor: georgiaBackgroundColor}, style]}>{children}</View>
+            </ScreenVisualModeContext.Provider>
+        );
+    }
+
+    if (visualMode === "sunset") {
+        return (
+            <ScreenVisualModeContext.Provider value={visualMode}>
+                <View style={[tw`flex-1`, {backgroundColor: sonnyBackgroundColor}, style]}>{children}</View>
+            </ScreenVisualModeContext.Provider>
+        );
+    }
+
+    if (visualMode === "overcast") {
+        return (
+            <ScreenVisualModeContext.Provider value={visualMode}>
+                <View style={[tw`flex-1`, {backgroundColor: riverBackgroundColor}, style]}>{children}</View>
             </ScreenVisualModeContext.Provider>
         );
     }

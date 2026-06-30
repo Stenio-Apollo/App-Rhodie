@@ -558,7 +558,7 @@ function AppContent() {
                 <UpdateAvailableBanner/>
 
                 <View
-                    style={tw`relative flex-1 bg-[#0f0f0f] rounded-t-3xl overflow-hidden`}
+                    style={tw`relative flex-1 rounded-t-3xl overflow-hidden`}
                     {...screenSwipeResponder.panHandlers}
                 >
                     <Animated.View
@@ -628,6 +628,7 @@ function AppContent() {
                                         : null
                             }
                             visualMode={visualModeState.mode}
+                            badgeCount={weeklyGoalState.progress.badges}
                             showTutorial={onboarding.visibleTutorials.journal}
                             onDismissTutorial={() => {
                                 void onboarding.dismissTutorial("journal");
