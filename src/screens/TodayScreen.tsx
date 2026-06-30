@@ -106,14 +106,16 @@ export function TodayScreen({
     const solidMode = coastMode || georgiaMode;
     const coastOrRiver = visualMode === "river" || coastMode;
     const badgeColor = "#ba885a";
-    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
-    const taskIconColor = visualMode === "river" || coastMode ? "#DAC8AE" : primaryTextColor;
-    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
-    const secondaryTextClass = coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
+    const quoteHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const quoteBodyTextColor = primaryTextColor;
+    const taskIconColor = visualMode === "river" || coastMode || georgiaMode ? "#DAC8AE" : primaryTextColor;
+    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.74)" : coastOrRiver ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
+    const secondaryTextClass = georgiaMode ? tw`text-white/70` : coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
     const nestedItemStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-2 rounded-2xl border px-3 py-2`,
-            coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+            coastOrRiver || georgiaMode ? tw`border-black/10` : tw`border-slate-700/60`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-2 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2`;
@@ -151,7 +153,7 @@ export function TodayScreen({
                       style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
                     <Text style={[tw`text-xs font-semibold`, {
                         fontFamily: fonts.body,
-                        color: coastOrRiver ? "rgba(17,17,17,0.62)" : badgeColor
+                        color: georgiaMode ? "rgba(255,255,255,0.74)" : coastOrRiver ? "rgba(17,17,17,0.62)" : badgeColor
                     }]}>Today • {today}</Text>
                     {profile?.birthday && isToday(profile.birthday) ? (
                         <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>
@@ -170,13 +172,13 @@ export function TodayScreen({
                 >
                     <Text style={[tw`text-center px-4 py-1 text-lg font-semibold`, {
                         fontFamily: fonts.heading,
-                        color: primaryTextColor
+                        color: quoteHeaderTextColor
                     }]}>
                         QUOTE OF THE DAY
                     </Text>
                     <Text style={[tw`mt-3 pb-[7px] text-center text-lg leading-snug`, {
                         fontFamily: fonts.body,
-                        color: primaryTextColor
+                        color: quoteBodyTextColor
                     }]}
                           numberOfLines={3}>
                         {todaysQuote}
@@ -209,7 +211,7 @@ export function TodayScreen({
                                         {weeklyGoal.text}
                                     </Text>
                                     <Text
-                                        style={[tw`mt-2 text-[11px] font-semibold text-slate-400`, {fontFamily: fonts.body}]}>
+                                        style={[tw`mt-2 text-[11px] font-semibold`, {fontFamily: fonts.body, color: mutedTextColor}]}>
                                         Week of {weeklyGoal.weekStartDate}
                                     </Text>
                                     <Text
@@ -307,7 +309,7 @@ export function TodayScreen({
                                         ) : null}
                                         <View style={tw`mt-2 flex-row items-center justify-between`}>
                                             <Text
-                                                style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"}]}>
+                                                style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.78)" : coastOrRiver ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"}]}>
                                                 {statusLabel[task.status]}{task.dueTime ? ` • ${task.dueTime}` : ""}
                                             </Text>
                                             {task.priority ? (

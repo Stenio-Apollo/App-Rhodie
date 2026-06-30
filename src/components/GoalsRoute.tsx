@@ -109,9 +109,12 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     const georgiaMode = visualMode === "georgia";
     const coastOrRiver = visualMode === "river" || coastMode;
     const solidSurfaceColor = georgiaMode ? "#2F4F4F" : "#708090";
-    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
-    const secondaryTextColor = coastOrRiver ? "rgba(17,17,17,0.68)" : "#cbd5e1";
-    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const primaryTextColor = coastOrRiver || georgiaMode ? "#111111" : "#E4E0D4";
+    const secondaryTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.68)" : "#cbd5e1";
+    const mutedTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const routeHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const cardHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const cardSectionLabelTextColor = coastMode || georgiaMode ? "#FFFFFF" : mutedTextColor;
     const panelBorderColor = coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c";
     const panelBackgroundColor = coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
     const accentColor = "#FF3800";
@@ -137,7 +140,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     return (
         <>
             <Text
-                style={[tw`self-center text-center text-2xl font-black`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
+                style={[tw`self-center text-center text-2xl font-black`, {fontFamily: fonts.heading, color: routeHeaderTextColor}]}>
                 Goals
             </Text>
             <Text
@@ -186,13 +189,13 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 <View style={tw`flex-1`}>
                                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                         fontFamily: fonts.strong,
-                                        color: mutedTextColor,
+                                        color: cardSectionLabelTextColor,
                                     }]}>
                                         Your progress
                                     </Text>
                                     <Text style={[tw`mt-1 text-2xl`, {
                                         fontFamily: fonts.heading,
-                                        color: primaryTextColor,
+                                        color: cardHeaderTextColor,
                                     }]}>
                                         {weeklyGoalProgress.points} {weeklyGoalProgress.points === 1 ? "point" : "points"}
                                     </Text>
@@ -214,7 +217,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                     <ProgressDots filled={filledForBadge} total={3}/>
                                     <Text style={[tw`mt-2 text-[10px]`, {
                                         fontFamily: fonts.body,
-                                        color: coastOrRiver ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
+                                        color: coastOrRiver || georgiaMode ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
                                     }]}>
                                         {pointsToNextBadge} {pointsToNextBadge === 1 ? "point" : "points"} to next badge
                                     </Text>
@@ -224,7 +227,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
 
                         <View style={tw`mt-4`}>
                             <Text
-                                style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
+                                style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: cardHeaderTextColor}]}>
                                 This week's goal
                             </Text>
                             <Text style={[tw`mt-1 text-xs`, {fontFamily: fonts.body, color: secondaryTextColor}]}>
@@ -242,10 +245,10 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 ]}
                             >
                                 <Text
-                                    style={[tw`text-xs font-semibold`, {fontFamily: fonts.body, color: mutedTextColor}]}>
+                                    style={[tw`text-xs font-semibold`, {fontFamily: fonts.body, color: cardSectionLabelTextColor}]}>
                                     Current focus
                                 </Text>
-                                <Text style={[tw`mt-1 text-base`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
+                                <Text style={[tw`mt-1 text-base`, {fontFamily: fonts.heading, color: cardHeaderTextColor}]}>
                                     {weeklyGoal.text}
                                 </Text>
                                 <Text
@@ -253,7 +256,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         tw`mt-2 text-[11px] font-semibold`,
                                         {
                                             fontFamily: fonts.body,
-                                            color: weeklyGoal.achievedAt ? accentColor : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
+                                            color: weeklyGoal.achievedAt ? accentColor : coastOrRiver || georgiaMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
                                         },
                                     ]}
                                 >
@@ -290,7 +293,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
 
                         <Text style={[tw`mt-4 text-[10px] uppercase tracking-[1px]`, {
                             fontFamily: fonts.strong,
-                            color: mutedTextColor,
+                            color: cardSectionLabelTextColor,
                         }]}>
                             Suggested goals
                         </Text>
@@ -336,7 +339,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <View style={tw`flex-1`}>
                                             <View style={tw`flex-row items-center justify-between gap-2`}>
                                                 <Text
-                                                    style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
+                                                    style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: cardHeaderTextColor}]}>
                                                     {preset.title}
                                                 </Text>
                                                 {preset.category ? (
@@ -361,7 +364,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                         <View style={tw`mt-4`}>
                             <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                 fontFamily: fonts.strong,
-                                color: mutedTextColor,
+                                color: cardSectionLabelTextColor,
                             }]}>
                                 Or write your own
                             </Text>
@@ -379,11 +382,11 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 returnKeyType="done"
                                 maxLength={120}
                                 editable={!isGoalLocked}
-                                placeholderTextColor={coastOrRiver ? "rgba(17,17,17,0.45)" : "#6b7280"}
-                                keyboardAppearance={coastOrRiver ? "light" : "dark"}
+                                placeholderTextColor={coastOrRiver || georgiaMode ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                                 style={[
                                     tw`mt-2`,
-                                    coastOrRiver || georgiaMode ? [coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
+                                    coastOrRiver || georgiaMode ? [tw`border-black/10 text-[#111111]`, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
                                 ]}
                             />
                             <Pressable
@@ -414,7 +417,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                             <View style={tw`mt-4`}>
                                 <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                     fontFamily: fonts.strong,
-                                    color: mutedTextColor,
+                                    color: cardSectionLabelTextColor,
                                 }]}>
                                     Recent wins
                                 </Text>
@@ -430,14 +433,14 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                             <View style={tw`flex-row items-center justify-between`}>
                                                 <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                                     fontFamily: fonts.strong,
-                                                    color: mutedTextColor,
+                                                    color: cardSectionLabelTextColor,
                                                 }]}>
                                                     Week of {archived.weekStartDate}
                                                 </Text>
                                                 <Ionicons name="trophy-outline" size={14} color="#ba885a"/>
                                             </View>
                                             <Text
-                                                style={[tw`mt-1 text-sm`, {fontFamily: fonts.heading, color: primaryTextColor}]}
+                                                style={[tw`mt-1 text-sm`, {fontFamily: fonts.heading, color: cardHeaderTextColor}]}
                                                 numberOfLines={2}
                                             >
                                                 {archived.text}

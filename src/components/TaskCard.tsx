@@ -11,6 +11,7 @@ import {useScreenVisualMode} from "./ScreenBackground";
 const ACCENT = "#B55941";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
+const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#2F4F4F";
 
 const buttonDepthStyle = {
@@ -58,7 +59,18 @@ function ActionPill({
     onPress: () => void;
     accent?: boolean;
 }) {
-    const georgiaMode = useScreenVisualMode() === "georgia";
+    const visualMode = useScreenVisualMode();
+    const riverMode = visualMode === "river";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const sonnyMode = visualMode === "sonny";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const lightCardMode = riverMode || coastMode;
+    const whiteTextMode = coastMode || georgiaMode || sonnyMode;
+    const actionAccentColor = sonnyMode ? "#FF3800" : ACCENT;
+    const textColor = whiteTextMode ? "#FFFFFF" : accent ? "#FFF6E8" : lightCardMode ? "#111111" : CREAM;
+    const actionBorderColor = coastMode || riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(51,65,85,0.6)" : sonnyMode ? "rgba(247,247,247,0.18)" : "rgba(223,196,170,0.42)";
+    const actionBackgroundColor = coastMode || georgiaMode ? solidSurfaceColor : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.92)";
     return (
         <Pressable
             accessibilityRole="button"
@@ -67,10 +79,10 @@ function ActionPill({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
                 accent
-                    ? {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle}
+                    ? {borderColor: actionAccentColor, backgroundColor: actionAccentColor, ...buttonDepthStyle}
                     : {
-                        borderColor: georgiaMode ? "rgba(51,65,85,0.6)" : "rgba(223,196,170,0.42)",
-                        backgroundColor: georgiaMode ? GEORGIA_SURFACE_COLOR : "rgba(15,15,15,0.92)",
+                        borderColor: actionBorderColor,
+                        backgroundColor: actionBackgroundColor,
                         ...buttonDepthStyle,
                     },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
@@ -78,11 +90,11 @@ function ActionPill({
         >
             <ButtonShine/>
             {icon ? (
-                <Ionicons name={icon} size={12} color={accent ? "#FFF6E8" : CREAM}/>
+                <Ionicons name={icon} size={12} color={textColor}/>
             ) : null}
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: accent ? "#FFF6E8" : CREAM,
+                color: textColor,
             }]}>
                 {label}
             </Text>
@@ -98,7 +110,18 @@ interface TaskCardProps {
 }
 
 export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
-    const georgiaMode = useScreenVisualMode() === "georgia";
+    const visualMode = useScreenVisualMode();
+    const riverMode = visualMode === "river";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const sonnyMode = visualMode === "sonny";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const whiteTextMode = coastMode || georgiaMode || sonnyMode;
+    const primaryTextColor = whiteTextMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY;
+    const bodyTextColor = whiteTextMode ? "rgba(255,255,255,0.82)" : riverMode ? "rgba(17,17,17,0.82)" : "rgba(228,224,212,0.82)";
+    const dueTextColor = whiteTextMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM;
+    const cardBorderColor = coastMode || riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(51,65,85,0.6)" : sonnyMode ? "rgba(247,247,247,0.18)" : "#2c2c2c";
+    const cardBackgroundColor = coastMode || georgiaMode ? solidSurfaceColor : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.94)";
     return (
         <Pressable
             onPress={haptics.tapTask}
@@ -110,8 +133,8 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                 style={[
                     tw`overflow-hidden rounded-2xl border p-3`,
                     {
-                        borderColor: georgiaMode ? "rgba(51,65,85,0.6)" : "#2c2c2c",
-                        backgroundColor: georgiaMode ? GEORGIA_SURFACE_COLOR : "rgba(15,15,15,0.94)",
+                        borderColor: cardBorderColor,
+                        backgroundColor: cardBackgroundColor,
                         ...buttonDepthStyle,
                     },
                 ]}
@@ -119,7 +142,7 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                 <ButtonShine/>
                 <View style={tw`flex-row items-start justify-between gap-2`}>
                     <Text
-                        style={[tw`flex-1 text-base font-bold`, {fontFamily: fonts.heading, color: TEXT_PRIMARY}]}>
+                        style={[tw`flex-1 text-base font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                         {task.title}
                     </Text>
                     <View
@@ -128,7 +151,7 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
 
                 {task.description ? (
                     <Text
-                        style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, color: "rgba(228,224,212,0.82)"}]}>
+                        style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, color: bodyTextColor}]}>
                         {task.description}
                     </Text>
                 ) : null}
@@ -140,7 +163,7 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                     />
                     {task.dueDate ? (
                         <Text
-                            style={[tw`text-xs font-semibold`, {fontFamily: fonts.body, color: CREAM}]}>
+                            style={[tw`text-xs font-semibold`, {fontFamily: fonts.body, color: dueTextColor}]}>
                             Due {task.dueDate}{task.dueTime ? ` ${task.dueTime}` : ""}
                         </Text>
                     ) : null}

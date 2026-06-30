@@ -192,9 +192,12 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const bg = visualMode === "georgia"
         ? require("../../public/images/rhbull3.jpg")
         : require("../../public/images/rh16.jpg");
-    const coastOrRiver = visualMode === "river" || visualMode === "coast";
-    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
-    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
+    const coastMode = visualMode === "coast";
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const georgiaMode = visualMode === "georgia";
+    const primaryTextColor = coastOrRiver || georgiaMode ? "#111111" : "#E4E0D4";
+    const mutedTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
+    const planHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
 
     const dayEvents = useMemo(
         () =>
@@ -254,11 +257,11 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                             pressed && tw`opacity-70`,
                         ]}
                     >
-                        <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: primaryTextColor}]}>‹</Text>
+                        <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: planHeaderTextColor}]}>‹</Text>
                     </Pressable>
 
                     <View style={tw`flex-1 items-center`}>
-                        <Text style={[tw`text-lg`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
+                        <Text style={[tw`text-lg`, {fontFamily: fonts.heading, color: planHeaderTextColor}]}>
                             {formatDateHeader(date)}
                         </Text>
                         {!isToday ? (
@@ -285,7 +288,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                             pressed && tw`opacity-70`,
                         ]}
                     >
-                        <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: primaryTextColor}]}>›</Text>
+                        <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: planHeaderTextColor}]}>›</Text>
                     </Pressable>
                 </View>
 
@@ -440,7 +443,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                         <Text
                             style={[
                                 tw`absolute top-1/3 self-center text-sm`,
-                                {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"},
+                                {fontFamily: fonts.body, color: coastOrRiver || georgiaMode ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"},
                             ]}
                         >
                             Tap any slot to plan your day

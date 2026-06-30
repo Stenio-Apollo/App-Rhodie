@@ -58,7 +58,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
     const coastOrRiver = riverMode || coastMode;
-    const lightMode = coastOrRiver;
+    const lightMode = coastOrRiver || georgiaMode;
     const activeNavColor = sonnyMode
         ? SONNY_NAV_COLOR
         : coastMode
@@ -69,7 +69,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                     ? GEORGIA_NAV_COLOR
                     : ACTIVE_NAV_COLOR;
     const navFrameColor = coastMode ? COAST_SURFACE_COLOR : georgiaMode ? GEORGIA_SURFACE_COLOR : lightMode ? "#FFFFFF" : "#000000";
-    const inactiveColor = lightMode ? "#111111" : INACTIVE_COLOR;
+    const inactiveColor = georgiaMode ? "#FFFFFF" : lightMode ? "#111111" : INACTIVE_COLOR;
     const navBorderSoft = hexToRgba(navFrameColor, 0.23);
     const navBorderStrong = hexToRgba(navFrameColor, 0.39);
     const pillBorderColor = hexToRgba(navFrameColor, 0.43);

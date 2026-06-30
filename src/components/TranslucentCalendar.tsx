@@ -19,13 +19,14 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
-    const lightMode = riverMode || coastMode;
+    const lightMode = riverMode || coastMode || georgiaMode;
     const solidMode = coastMode || georgiaMode || sonnyMode;
     const solidSurfaceColor = sonnyMode ? "#000000" : georgiaMode ? "#2F4F4F" : "#708090";
     const todayTextColor = sonnyMode ? "#FF3800" : lightMode ? "#111111" : "#FF3800";
+    const calendarHeaderTextColor = lightMode ? "#111111" : "#E4E0D4";
     const calendarTheme = {
         calendarBackground: "transparent",
-        monthTextColor: lightMode ? "#111111" : "#E4E0D4",
+        monthTextColor: calendarHeaderTextColor,
         textMonthFontFamily: fonts.heading,
         textDayFontFamily: fonts.body,
         textDayHeaderFontFamily: fonts.heading,
@@ -33,7 +34,7 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
         textDisabledColor: lightMode ? "rgba(17,17,17,0.25)" : "rgba(228,224,212,0.25)",
         selectedDayTextColor: "#FBF7F3",
         todayTextColor,
-        arrowColor: lightMode ? "#111111" : "#E4E0D4",
+        arrowColor: calendarHeaderTextColor,
         dotColor: lightMode ? "#111111" : "#E4E0D4",
         selectedDotColor: "#FBF7F3",
         textSectionTitleColor: lightMode ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)",

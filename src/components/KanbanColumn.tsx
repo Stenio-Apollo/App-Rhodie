@@ -24,9 +24,9 @@ export function KanbanColumn({status, tasks, onDelete, onComplete, visualMode}: 
     const riverMode = visualMode === "river";
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const lightMode = riverMode || coastMode;
+    const lightMode = riverMode || coastMode || georgiaMode;
     const solidSurfaceColor = georgiaMode ? "#2F4F4F" : "#708090";
-    const headerColor = lightMode ? "#111111" : status === "completed" ? CREAM : TEXT_PRIMARY;
+    const headerColor = georgiaMode ? "#FFFFFF" : lightMode ? "#111111" : status === "completed" ? CREAM : TEXT_PRIMARY;
     return (
         <View style={tw`w-80`}>
             <View

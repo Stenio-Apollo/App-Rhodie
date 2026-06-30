@@ -10,16 +10,30 @@ interface BadgeProps {
 
 export function Badge({label, tone = "default"}: BadgeProps) {
     const visualMode = useScreenVisualMode();
-    const lightMode = visualMode === "river" || visualMode === "coast";
+    const riverMode = visualMode === "river";
+    const coastMode = visualMode === "coast";
+    const lightMode = riverMode || coastMode;
+    const georgiaMode = visualMode === "georgia";
+    const sonnyMode = visualMode === "sonny";
+    const whiteTextMode = coastMode || georgiaMode;
     const isAccent = tone === "accent";
     const isCount = tone === "count";
+    const badgeBorderColor = isAccent
+        ? sonnyMode ? "#FF3800" : "#B55941"
+        : riverMode ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)";
+    const badgeBackgroundColor = isAccent
+        ? sonnyMode ? "rgba(255,56,0,0.28)" : "rgba(181,89,65,0.28)"
+        : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.85)";
+    const badgeTextColor = whiteTextMode
+        ? "#FFFFFF"
+        : riverMode ? "#111111" : sonnyMode ? "#FFFFFF" : isAccent ? "#FFF6E8" : "#DFC4AA";
 
     if (isCount) {
         return (
             <Text
                 style={[
                     tw`px-2 py-1 text-[10px] font-bold tracking-[1px]`,
-                    {fontFamily: fonts.strong, color: lightMode ? "#111111" : "#DFC4AA"},
+                    {fontFamily: fonts.strong, color: whiteTextMode ? "#FFFFFF" : lightMode ? "#111111" : "#DFC4AA"},
                 ]}
             >
                 {label}
@@ -31,15 +45,13 @@ export function Badge({label, tone = "default"}: BadgeProps) {
         <View
             style={[
                 tw`rounded-lg border px-2 py-1`,
-                isAccent
-                    ? {borderColor: "#B55941", backgroundColor: "rgba(181,89,65,0.28)"}
-                    : {borderColor: "rgba(223,196,170,0.32)", backgroundColor: "rgba(15,15,15,0.85)"},
+                {borderColor: badgeBorderColor, backgroundColor: badgeBackgroundColor},
             ]}
         >
             <Text
                 style={[
                     tw`text-[10px] font-bold tracking-[1px]`,
-                    {fontFamily: fonts.strong, color: isAccent ? "#FFF6E8" : "#DFC4AA"},
+                    {fontFamily: fonts.strong, color: badgeTextColor},
                 ]}
             >
                 {label}

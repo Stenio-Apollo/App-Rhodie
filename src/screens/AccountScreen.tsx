@@ -24,15 +24,17 @@ function AccountRouteEntry({
                                active,
                                onPress,
                                coastOrRiver = false,
+                               whiteContent = false,
                            }: {
     label: string;
     icon: ComponentProps<typeof Ionicons>["name"];
     active: boolean;
     onPress: () => void;
     coastOrRiver?: boolean;
+    whiteContent?: boolean;
 }) {
     const badgeColor = "#ba885a";
-    const color = active ? badgeColor : coastOrRiver ? "#000000" : "#E4E0D4";
+    const color = whiteContent ? "#E4E0D4" : active ? badgeColor : coastOrRiver ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -215,19 +217,19 @@ export function AccountScreen({
         : visualMode === "river"
             ? {color: badgeColor}
             : {color: "#DFC4AA", opacity: 0.7};
-    const accountBodyTextStyle = {color: coastOrRiver ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
-    const accountMutedTextStyle = {color: coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"};
+    const accountBodyTextStyle = {color: coastOrRiver || georgiaMode ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
+    const accountMutedTextStyle = {color: coastOrRiver || georgiaMode ? "rgba(17,17,17,0.58)" : "#94a3b8"};
     const profileInputStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-4 px-4 py-3 opacity-100`,
-            coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            coastOrRiver || georgiaMode ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
         ]
         : tw`mt-4 px-4 py-3 opacity-49`;
     const profileEmailInputStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-3 px-4 py-3 opacity-100`,
-            coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            coastOrRiver || georgiaMode ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
         ]
         : tw`mt-3 px-4 py-3 opacity-49`;
@@ -390,21 +392,24 @@ export function AccountScreen({
                         icon="mail-outline"
                         active={route === "support"}
                         onPress={() => setRoute("support")}
-                        coastOrRiver={coastOrRiver}
+                        coastOrRiver={coastOrRiver || georgiaMode}
+                        whiteContent={coastMode || georgiaMode}
                     />
                     <AccountRouteEntry
                         label="Replay"
                         icon="refresh-circle-outline"
                         active={route === "guide"}
                         onPress={() => setRoute("guide")}
-                        coastOrRiver={coastOrRiver}
+                        coastOrRiver={coastOrRiver || georgiaMode}
+                        whiteContent={coastMode || georgiaMode}
                     />
                     <AccountRouteEntry
                         label="Subscription"
                         icon="card-outline"
                         active={route === "subscription"}
                         onPress={() => setRoute("subscription")}
-                        coastOrRiver={coastOrRiver}
+                        coastOrRiver={coastOrRiver || georgiaMode}
+                        whiteContent={coastMode || georgiaMode}
                     />
                 </View>
                 {route !== "account" ? (
@@ -421,7 +426,7 @@ export function AccountScreen({
                             pressed && {opacity: 0.6, transform: [{translateY: 1}]},
                         ]}
                     >
-                        <Ionicons name="close" size={18} color={coastOrRiver ? "#111111" : "#E4E0D4"}/>
+                        <Ionicons name="close" size={18} color={coastOrRiver || georgiaMode ? "#111111" : "#E4E0D4"}/>
                     </Pressable>
                 ) : null}
                 <ScrollView
@@ -454,8 +459,8 @@ export function AccountScreen({
                                     placeholder="Your name"
                                     value={name}
                                     onChangeText={setName}
-                                    placeholderTextColor={coastOrRiver ? "rgba(17,17,17,0.45)" : "#6b7280"}
-                                    keyboardAppearance={coastOrRiver ? "light" : "dark"}
+                                    placeholderTextColor={coastOrRiver || georgiaMode ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                    keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                                     style={profileInputStyle}
                                 />
 
@@ -463,8 +468,8 @@ export function AccountScreen({
                                     placeholder="Email"
                                     value={session.user.email ?? "No email on file"}
                                     editable={false}
-                                    placeholderTextColor={coastOrRiver ? "rgba(17,17,17,0.45)" : "#6b7280"}
-                                    keyboardAppearance={coastOrRiver ? "light" : "dark"}
+                                    placeholderTextColor={coastOrRiver || georgiaMode ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                    keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                                     style={profileEmailInputStyle}
                                 />
 
@@ -473,7 +478,7 @@ export function AccountScreen({
                                         coastOrRiver || georgiaMode
                                             ? [
                                                 tw`mt-3 rounded-xl border px-4 py-3`,
-                                                coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+                                                coastOrRiver || georgiaMode ? tw`border-black/10` : tw`border-slate-700/60`,
                                                 {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
                                             ]
                                             : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/44 px-4 py-3`
@@ -489,8 +494,8 @@ export function AccountScreen({
                                         placeholder="Optional birthday"
                                         showClear
                                         clearTextColor={georgiaMode ? "#111111" : undefined}
-                                        pickerBackgroundClass={coastOrRiver ? "bg-white" : "bg-black/47"}
-                                        coastOrRiver={coastOrRiver}
+                                        pickerBackgroundClass={coastOrRiver || georgiaMode ? "bg-white" : "bg-black/47"}
+                                        coastOrRiver={coastOrRiver || georgiaMode}
                                         sonnyMode={sonnyMode}
 
                                     />
@@ -602,7 +607,7 @@ export function AccountScreen({
 
                             <TranslucentCard radius={16} style={tw`mt-4 px-4 py-3`}>
                                 <Text style={[tw`text-xs`, {fontFamily: fonts.body, ...accountHeaderColorStyle}]}>Status</Text>
-                                <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: coastOrRiver ? "#111111" : "#E4E0D4"}]}>
+                                <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: coastOrRiver || georgiaMode ? "#111111" : "#E4E0D4"}]}>
                                     {getSubscriptionStatusLabel(subscription)}
                                 </Text>
                                 <Text style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, ...accountBodyTextStyle}]}>

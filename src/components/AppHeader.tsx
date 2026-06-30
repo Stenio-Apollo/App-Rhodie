@@ -29,10 +29,11 @@ export function AppHeader({
                           }: AppHeaderProps) {
     const riverMode = visualMode === "river";
     const coastMode = visualMode === "coast";
-    const lightMode = riverMode || coastMode;
-    const headerTextColor = lightMode ? "#111111" : "#E4E0D4";
-    const logoTextColor = coastMode ? "#FFFFFF" : headerTextColor;
-    const logoBorderColor = coastMode ? "#FFFFFF" : lightMode ? "rgba(17,17,17,0.72)" : "#FFFFFF";
+    const georgiaMode = visualMode === "georgia";
+    const lightMode = riverMode || coastMode || georgiaMode;
+    const headerTextColor = georgiaMode ? "#FFFFFF" : lightMode ? "#111111" : "#E4E0D4";
+    const logoTextColor = coastMode || georgiaMode ? "#FFFFFF" : headerTextColor;
+    const logoBorderColor = coastMode || georgiaMode ? "#FFFFFF" : lightMode ? "rgba(17,17,17,0.72)" : "#FFFFFF";
     const avatarFallbackColor = lightMode ? "#111111" : "#FFF6E8";
     const avatarFallbackBackgroundColor = lightMode ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.4)";
     const modeButton = visualMode === "georgia"

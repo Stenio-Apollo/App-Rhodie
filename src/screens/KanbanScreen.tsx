@@ -69,6 +69,8 @@ function ThemedField({
     const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
     const solidMode = coastMode || georgiaMode;
     const sonnyMode = visualMode === "sonny";
+    const fieldTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : sonnyMode ? "#FFFFFF" : TEXT_PRIMARY;
+    const fieldPlaceholderColor = georgiaMode || sonnyMode ? SOLID_THEME_PLACEHOLDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.5)";
     return (
         <View
             style={[
@@ -88,9 +90,9 @@ function ThemedField({
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                placeholderTextColor={georgiaMode || sonnyMode ? SOLID_THEME_PLACEHOLDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.5)"}
-                keyboardAppearance={coastOrRiver ? "light" : "dark"}
-                style={[tw`text-sm`, {fontFamily: fonts.body, color: coastOrRiver ? "#111111" : georgiaMode || sonnyMode ? "#FFFFFF" : TEXT_PRIMARY}]}
+                placeholderTextColor={fieldPlaceholderColor}
+                keyboardAppearance={visualMode === "river" ? "light" : "dark"}
+                style={[tw`text-sm`, {fontFamily: fonts.body, color: fieldTextColor}]}
             />
         </View>
     );
@@ -145,12 +147,12 @@ function ThemedButton({
         >
             <ButtonShine/>
             {icon ? (
-                <Ionicons name={icon} size={14} color={badgeButton ? "#0f0f0f" : accent ? "#FFF6E8" : coastOrRiver ? "#111111" : georgiaMode || sonnyMode ? georgiaButtonTextColor : CREAM}/>
+                <Ionicons name={icon} size={14} color={coastMode || georgiaMode ? georgiaButtonTextColor : badgeButton ? "#0f0f0f" : accent ? "#FFF6E8" : coastOrRiver ? "#111111" : sonnyMode ? georgiaButtonTextColor : CREAM}/>
             ) : null}
             <Text
                 style={[tw`text-[12px] font-semibold`, {
                     fontFamily: fonts.strong,
-                    color: badgeButton ? "#0f0f0f" : accent ? "#FFF6E8" : coastOrRiver ? "#111111" : georgiaMode || sonnyMode ? georgiaButtonTextColor : CREAM,
+                    color: coastMode || georgiaMode ? georgiaButtonTextColor : badgeButton ? "#0f0f0f" : accent ? "#FFF6E8" : coastOrRiver ? "#111111" : sonnyMode ? georgiaButtonTextColor : CREAM,
                 }]}
             >
                 {label}
@@ -213,8 +215,8 @@ export function KanbanScreen({
     const coastOrRiver = visualMode === "river" || coastMode;
     const sonnyMode = visualMode === "sonny";
     const themeAccent = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
-    const primaryTextColor = coastOrRiver ? "#111111" : georgiaMode || sonnyMode ? "#FFFFFF" : TEXT_PRIMARY;
-    const accentTextColor = coastOrRiver ? "#111111" : CREAM;
+    const primaryTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : sonnyMode ? "#FFFFFF" : TEXT_PRIMARY;
+    const accentTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : CREAM;
 
     const filteredGrouped = useMemo(() => {
         if (!filterDate) return grouped;
@@ -348,7 +350,7 @@ export function KanbanScreen({
                                             ]}
                                         >
                                             <ButtonShine/>
-                                            <Ionicons name="calendar-outline" size={14} color={coastOrRiver ? "#111111" : georgiaMode || sonnyMode ? "#FFFFFF" : CREAM}/>
+                                            <Ionicons name="calendar-outline" size={14} color={coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : sonnyMode ? "#FFFFFF" : CREAM}/>
                                             <Text style={[tw`flex-1 text-sm`, {
                                                 fontFamily: fonts.body,
                                                 color: dueDate
@@ -367,7 +369,7 @@ export function KanbanScreen({
                                                     }}
                                                     hitSlop={8}
                                                 >
-                                                    <Ionicons name="close-circle" size={16} color={coastOrRiver ? "#111111" : georgiaMode || sonnyMode ? "#FFFFFF" : CREAM}/>
+                                                    <Ionicons name="close-circle" size={16} color={coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : sonnyMode ? "#FFFFFF" : CREAM}/>
                                                 </Pressable>
                                             ) : null}
                                         </View>
@@ -403,7 +405,7 @@ export function KanbanScreen({
                                     <View style={tw`mt-1`}>
                                         <Text style={[tw`mb-2 text-[10px] uppercase tracking-[1px]`, {
                                             fontFamily: fonts.strong,
-                                            color: georgiaMode || sonnyMode ? "#FFFFFF" : accentTextColor,
+                                            color: sonnyMode ? "#FFFFFF" : accentTextColor,
                                             opacity: 0.7,
                                         }]}>
                                             Priority
@@ -422,9 +424,9 @@ export function KanbanScreen({
                                                             style={({pressed}) => [
                                                                 tw`overflow-hidden rounded-xl border px-3.5 py-2`,
                                                                 isActive
-                                                                    ? {
-                                                                        borderColor: coastOrRiver || georgiaMode ? "#8FBBD0" : sonnyMode ? "#DAC8AE" : CREAM,
-                                                                        backgroundColor: coastOrRiver || georgiaMode ? "#B9D8E8" : sonnyMode ? "#DAC8AE" : CREAM,
+                                                                ? {
+                                                                        borderColor: georgiaMode ? "#DAC8AE" : coastOrRiver ? "#8FBBD0" : sonnyMode ? "#DAC8AE" : CREAM,
+                                                                        backgroundColor: georgiaMode ? GEORGIA_SURFACE_COLOR : coastOrRiver ? "#B9D8E8" : sonnyMode ? "#DAC8AE" : CREAM,
                                                                         ...buttonDepthStyle,
                                                                     }
                                                                     : coastOrRiver || georgiaMode
@@ -444,7 +446,7 @@ export function KanbanScreen({
                                                             <ButtonShine/>
                                                             <Text style={[tw`text-[11px] font-semibold uppercase tracking-[1px]`, {
                                                                 fontFamily: fonts.strong,
-                                                                color: coastOrRiver || georgiaMode ? "#0f0f0f" : sonnyMode ? (isActive ? "#0f0f0f" : "#FFFFFF") : isActive ? "#0f0f0f" : CREAM,
+                                                                color: georgiaMode ? (isActive ? "#FFFFFF" : "#0f0f0f") : coastOrRiver ? "#0f0f0f" : sonnyMode ? (isActive ? "#0f0f0f" : "#FFFFFF") : isActive ? "#0f0f0f" : CREAM,
                                                             }]}>
                                                                 {item}
                                                             </Text>

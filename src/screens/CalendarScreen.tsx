@@ -30,6 +30,7 @@ function CalendarRouteEntry({
                                 disabled = false,
                                 active = false,
                                 coastOrRiver = false,
+                                whiteContent = false,
                             }: {
     label: string;
     icon: React.ComponentProps<typeof Ionicons>["name"];
@@ -37,10 +38,13 @@ function CalendarRouteEntry({
     disabled?: boolean;
     active?: boolean;
     coastOrRiver?: boolean;
+    whiteContent?: boolean;
 }) {
     const badgeColor = "#ba885a";
     const color = disabled
-        ? (coastOrRiver ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
+        ? (whiteContent ? "rgba(228,224,212,0.35)" : coastOrRiver ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
+        : whiteContent
+            ? "#E4E0D4"
         : active
             ? badgeColor
             : coastOrRiver ? "#000000" : "#E4E0D4";
@@ -127,10 +131,12 @@ export function CalendarScreen({
         ? require("../../public/images/rhram1.jpg")
         : require("../../public/images/rh211.jpg");
     const {keyboardInset} = useKeyboardInset();
-    const coastOrRiver = visualMode === "river" || visualMode === "coast";
+    const coastMode = visualMode === "coast";
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const georgiaMode = visualMode === "georgia";
     const accentColor = "#FF3800";
-    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
-    const secondaryTextClass = coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
+    const primaryTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
+    const secondaryTextClass = coastMode || georgiaMode ? tw`text-white/70` : coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -239,27 +245,31 @@ export function CalendarScreen({
                         icon="calendar-outline"
                         onPress={openCalendarRoute}
                         active={route === "calendar"}
-                        coastOrRiver={coastOrRiver}
+                        coastOrRiver={coastOrRiver || georgiaMode}
+                        whiteContent={visualMode === "coast" || georgiaMode}
                     />
                     <CalendarRouteEntry
                         label="Google"
                         icon="logo-google"
                         onPress={handleGoogleRoutePress}
                         disabled={!googleCalendar.available || googleCalendar.busy}
-                        coastOrRiver={coastOrRiver}
+                        coastOrRiver={coastOrRiver || georgiaMode}
+                        whiteContent={visualMode === "coast" || georgiaMode}
                     />
                     <CalendarRouteEntry
                         label="Tasks"
                         icon="checkbox-outline"
                         onPress={onOpenTasks}
-                        coastOrRiver={coastOrRiver}
+                        coastOrRiver={coastOrRiver || georgiaMode}
+                        whiteContent={visualMode === "coast" || georgiaMode}
                     />
                     <CalendarRouteEntry
                         label="Goals"
                         icon="flag-outline"
                         onPress={() => openGoalsRoute()}
                         active={route === "goals"}
-                        coastOrRiver={coastOrRiver}
+                        coastOrRiver={coastOrRiver || georgiaMode}
+                        whiteContent={visualMode === "coast" || georgiaMode}
                     />
                 </View>
                 {route === "goals" ? (

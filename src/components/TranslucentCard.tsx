@@ -23,7 +23,7 @@ export function TranslucentCard({
     const riverMode = visualMode === "river";
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const lightMode = riverMode || coastMode;
+    const lightMode = riverMode || coastMode || georgiaMode;
     const solidSurfaceColor = georgiaMode ? "#2F4F4F" : "#708090";
     const borderColor = lightMode ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)";
     const surfaceColor = coastMode || georgiaMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)";
