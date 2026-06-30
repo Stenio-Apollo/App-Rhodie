@@ -105,6 +105,8 @@ function Avatar({
 }) {
     const initial = displayName(author)[0]?.toUpperCase() ?? "R";
     const isCurrentUser = author.id === currentUserId;
+    const visualMode = useScreenVisualMode();
+    const currentUserDefaultColor = "#FF3800";
     if (author.avatarUrl) {
         return (
             <Image
@@ -118,7 +120,7 @@ function Avatar({
         <View
             style={[
                 tw`items-center justify-center rounded-full`,
-                isCurrentUser ? {backgroundColor: "#FF3800"} : tw`bg-[#DFC4AA]`,
+                isCurrentUser ? {backgroundColor: currentUserDefaultColor} : tw`bg-[#DFC4AA]`,
                 {width: size, height: size},
             ]}
         >
@@ -710,6 +712,8 @@ export function CommunityScreen({
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(today), [today]);
     const selectedComposerMode = COMPOSER_MODES.find((mode) => mode.key === composerMode) ?? COMPOSER_MODES[0];
     const surfSide = visualMode === "surfSide";
+    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const connectActionColor = "#FF3800";
     const primaryTextColor = surfSide ? "#111111" : "#ffffff";
     const bodyTextColor = surfSide ? "rgba(17,17,17,0.74)" : "rgba(228,224,212,0.7)";
     const inputStyle = surfSide
@@ -876,9 +880,9 @@ export function CommunityScreen({
                                         style={({pressed}) => [
                                             tw`flex-1 items-center rounded-xl px-2 py-2`,
                                             active && {
-                                                backgroundColor: "#FF3800",
+                                                backgroundColor: connectActionColor,
                                                 borderWidth: 1,
-                                                borderColor: "#C82D00",
+                                                borderColor: connectActionColor,
                                                 shadowColor: "#000000",
                                                 shadowOffset: {width: 0, height: 7},
                                                 shadowOpacity: 0.36,
@@ -936,7 +940,7 @@ export function CommunityScreen({
                                 }}
                                 disabled={community.busy || postText.trim().length === 0}
                                 shine
-                                style={[tw`rounded-full px-4 py-2`, {backgroundColor: "#FF3800"}]}
+                                style={[tw`rounded-full px-4 py-2`, {backgroundColor: connectActionColor}]}
                                 textStyle={{color: "#FFF6E8"}}
                             />
                         </View>

@@ -48,7 +48,8 @@ function JournalRouteEntry({
     onPress: () => void;
     surfSide?: boolean;
 }) {
-    const color = surfSide ? (active ? "#FF3800" : "#000000") : active ? "#000000" : "#E4E0D4";
+    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const color = active ? badgeColor : surfSide ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -104,6 +105,7 @@ export function JournalScreen({
     const promptEntryBg = require("../../public/images/newspaper 1.jpg");
     const {keyboardInset} = useKeyboardInset();
     const surfSide = visualMode === "surfSide";
+    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
     const mutedTextColor = surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     const entrySurfaceStyle = surfSide
@@ -297,7 +299,7 @@ export function JournalScreen({
                         <Text
                             style={[tw`text-center text-xs font-semibold`, {
                                 fontFamily: fonts.body,
-                                color: "#FF3800"
+                                color: badgeColor
                             }]}>{selectedDate}</Text>
 
                         <Text

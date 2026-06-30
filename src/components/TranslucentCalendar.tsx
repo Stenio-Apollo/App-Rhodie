@@ -14,7 +14,9 @@ interface TranslucentCalendarProps {
 }
 
 export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalendarProps) {
-    const surfSide = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const surfSide = visualMode === "surfSide";
+    const todayTextColor = visualMode === "georgia" ? "#FF3800" : surfSide ? "#111111" : "#FF3800";
     const calendarTheme = {
         calendarBackground: "transparent",
         monthTextColor: surfSide ? "#111111" : "#E4E0D4",
@@ -24,7 +26,7 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
         dayTextColor: surfSide ? "#111111" : "#E4E0D4",
         textDisabledColor: surfSide ? "rgba(17,17,17,0.25)" : "rgba(228,224,212,0.25)",
         selectedDayTextColor: "#FBF7F3",
-        todayTextColor: surfSide ? "#111111" : "#FF3800",
+        todayTextColor,
         arrowColor: surfSide ? "#111111" : "#E4E0D4",
         dotColor: surfSide ? "#111111" : "#E4E0D4",
         selectedDotColor: "#FBF7F3",

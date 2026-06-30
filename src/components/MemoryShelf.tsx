@@ -14,6 +14,9 @@ import {useScreenVisualMode} from "./ScreenBackground";
 type CategoryFilter = "all" | "prompt" | "gratitude";
 
 const ACCENT = "#FF3800";
+const GEORGIA_ACCENT = "#FF3800";
+const DARK_BADGE_COLOR = "#ba885a";
+const COAST_BADGE_COLOR = "#FF8000";
 const CREAM = "#F0F8FF";
 const TEXT_PRIMARY = "#E4E0D4";
 
@@ -122,7 +125,10 @@ function FilterChip({
     active: boolean;
     onPress: () => void;
 }) {
-    const coast = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const coast = visualMode === "surfSide";
+    const accentColor = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
+    const accentBorderColor = visualMode === "georgia" ? "#CB0000" : "#C82D00";
     return (
         <Pressable
             accessibilityRole="button"
@@ -134,7 +140,7 @@ function FilterChip({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-full border px-3.5 py-1.5`,
                 active
-                    ? {borderColor: coast ? "#C82D00" : CREAM, backgroundColor: coast ? "#FF3800" : CREAM, ...buttonDepthStyle}
+                    ? {borderColor: coast ? "#C82D00" : visualMode === "georgia" ? accentBorderColor : CREAM, backgroundColor: coast ? "#FF3800" : visualMode === "georgia" ? accentColor : CREAM, ...buttonDepthStyle}
                     : {
                         borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)",
                         backgroundColor: coast ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)",
@@ -146,7 +152,7 @@ function FilterChip({
             <ButtonShine/>
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: active ? (coast ? "#FFF6E8" : "#0f0f0f") : coast ? "#111111" : CREAM,
+                color: active ? (coast || visualMode === "georgia" ? "#FFF6E8" : "#0f0f0f") : coast ? "#111111" : CREAM,
             }]}>
                 {label}
             </Text>
@@ -175,8 +181,10 @@ function EntryCard({
 }) {
     const isPrompt = entry.category === "prompt";
     const entryPrompt = isPrompt ? getDailyJournalPrompt(entry.date) : null;
-    const coast = useScreenVisualMode() === "surfSide";
-    const accentColor = coast ? "#FF3800" : ACCENT;
+    const visualMode = useScreenVisualMode();
+    const coast = visualMode === "surfSide";
+    const badgeColor = coast ? COAST_BADGE_COLOR : DARK_BADGE_COLOR;
+    const cardBorderColor = coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
     const primaryTextColor = coast ? "#111111" : TEXT_PRIMARY;
     const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.58)";
     return (
@@ -184,7 +192,7 @@ function EntryCard({
             style={[
                 tw`overflow-hidden rounded-2xl border p-4`,
                 {
-                    borderColor: coast ? "rgba(17,17,17,0.14)" : isPrompt ? "rgba(255,56,0,0.55)" : "rgba(223,196,170,0.28)",
+                    borderColor: cardBorderColor,
                     backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)",
                     ...buttonDepthStyle,
                 },
@@ -198,14 +206,12 @@ function EntryCard({
                 <View
                     style={[
                         tw`rounded-full border px-3 py-1`,
-                        isPrompt
-                            ? {borderColor: accentColor, backgroundColor: accentColor}
-                            : {borderColor: coast ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: coast ? "rgba(255,255,255,0.78)" : CREAM},
+                        {borderColor: badgeColor, backgroundColor: badgeColor},
                     ]}
                 >
                     <Text style={[tw`text-[10px] tracking-[1px]`, {
                         fontFamily: fonts.strong,
-                        color: isPrompt ? "#FFF6E8" : "#0f0f0f",
+                        color: "#0f0f0f",
                     }]}>
                         {isPrompt ? "PROMPT" : "GRATITUDE"}
                     </Text>
@@ -223,7 +229,7 @@ function EntryCard({
                 })}
             </Text>
             {entryPrompt ? (
-                <View style={tw`mt-3 rounded-xl p-3`}>
+                <View style={[tw`mt-3 rounded-xl border p-3`, {borderColor: cardBorderColor}]}>
                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: coast ? "#111111" : CREAM}]}>
                         Prompt responded to
                     </Text>
@@ -291,7 +297,10 @@ function ActionPill({
     onPress: () => void;
     accent?: boolean;
 }) {
-    const coast = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const coast = visualMode === "surfSide";
+    const accentColor = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
+    const accentBorderColor = visualMode === "georgia" ? "#CB0000" : ACCENT;
     return (
         <Pressable
             accessibilityRole="button"
@@ -303,7 +312,7 @@ function ActionPill({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
                 accent
-                    ? {borderColor: coast ? "#C82D00" : ACCENT, backgroundColor: coast ? "#FF3800" : ACCENT, ...buttonDepthStyle}
+                    ? {borderColor: coast ? "#C82D00" : accentBorderColor, backgroundColor: coast ? "#FF3800" : accentColor, ...buttonDepthStyle}
                     : {
                         borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.42)",
                         backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
@@ -416,8 +425,10 @@ export function MemoryShelf({
 
     const hasAnyEntries = entries.length > 0;
     const isFiltered = Boolean(searchTerm.trim()) || categoryFilter !== "all" || scopeToDate;
-    const coast = useScreenVisualMode() === "surfSide";
-    const accentColor = coast ? "#FF3800" : ACCENT;
+    const visualMode = useScreenVisualMode();
+    const coast = visualMode === "surfSide";
+    const georgia = visualMode === "georgia";
+    const accentColor = georgia ? GEORGIA_ACCENT : coast ? "#FF3800" : ACCENT;
     const primaryTextColor = coast ? "#111111" : TEXT_PRIMARY;
     const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     const mutedTextColor = coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
@@ -444,7 +455,7 @@ export function MemoryShelf({
                     style={[StyleSheet.absoluteFill, {backgroundColor: coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
                 />
                 <LinearGradient
-                    colors={coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,56,0,0.08)", "rgba(255,255,255,0.02)", "transparent"]}
+                    colors={coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
                     locations={[0, 0.5, 1]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}

@@ -33,7 +33,9 @@ export function AppHeader({
         ? {label: "Sunset", backgroundColor: "#FF3800", textColor: "#FFF6E8"}
         : visualMode === "surfSide"
             ? {label: "Coast", backgroundColor: "#F0F8FF", textColor: "#111111"}
-            : {label: "Overcast", backgroundColor: "#3895c5", textColor: "#FFF6E8"};
+            : visualMode === "georgia"
+                ? {label: "Georgia", backgroundColor: "#000000", textColor: "#FFF6E8"}
+                : {label: "Overcast", backgroundColor: "#3895c5", textColor: "#FFF6E8"};
     const headerButtonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},

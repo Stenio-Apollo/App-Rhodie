@@ -3,13 +3,14 @@ import {useCallback, useEffect, useState} from "react";
 
 const STORAGE_PREFIX = "rhnative.visual-mode.v1";
 
-export type VisualMode = "overcast" | "sunset" | "surfSide";
+export type VisualMode = "overcast" | "sunset" | "surfSide" | "georgia";
 
 function storageKey(userId: string | null | undefined): string {
     return `${STORAGE_PREFIX}.${userId ?? "local"}`;
 }
 
 function normalizeVisualMode(value: string | null): VisualMode {
+    if (value === "georgia") return "georgia";
     if (value === "surfSide" || value === "copper") return "surfSide";
     return value === "sunset" || value === "warm" ? "sunset" : "overcast";
 }

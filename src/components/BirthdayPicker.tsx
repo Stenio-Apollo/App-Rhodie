@@ -50,6 +50,7 @@ interface BirthdayPickerProps {
     showClear?: boolean;
     pickerBackgroundClass?: string;
     surfSide?: boolean;
+    georgia?: boolean;
 }
 
 export function BirthdayPicker({
@@ -60,8 +61,11 @@ export function BirthdayPicker({
                                    showClear = false,
                                    pickerBackgroundClass = "bg-black/20",
                                    surfSide = false,
+                                   georgia = false,
                                }: BirthdayPickerProps) {
     const [open, setOpen] = useState(false);
+    const accentColor = "#FF3800";
+    const accentSurfaceColor = georgia ? "rgba(255,56,0,0.14)" : "rgba(255,56,0,0.08)";
 
     useEffect(() => {
         if (!month) {
@@ -133,13 +137,13 @@ export function BirthdayPicker({
                                         }}
                                         style={({pressed}) => [
                                             tw`px-3 py-3`,
-                                            active ? {backgroundColor: surfSide ? "rgba(255,56,0,0.08)" : "rgba(251,247,243,0.12)"} : null,
+                                            active ? {backgroundColor: surfSide || georgia ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
                                             pressed && tw`opacity-90`,
                                         ]}
                                     >
                                         <Text style={[tw`text-sm`, {
                                             fontFamily: fonts.body,
-                                            color: active ? (surfSide ? "#FF3800" : "#fbf7f3") : surfSide ? "#111111" : "#94a3b8",
+                                            color: active ? (surfSide || georgia ? accentColor : "#fbf7f3") : surfSide ? "#111111" : "#94a3b8",
                                         }]}>
                                             {option.label}
                                         </Text>
@@ -175,13 +179,13 @@ export function BirthdayPicker({
                                         }}
                                         style={({pressed}) => [
                                             tw`px-3 py-3`,
-                                            active ? {backgroundColor: surfSide ? "rgba(255,56,0,0.08)" : "rgba(251,247,243,0.12)"} : null,
+                                            active ? {backgroundColor: surfSide || georgia ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
                                             pressed && tw`opacity-90`,
                                         ]}
                                     >
                                         <Text style={[tw`text-sm`, {
                                             fontFamily: fonts.body,
-                                            color: active ? (surfSide ? "#FF3800" : "#fbf7f3") : surfSide ? "#111111" : "#94a3b8",
+                                            color: active ? (surfSide || georgia ? accentColor : "#fbf7f3") : surfSide ? "#111111" : "#94a3b8",
                                         }]}>
                                             {Number(option)}
                                         </Text>

@@ -16,6 +16,7 @@ import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {ScreenBackground, useScreenVisualMode} from "../components/ScreenBackground";
 
 const ACCENT = "#FF3800";
+const GEORGIA_ACCENT = "#FF3800";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
 
@@ -96,7 +97,9 @@ function ThemedButton({
     accent?: boolean;
     disabled?: boolean;
 }) {
-    const surfSide = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const surfSide = visualMode === "surfSide";
+    const accentColor = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
     return (
         <Pressable
             accessibilityRole="button"
@@ -106,7 +109,7 @@ function ThemedButton({
             style={({pressed}) => [
                 tw`overflow-hidden flex-row items-center justify-center gap-1.5 rounded-xl border px-3.5 py-2.5`,
                 accent
-                    ? {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle}
+                    ? {borderColor: accentColor, backgroundColor: accentColor, ...buttonDepthStyle}
                     : surfSide
                         ? {borderColor: "rgba(17,17,17,0.14)", backgroundColor: "rgba(255,255,255,0.34)", ...buttonDepthStyle}
                         : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
@@ -178,6 +181,7 @@ export function KanbanScreen({
     const {keyboardInset} = useKeyboardInset();
     const fabBottom = useMemo(() => Animated.add(keyboardInset, 47), [keyboardInset]);
     const surfSide = visualMode === "surfSide";
+    const themeAccent = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
     const primaryTextColor = surfSide ? "#111111" : TEXT_PRIMARY;
     const accentTextColor = surfSide ? "#111111" : CREAM;
 
@@ -198,13 +202,13 @@ export function KanbanScreen({
         });
 
         if (dueDate) {
-            map[dueDate] = {...(map[dueDate] ?? {}), selected: true, selectedColor: ACCENT};
+            map[dueDate] = {...(map[dueDate] ?? {}), selected: true, selectedColor: themeAccent};
         }
         if (filterDate && filterDate !== dueDate) {
-            map[filterDate] = {...(map[filterDate] ?? {}), selected: true, selectedColor: ACCENT};
+            map[filterDate] = {...(map[filterDate] ?? {}), selected: true, selectedColor: themeAccent};
         }
         return map;
-    }, [dueDate, filterDate, tasks]);
+    }, [dueDate, filterDate, tasks, themeAccent]);
 
     const formattedDueDate = useMemo(() => {
         if (!dueDate) return null;
@@ -471,8 +475,8 @@ export function KanbanScreen({
                         style={({pressed}) => [
                             tw`h-11 w-11 items-center justify-center overflow-hidden rounded-full border`,
                             {
-                                borderColor: ACCENT,
-                                backgroundColor: ACCENT,
+                                borderColor: themeAccent,
+                                backgroundColor: themeAccent,
                                 shadowColor: "#000000",
                                 shadowOffset: {width: 0, height: 8},
                                 shadowOpacity: 0.42,

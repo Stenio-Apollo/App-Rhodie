@@ -543,7 +543,9 @@ function AppContent() {
                                 ? "sunset"
                                 : visualModeState.mode === "sunset"
                                     ? "surfSide"
-                                    : "overcast",
+                                    : visualModeState.mode === "surfSide"
+                                        ? "georgia"
+                                        : "overcast",
                         );
                     }}
                     onToggleAccount={() => {

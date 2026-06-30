@@ -28,7 +28,8 @@ function AccountRouteEntry({
     onPress: () => void;
     surfSide?: boolean;
 }) {
-    const color = surfSide ? (active ? "#FF3800" : "#000000") : active ? "#000000" : "#E4E0D4";
+    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const color = active ? badgeColor : surfSide ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -163,6 +164,10 @@ export function AccountScreen({
     const bg = visualMode === "sunset"
         ? require("../../public/images/news paper.jpg")
         : require("../../public/images/newspaper 1.jpg");
+    const surfSide = visualMode === "surfSide";
+    const georgia = visualMode === "georgia";
+    const themeAccentColor = "#FF3800";
+    const themeAccentBorderColor = georgia ? "#CB0000" : "#C82D00";
     const accountButtonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},
@@ -178,9 +183,9 @@ export function AccountScreen({
     };
     const sunsetButtonStyle = {
         ...accountButtonDepthStyle,
-        backgroundColor: "#FF3800",
+        backgroundColor: themeAccentColor,
         borderWidth: 1,
-        borderColor: "#C82D00",
+        borderColor: themeAccentBorderColor,
     };
     const blackButtonStyle = {
         ...accountButtonDepthStyle,
@@ -190,13 +195,12 @@ export function AccountScreen({
     };
     const deleteButtonStyle = {
         ...accountButtonDepthStyle,
-        backgroundColor: "#FF3800",
+        backgroundColor: themeAccentColor,
         borderWidth: 1,
-        borderColor: "#C82D00",
+        borderColor: themeAccentBorderColor,
     };
     const lightButtonTextStyle = {color: "#FFF6E8"};
     const darkButtonTextStyle = {color: "#111111"};
-    const surfSide = visualMode === "surfSide";
     const accountHeaderColorStyle = surfSide ? {color: "#111111"} : {color: "#DFC4AA", opacity: 0.7};
     const accountBodyTextStyle = {color: surfSide ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
     const accountMutedTextStyle = {color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"};
@@ -461,6 +465,7 @@ export function AccountScreen({
                                         showClear
                                         pickerBackgroundClass={surfSide ? "bg-white" : "bg-black/47"}
                                         surfSide={surfSide}
+                                        georgia={georgia}
 
                                     />
                                 </View>
@@ -489,7 +494,7 @@ export function AccountScreen({
                                 ) : null}
                             </TranslucentCard>
 
-                            <TranslucentCard radius={24} style={[tw`p-4`, {borderColor: "#7f1d1d"}]}>
+                            <TranslucentCard radius={24} style={tw`p-4`}>
                                 <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Account
                                     security</Text>
                                 <Text style={[tw`mt-1 text-sm`, {fontFamily: fonts.body, ...accountBodyTextStyle}]}>Deleting your
@@ -625,7 +630,7 @@ export function AccountScreen({
                                     onPress={() => {
                                         void handleOpenExternalUrl(termsOfUseUrl, "Terms of Use");
                                     }}
-                                    style={{color: "#FF3800"}}
+                                    style={{color: themeAccentColor}}
                                 >
                                     Terms of Use
                                 </Text>
@@ -634,7 +639,7 @@ export function AccountScreen({
                                     onPress={() => {
                                         void handleOpenExternalUrl(termsOfUseUrl, "EULA");
                                     }}
-                                    style={{color: "#FF3800"}}
+                                    style={{color: themeAccentColor}}
                                 >
                                     EULA
                                 </Text>
@@ -644,7 +649,7 @@ export function AccountScreen({
                                     onPress={() => {
                                         void handleOpenExternalUrl(privacyPolicyUrl, "Privacy Policy");
                                     }}
-                                    style={{color: "#FF3800"}}
+                                    style={{color: themeAccentColor}}
                                 >
                                     Privacy Policy
                                 </Text>

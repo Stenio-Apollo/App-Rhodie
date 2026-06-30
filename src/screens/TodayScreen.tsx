@@ -98,6 +98,7 @@ export function TodayScreen({
         elevation: 6,
     };
     const surfSide = visualMode === "surfSide";
+    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
     const mutedTextColor = surfSide ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
     const secondaryTextClass = surfSide ? tw`text-black/70` : tw`text-slate-300`;
@@ -139,7 +140,7 @@ export function TodayScreen({
                       style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
                     <Text style={[tw`text-xs font-semibold`, {
                         fontFamily: fonts.body,
-                        color: surfSide ? "rgba(17,17,17,0.62)" : "rgba(228,224,212,0.6)"
+                        color: badgeColor
                     }]}>Today • {today}</Text>
                     {profile?.birthday && isToday(profile.birthday) ? (
                         <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>
@@ -230,7 +231,7 @@ export function TodayScreen({
                                             {
                                                 width: 33,
                                                 height: 24,
-                                                tintColor: surfSide ? "#FF8000" : "#ba885a",
+                                                tintColor: badgeColor,
                                             },
                                         ]}
                                     />

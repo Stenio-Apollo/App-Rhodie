@@ -23,6 +23,7 @@ const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; act
 const ACTIVE_NAV_COLOR = "#B55941";
 const SUNSET_NAV_COLOR = "#B55941";
 const SURF_SIDE_NAV_COLOR = "#FF3800";
+const GEORGIA_NAV_COLOR = "#FF3800";
 const INACTIVE_COLOR = "#E4E0D4";
 const ROW_HORIZONTAL_PADDING = 3;
 const PILL_HORIZONTAL_INSET = 3;
@@ -50,8 +51,8 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
     const tabCount = TAB_ITEMS.length;
     const activeIndex = accountOpen ? -1 : TAB_ITEMS.findIndex((item) => item.key === activeTab);
     const surfSide = visualMode === "surfSide";
-    const activeNavColor = surfSide ? SURF_SIDE_NAV_COLOR : visualMode === "sunset" ? SUNSET_NAV_COLOR : ACTIVE_NAV_COLOR;
-    const navFrameColor = surfSide ? "#111111" : activeNavColor;
+    const activeNavColor = visualMode === "georgia" ? GEORGIA_NAV_COLOR : surfSide ? SURF_SIDE_NAV_COLOR : visualMode === "sunset" ? SUNSET_NAV_COLOR : ACTIVE_NAV_COLOR;
+    const navFrameColor = surfSide ? "#FFFFFF" : "#000000";
     const inactiveColor = surfSide ? "#111111" : INACTIVE_COLOR;
     const navBorderSoft = hexToRgba(navFrameColor, 0.23);
     const navBorderStrong = hexToRgba(navFrameColor, 0.39);

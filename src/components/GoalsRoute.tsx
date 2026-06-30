@@ -44,7 +44,9 @@ function ButtonShine() {
 }
 
 function ProgressDots({filled, total}: {filled: number; total: number}) {
-    const coast = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const coast = visualMode === "surfSide";
+    const accentColor = "#FF3800";
     return (
         <View style={tw`flex-row items-center gap-2`}>
             {Array.from({length: total}).map((_, index) => {
@@ -55,9 +57,9 @@ function ProgressDots({filled, total}: {filled: number; total: number}) {
                         style={[
                             tw`h-2.5 w-2.5 rounded-full`,
                             {
-                                backgroundColor: isFilled ? "#FF3800" : coast ? "rgba(17,17,17,0.18)" : "rgba(228,224,212,0.18)",
+                                backgroundColor: isFilled ? accentColor : coast ? "rgba(17,17,17,0.18)" : "rgba(228,224,212,0.18)",
                                 borderWidth: 1,
-                                borderColor: isFilled ? "#FF3800" : coast ? "rgba(17,17,17,0.28)" : "rgba(228,224,212,0.28)",
+                                borderColor: isFilled ? accentColor : coast ? "rgba(17,17,17,0.28)" : "rgba(228,224,212,0.28)",
                             },
                         ]}
                     />
@@ -102,13 +104,16 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     ref,
 ) {
     const [history, setHistory] = useState<ArchivedWeeklyGoal[]>([]);
-    const coast = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const coast = visualMode === "surfSide";
     const primaryTextColor = coast ? "#111111" : "#E4E0D4";
     const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "#cbd5e1";
     const mutedTextColor = coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
     const panelBorderColor = coast ? "rgba(17,17,17,0.14)" : "#2c2c2c";
     const panelBackgroundColor = coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
     const accentColor = "#FF3800";
+    const accentSoftColor = visualMode === "georgia" ? "rgba(255,56,0,0.18)" : "rgba(181,89,65,0.18)";
+    const accentSelectedColor = "rgba(255,56,0,0.22)";
 
     useEffect(() => {
         if (!loadRecentAchievedGoals) return;
@@ -303,7 +308,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                             selected
                                                 ? {
                                                     borderColor: accentColor,
-                                                    backgroundColor: coast ? "rgba(255,56,0,0.1)" : "rgba(181,89,65,0.18)",
+                                                    backgroundColor: coast ? "rgba(255,56,0,0.1)" : accentSoftColor,
                                                 }
                                                 : {
                                                     borderColor: panelBorderColor,
@@ -317,7 +322,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <ButtonShine/>
                                         <View style={[
                                             tw`h-10 w-10 items-center justify-center rounded-full`,
-                                            {backgroundColor: selected ? "rgba(255,56,0,0.22)" : coast ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
+                                            {backgroundColor: selected ? accentSelectedColor : coast ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
                                         ]}>
                                             <Ionicons
                                                 name={(preset.icon ?? "flag-outline") as React.ComponentProps<typeof Ionicons>["name"]}

@@ -16,6 +16,8 @@ const surfSideGradientColors = [
     "#EFE8DF",
 ] as const;
 
+const georgiaBackgroundColor = "#000000";
+
 const ScreenVisualModeContext = createContext<VisualMode>("overcast");
 
 export function useScreenVisualMode() {
@@ -40,6 +42,14 @@ export function ScreenBackground({
                 >
                     {children}
                 </LinearGradient>
+            </ScreenVisualModeContext.Provider>
+        );
+    }
+
+    if (visualMode === "georgia") {
+        return (
+            <ScreenVisualModeContext.Provider value={visualMode}>
+                <View style={[tw`flex-1`, {backgroundColor: georgiaBackgroundColor}, style]}>{children}</View>
             </ScreenVisualModeContext.Provider>
         );
     }

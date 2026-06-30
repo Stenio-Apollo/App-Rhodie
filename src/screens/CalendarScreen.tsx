@@ -38,11 +38,12 @@ function CalendarRouteEntry({
     active?: boolean;
     surfSide?: boolean;
 }) {
+    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
     const color = disabled
         ? (surfSide ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
-        : surfSide
-            ? (active ? "#FF3800" : "#000000")
-            : active ? "#000000" : "#E4E0D4";
+        : active
+            ? badgeColor
+            : surfSide ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -127,6 +128,7 @@ export function CalendarScreen({
         : require("../../public/images/rh211.jpg");
     const {keyboardInset} = useKeyboardInset();
     const surfSide = visualMode === "surfSide";
+    const accentColor = "#FF3800";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
     const secondaryTextClass = surfSide ? tw`text-black/70` : tw`text-slate-300`;
 
@@ -138,9 +140,9 @@ export function CalendarScreen({
             map[task.dueDate] = {...(map[task.dueDate] ?? {}), marked: true};
         });
 
-        map[selectedDate] = {...(map[selectedDate] ?? {}), selected: true, selectedColor: "#FF3800"};
+        map[selectedDate] = {...(map[selectedDate] ?? {}), selected: true, selectedColor: accentColor};
         return map;
-    }, [selectedDate, tasks]);
+    }, [accentColor, selectedDate, tasks]);
 
     const selectedTasks = tasks.filter((task) => task.dueDate === selectedDate).sort((a, b) => a.order - b.order);
     const customGoalReady = customGoal.trim().length > 0;

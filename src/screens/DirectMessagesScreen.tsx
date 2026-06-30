@@ -77,7 +77,9 @@ function messageReceipt(
 
 function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number }) {
     const initial = displayName(author)[0]?.toUpperCase() ?? "R";
-    const surfSide = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const surfSide = visualMode === "surfSide";
+    const accentColor = visualMode === "georgia" ? "#FF3800" : surfSide ? "#FF3800" : "#B55941";
     if (author.avatarUrl) {
         return (
             <Image
@@ -88,7 +90,7 @@ function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number })
     }
 
     return (
-        <View style={[tw`items-center justify-center rounded-full`, {width: size, height: size, backgroundColor: surfSide ? "#FF3800" : "#B55941"}]}>
+        <View style={[tw`items-center justify-center rounded-full`, {width: size, height: size, backgroundColor: accentColor}]}>
             <Text style={[tw`text-sm text-[#FFF6E8]`, {fontFamily: fonts.heading}]}>{initial}</Text>
         </View>
     );
@@ -103,7 +105,9 @@ function ConversationButton({
     selected: boolean;
     onPress: () => void;
 }) {
-    const surfSide = useScreenVisualMode() === "surfSide";
+    const visualMode = useScreenVisualMode();
+    const surfSide = visualMode === "surfSide";
+    const accentColor = visualMode === "georgia" ? "#FF3800" : surfSide ? "#FF3800" : "#B55941";
     const primaryTextColor = surfSide ? "#111111" : "#ffffff";
     const secondaryTextColor = surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     return (
@@ -124,7 +128,7 @@ function ConversationButton({
                             {displayName(conversation.participant)}
                         </Text>
                         {conversation.unreadCount > 0 ? (
-                            <View style={[tw`min-w-5 items-center rounded-full px-1.5 py-0.5`, {backgroundColor: surfSide ? "#FF3800" : "#B55941"}]}>
+                            <View style={[tw`min-w-5 items-center rounded-full px-1.5 py-0.5`, {backgroundColor: accentColor}]}>
                                 <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>
                                     {conversation.unreadCount}
                                 </Text>
@@ -150,6 +154,8 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
     const routeOpacity = useRef(new Animated.Value(0)).current;
     const routeTranslateY = useRef(new Animated.Value(-14)).current;
     const surfSide = visualMode === "surfSide";
+    const georgia = visualMode === "georgia";
+    const accentColor = georgia ? "#FF3800" : surfSide ? "#FF3800" : "#B55941";
     const primaryTextColor = surfSide ? "#111111" : "#ffffff";
     const secondaryTextColor = surfSide ? "rgba(17,17,17,0.62)" : "rgba(255,255,255,0.55)";
     const emptyStateStyle = surfSide
@@ -248,7 +254,10 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
     }
 
     return (
-        <ScreenBackground visualMode={visualMode} style={[tw`absolute inset-0 z-20 bg-black`, {paddingBottom: keyboardInset}]}>
+        <ScreenBackground
+            visualMode={visualMode}
+            style={[tw`absolute inset-0 z-20`, {paddingBottom: keyboardInset, backgroundColor: "#000000"}]}
+        >
             <Animated.View style={[tw`flex-1`, {opacity: routeOpacity, transform: [{translateY: routeTranslateY}]}]}>
             <View style={tw`flex-row items-center justify-between border-b border-slate-700 px-4 py-3`}>
                 <View style={tw`flex-row items-center gap-2`}>
@@ -329,10 +338,10 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                                                 delayLongPress={320}
 	                                                style={({pressed}) => [
 	                                                    tw`rounded-3xl border border-slate-700 px-4 py-3`,
-	                                                    mine ? {backgroundColor: surfSide ? "#FF3800" : "#B55941"} : surfSide ? tw`bg-white/24` : tw`bg-black/70`,
+	                                                    mine ? {backgroundColor: accentColor} : surfSide ? tw`bg-white/24` : tw`bg-black/70`,
 	                                                    actionSelected ? {
-	                                                        borderColor: surfSide ? "#FF3800" : "#B55941",
-	                                                        shadowColor: surfSide ? "#FF3800" : "#B55941",
+	                                                        borderColor: accentColor,
+	                                                        shadowColor: accentColor,
 	                                                        shadowOffset: {width: 0, height: 0},
 	                                                        shadowOpacity: 0.42,
 	                                                        shadowRadius: 12,
