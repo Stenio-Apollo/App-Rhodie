@@ -14,7 +14,7 @@ import {haptics} from "../lib/haptics";
 import type {EncryptionState} from "../state/useEncryption";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 
-const passphraseBackground = require("../../public/images/rhbull.jpg");
+const passphraseBackground = require("../../public/images/newspaper 1.jpg");
 
 interface PrivacyPassphraseScreenProps {
     encryption: EncryptionState;
@@ -362,7 +362,8 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
     const {keyboardInset} = useKeyboardInset();
 
     return (
-        <ImageBackground source={passphraseBackground} resizeMode="cover" style={tw`flex-1`}>
+        <ImageBackground source={passphraseBackground} resizeMode="cover" style={tw`flex-1`}
+                         imageStyle={{opacity: 0.53}}>
             <Animated.View style={[tw`flex-1`, {paddingBottom: keyboardInset}]}>
                 <SafeAreaView style={tw`flex-1 bg-black/35 px-7`}>
                     <View style={tw`pt-4`}>
