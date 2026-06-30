@@ -726,7 +726,7 @@ export function CommunityScreen({
     const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
     const solidMode = river || sonny;
     const surfSide = visualMode === "surfSide" || river;
-    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const badgeColor = "#ba885a";
     const connectActionColor = "#FF3800";
     const primaryTextColor = surfSide ? "#111111" : "#ffffff";
     const bodyTextColor = surfSide ? "rgba(17,17,17,0.74)" : "rgba(228,224,212,0.7)";

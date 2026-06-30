@@ -52,7 +52,7 @@ function JournalRouteEntry({
     onPress: () => void;
     surfSide?: boolean;
 }) {
-    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const badgeColor = "#ba885a";
     const color = active ? badgeColor : surfSide ? "#000000" : "#E4E0D4";
 
     return (
@@ -115,7 +115,7 @@ export function JournalScreen({
     const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
     const solidMode = river || sonny;
     const surfSide = visualMode === "surfSide" || river;
-    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const badgeColor = "#ba885a";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
     const mutedTextColor = surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     const entrySurfaceStyle = surfSide || sonny

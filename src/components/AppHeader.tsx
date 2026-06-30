@@ -28,14 +28,20 @@ export function AppHeader({
                               onToggleAccount,
                           }: AppHeaderProps) {
     const surfSide = visualMode === "surfSide";
-    const headerTextColor = "#E4E0D4";
+    const river = visualMode === "overcast";
+    const lightMode = surfSide || river;
+    const headerTextColor = lightMode ? "#111111" : "#E4E0D4";
+    const logoTextColor = river ? "#FFFFFF" : headerTextColor;
+    const logoBorderColor = river ? "#FFFFFF" : lightMode ? "rgba(17,17,17,0.72)" : "#FFFFFF";
+    const avatarFallbackColor = lightMode ? "#111111" : "#FFF6E8";
+    const avatarFallbackBackgroundColor = lightMode ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.4)";
     const modeButton = visualMode === "sunset"
         ? {label: "Sonny", backgroundColor: "#2F4F4F", textColor: "#FFF6E8"}
         : visualMode === "surfSide"
-            ? {label: "Coast", backgroundColor: "#F0F8FF", textColor: "#111111"}
+            ? {label: "River", backgroundColor: "#F0F8FF", textColor: "#111111"}
             : visualMode === "georgia"
                 ? {label: "Georgia", backgroundColor: "#000000", textColor: "#FFF6E8"}
-                : {label: "River", backgroundColor: "#708090", textColor: "#FFF6E8"};
+                : {label: "Coast", backgroundColor: "#708090", textColor: "#FFF6E8"};
     const headerButtonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},
@@ -54,8 +60,13 @@ export function AppHeader({
             <View style={tw`flex-row items-center gap-3`}>
                 <Text
                     style={[
-                        tw`text-xl rounded-lg border border-white px-2 py-1`,
-                        {color: headerTextColor, fontFamily: fonts.heading, letterSpacing: 0.5},
+                        tw`text-xl rounded-lg border px-2 py-1`,
+                        {
+                            borderColor: logoBorderColor,
+                            color: logoTextColor,
+                            fontFamily: fonts.heading,
+                            letterSpacing: 0.5,
+                        },
                     ]}
                 >
                     rh.
@@ -79,8 +90,16 @@ export function AppHeader({
                             {avatarUrl ? (
                                 <Image source={{uri: avatarUrl}} style={tw`h-8 w-8 rounded-full bg-black/40`}/>
                             ) : (
-                                <View style={tw`h-8 w-8 items-center justify-center rounded-full border border-white/45 bg-black/40`}>
-                                    <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#FFF6E8"}]}>
+                                <View
+                                    style={[
+                                        tw`h-8 w-8 items-center justify-center rounded-full border`,
+                                        {
+                                            backgroundColor: avatarFallbackBackgroundColor,
+                                            borderColor: lightMode ? "rgba(17,17,17,0.3)" : "rgba(255,255,255,0.45)",
+                                        },
+                                    ]}
+                                >
+                                    <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: avatarFallbackColor}]}>
                                         {(fullName?.trim()?.[0] ?? "R").toUpperCase()}
                                     </Text>
                                 </View>
@@ -112,7 +131,7 @@ export function AppHeader({
                         pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                     ]}
                 >
-                    <Ionicons name={accountOpen ? "close" : "menu"} size={20} color="#FFF6E8"/>
+                    <Ionicons name={accountOpen ? "close" : "menu"} size={20} color={avatarFallbackColor}/>
                 </Pressable>
             </View>
         </View>

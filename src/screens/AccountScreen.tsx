@@ -31,7 +31,7 @@ function AccountRouteEntry({
     onPress: () => void;
     surfSide?: boolean;
 }) {
-    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const badgeColor = "#ba885a";
     const color = active ? badgeColor : surfSide ? "#000000" : "#E4E0D4";
 
     return (
@@ -173,6 +173,7 @@ export function AccountScreen({
     const solidMode = river || sonny;
     const surfSide = visualMode === "surfSide" || river;
     const georgia = visualMode === "georgia";
+    const badgeColor = "#ba885a";
     const themeAccentColor = "#FF3800";
     const themeAccentBorderColor = georgia ? "#CB0000" : "#C82D00";
     const accountButtonDepthStyle = {
@@ -208,7 +209,7 @@ export function AccountScreen({
     };
     const lightButtonTextStyle = {color: "#FFF6E8"};
     const darkButtonTextStyle = {color: "#111111"};
-    const accountHeaderColorStyle = surfSide ? {color: "#111111"} : {color: "#DFC4AA", opacity: 0.7};
+    const accountHeaderColorStyle = surfSide ? {color: badgeColor} : {color: "#DFC4AA", opacity: 0.7};
     const accountBodyTextStyle = {color: surfSide ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
     const accountMutedTextStyle = {color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"};
     const profileInputStyle = surfSide || sonny

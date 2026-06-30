@@ -105,7 +105,7 @@ export function TodayScreen({
     const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
     const solidMode = river || sonny;
     const surfSide = visualMode === "surfSide" || river;
-    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const badgeColor = "#ba885a";
     const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
     const taskIconColor = visualMode === "surfSide" || river ? "#DAC8AE" : primaryTextColor;
     const mutedTextColor = surfSide ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
@@ -190,7 +190,7 @@ export function TodayScreen({
                     {showTutorial && onDismissTutorial ? (
                         <TutorialCard
                             title="Home is command center"
-                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Sonny/River to change the mode."
+                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Sonny/Coast to change the mode."
                             onDismiss={onDismissTutorial}
                         />
                     ) : null}

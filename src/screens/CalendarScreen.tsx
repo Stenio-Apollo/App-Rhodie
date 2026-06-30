@@ -38,7 +38,7 @@ function CalendarRouteEntry({
     active?: boolean;
     surfSide?: boolean;
 }) {
-    const badgeColor = surfSide ? "#FF8000" : "#ba885a";
+    const badgeColor = "#ba885a";
     const color = disabled
         ? (surfSide ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
         : active

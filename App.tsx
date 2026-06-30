@@ -40,7 +40,7 @@ import {usePlannerEvents} from "./src/state/usePlannerEvents";
 import {OnboardingScreen} from "./src/screens/OnboardingScreen";
 import {useOnboarding} from "./src/state/useOnboarding";
 import {clearStickyNoteStorage, useStickyNote} from "./src/state/useStickyNote";
-import {clearVisualModeStorage, useVisualMode} from "./src/state/useVisualMode";
+import {clearVisualModeStorage, useVisualMode, type VisualMode} from "./src/state/useVisualMode";
 import {useEncryption} from "./src/state/useEncryption";
 import {PrivacyPassphraseScreen} from "./src/screens/PrivacyPassphraseScreen";
 import {fonts} from "./src/theme/fonts";
@@ -63,6 +63,13 @@ type HomeActionInput =
 const TAB_ORDER: Tab[] = ["today", "plan", "journal", "calendar", "community"];
 const SWIPE_DISTANCE_THRESHOLD = 70;
 const SWIPE_VERTICAL_LIMIT = 55;
+
+function getVisualModeShellColor(visualMode: VisualMode): string {
+    if (visualMode === "sunset") return "#2F4F4F";
+    if (visualMode === "surfSide") return "#DDEAF2";
+    if (visualMode === "georgia") return "#000000";
+    return "#708090";
+}
 
 function AppContent() {
     const [tab, setTab] = useState<Tab>("today");
@@ -520,6 +527,7 @@ function AppContent() {
         tab !== "insights" &&
         !journalMemoryOpen &&
         !calendarGoalsOpen;
+    const shellBackgroundColor = getVisualModeShellColor(visualModeState.mode);
 
     return (
         <AppErrorBoundary
@@ -529,7 +537,10 @@ function AppContent() {
         >
             <SafeAreaProvider>
             <GradientBackground>
-                <SafeAreaView edges={["top", "left", "right"]} style={tw`bg-black flex-1`}>
+                <SafeAreaView
+                    edges={["top", "left", "right"]}
+                    style={[tw`flex-1`, {backgroundColor: shellBackgroundColor}]}
+                >
                     <StatusBar style="light"/>
 
                 <AppHeader
