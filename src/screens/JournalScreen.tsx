@@ -1,5 +1,5 @@
 import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
-import {Animated, Easing, ImageBackground, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {Animated, Easing, Pressable, ScrollView, Text, TextInput, View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {getDailyStoicQuote} from "../lib/quotes";
@@ -13,6 +13,7 @@ import {MemoryShelf} from "../components/MemoryShelf";
 import {TranslucentCard} from "../components/TranslucentCard";
 import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
+import {ScreenBackground} from "../components/ScreenBackground";
 
 function isoToday(): string {
     return toLocalISODate();
@@ -39,13 +40,15 @@ function JournalRouteEntry({
                                icon,
                                active,
                                onPress,
+                               surfSide = false,
                            }: {
     label: string;
     icon: ComponentProps<typeof Ionicons>["name"];
     active: boolean;
     onPress: () => void;
+    surfSide?: boolean;
 }) {
-    const color = active ? "#000000" : "#E4E0D4";
+    const color = surfSide ? (active ? "#FF3800" : "#000000") : active ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -100,6 +103,15 @@ export function JournalScreen({
         : require("../../public/images/rh201.jpg");
     const promptEntryBg = require("../../public/images/newspaper 1.jpg");
     const {keyboardInset} = useKeyboardInset();
+    const surfSide = visualMode === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
+    const mutedTextColor = surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
+    const entrySurfaceStyle = surfSide
+        ? tw`rounded-[24px] border border-black/10 bg-white/24 p-4`
+        : tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`;
+    const entryInputStyle = surfSide
+        ? tw`mt-4 flex-1 rounded-[24px] border border-black/10 bg-white/24 px-4 py-4 text-base leading-6 text-[#111111]`
+        : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4 text-base leading-6 text-[#E4E0D4]`;
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(selectedDate), [selectedDate]);
@@ -223,10 +235,10 @@ export function JournalScreen({
     }, [byDate, homeAction]);
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-39`}>
+        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-39`}>
             <Animated.View
                 style={[
-                    tw`flex-1 bg-black/47`,
+                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/47`,
                     {
                         paddingHorizontal: 1,
                         paddingBottom: route === "promptEntry" || route === "gratitudeEntry" ? 0 : keyboardInset
@@ -239,18 +251,21 @@ export function JournalScreen({
                         icon="create-outline"
                         active={route === "write" || route === "promptEntry" || route === "gratitudeEntry"}
                         onPress={() => setRoute("write")}
+                        surfSide={surfSide}
                     />
                     <JournalRouteEntry
                         label="Memory"
                         icon="albums-outline"
                         active={route === "memory"}
                         onPress={() => setRoute("memory")}
+                        surfSide={surfSide}
                     />
                     <JournalRouteEntry
                         label="Audio"
                         icon="mic-outline"
                         active={route === "audio"}
                         onPress={() => setRoute("audio")}
+                        surfSide={surfSide}
                     />
                 </View>
                 {route === "memory" || route === "audio" ? (
@@ -267,7 +282,7 @@ export function JournalScreen({
                             pressed && {opacity: 0.6, transform: [{translateY: 1}]},
                         ]}
                     >
-                        <Ionicons name="close" size={18} color="#E4E0D4"/>
+                        <Ionicons name="close" size={18} color={primaryTextColor}/>
                     </Pressable>
                 ) : null}
                 {route === "write" ? (
@@ -275,20 +290,20 @@ export function JournalScreen({
                         <Text
                             style={[tw`text-center px-4 py-1 text-lg font-semibold`, {
                                 fontFamily: fonts.heading,
-                                color: "#E4E0D4"
+                                color: primaryTextColor
                             }]}>
                             QUOTE OF THE DAY
                         </Text>
                         <Text
                             style={[tw`text-center text-xs font-semibold`, {
                                 fontFamily: fonts.body,
-                                color: "rgba(228,224,212,0.7)"
+                                color: "#FF3800"
                             }]}>{selectedDate}</Text>
 
                         <Text
                             style={[tw`mt-7 text-center text-lg leading-tight`, {
                                 fontFamily: fonts.body,
-                                color: "#E4E0D4"
+                                color: primaryTextColor
                             }]}
                             numberOfLines={3}>{todaysQuote}</Text>
                     </View>
@@ -317,12 +332,15 @@ export function JournalScreen({
                                     <View style={tw`flex-row items-start justify-between gap-3`}>
                                         <View style={tw`flex-1`}>
                                             <Text
-                                                style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                                style={[tw`text-sm font-semibold`, {
+                                                    fontFamily: fonts.heading,
+                                                    color: primaryTextColor
+                                                }]}>
                                                 Prompt of the day
                                             </Text>
                                             <Text style={[tw`mt-2 text-base leading-snug`, {
                                                 fontFamily: fonts.body,
-                                                color: "#E4E0D4"
+                                                color: primaryTextColor
                                             }]}
                                                   numberOfLines={5}>
                                                 {todaysPrompt}
@@ -340,13 +358,13 @@ export function JournalScreen({
                                             <Text
                                                 numberOfLines={1}
                                                 style={[
-                                                    tw`mb-1 text-[10px] font-bold text-[#E4E0D4]`,
-                                                    {fontFamily: fonts.heading},
+                                                    tw`mb-1 text-[10px] font-bold`,
+                                                    {fontFamily: fonts.heading, color: primaryTextColor},
                                                 ]}
                                             >
                                                 Write
                                             </Text>
-                                            <Ionicons name="create-outline" size={22} color="#E4E0D4"/>
+                                            <Ionicons name="create-outline" size={22} color={primaryTextColor}/>
                                         </Pressable>
                                     </View>
                                 </TranslucentCard>
@@ -355,7 +373,10 @@ export function JournalScreen({
                                     <View style={tw`flex-row items-start justify-between gap-3`}>
                                         <View style={tw`flex-1`}>
                                             <Text
-                                                style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                                style={[tw`text-sm font-semibold`, {
+                                                    fontFamily: fonts.heading,
+                                                    color: primaryTextColor
+                                                }]}>
                                                 3 Good Things Today
                                             </Text>
                                             <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
@@ -374,13 +395,13 @@ export function JournalScreen({
                                             <Text
                                                 numberOfLines={1}
                                                 style={[
-                                                    tw`mb-1 text-[10px] font-bold text-[#E4E0D4]`,
-                                                    {fontFamily: fonts.heading},
+                                                    tw`mb-1 text-[10px] font-bold`,
+                                                    {fontFamily: fonts.heading, color: primaryTextColor},
                                                 ]}
                                             >
                                                 Write
                                             </Text>
-                                            <Ionicons name="create-outline" size={22} color="#E4E0D4"/>
+                                            <Ionicons name="create-outline" size={22} color={primaryTextColor}/>
                                         </Pressable>
                                     </View>
                                 </TranslucentCard>
@@ -402,14 +423,20 @@ export function JournalScreen({
 
                         {route === "audio" ? (
                             <TranslucentCard radius={28} style={tw`items-center p-4`}>
-                                <Text style={[tw`text-center text-xl`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                                <Text style={[tw`text-center text-xl`, {
+                                    fontFamily: fonts.heading,
+                                    color: primaryTextColor
+                                }]}>
                                     Audio Journal
                                 </Text>
                                 <View
                                     style={tw`mt-4 w-full items-center justify-center rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-6`}>
-                                    <Ionicons name="mic-outline" size={34} color="#E4E0D4"/>
+                                    <Ionicons name="mic-outline" size={34} color={primaryTextColor}/>
                                     <Text
-                                        style={[tw`mt-3 text-center text-md text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                        style={[tw`mt-3 text-center text-md`, {
+                                            fontFamily: fonts.heading,
+                                            color: primaryTextColor
+                                        }]}>
                                         Coming Soon...
                                     </Text>
                                     <Text
@@ -423,12 +450,18 @@ export function JournalScreen({
                     </Animated.View>
                 </ScrollView>
                 {(route === "promptEntry" || route === "gratitudeEntry") ? (
-                    <ImageBackground
+                    <ScreenBackground
+                        visualMode={visualMode}
                         source={promptEntryBg}
                         style={tw`absolute inset-0 z-30 bg-black`}
                         imageStyle={tw`opacity-11`}
                     >
-                        <Animated.View style={[tw`flex-1 bg-black/88`, {paddingBottom: keyboardInset}]}>
+                        <Animated.View
+                            style={[
+                                surfSide ? tw`flex-1 bg-white/18` : tw`flex-1 bg-black/88`,
+                                {paddingBottom: keyboardInset},
+                            ]}
+                        >
                             <Animated.View
                                 style={[
                                     tw`flex-1`,
@@ -437,7 +470,7 @@ export function JournalScreen({
                             >
                                 <View
                                     style={tw`relative flex-row items-center justify-center border-b border-slate-700 px-4 py-3`}>
-                                    <Text style={[tw`text-xl text-white`, {fontFamily: fonts.heading}]}>
+                                    <Text style={[tw`text-xl`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                         {route === "promptEntry" ? "Prompt Entry" : "Gratitude Entry"}
                                     </Text>
                                     <Pressable
@@ -452,31 +485,31 @@ export function JournalScreen({
                                             pressed && tw`opacity-70`,
                                         ]}
                                     >
-                                        <Ionicons name="close" size={20} color="#ffffff"/>
+                                        <Ionicons name="close" size={20} color={primaryTextColor}/>
                                     </Pressable>
                                 </View>
 
                                 <View style={tw`flex-1 px-4 pb-4 pt-4`}>
                                     {route === "promptEntry" ? (
                                         <>
-                                            <View style={tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`}>
+                                            <View style={entrySurfaceStyle}>
                                                 <View style={tw`flex-row items-start justify-between gap-3`}>
                                                     <Text style={[tw`flex-1 text-sm`, {
                                                         fontFamily: fonts.heading,
-                                                        color: "#E4E0D4"
+                                                        color: primaryTextColor
                                                     }]}>
                                                         Journal prompt
                                                     </Text>
                                                     <Text style={[tw`text-[11px] font-semibold`, {
                                                         fontFamily: fonts.body,
-                                                        color: "rgba(228,224,212,0.68)"
+                                                        color: mutedTextColor
                                                     }]}>
                                                         {selectedDate}
                                                     </Text>
                                                 </View>
                                                 <Text style={[tw`mt-3 text-base leading-6`, {
                                                     fontFamily: fonts.body,
-                                                    color: "#E4E0D4"
+                                                    color: primaryTextColor
                                                 }]}>
                                                     {todaysPrompt}
                                                 </Text>
@@ -490,22 +523,22 @@ export function JournalScreen({
                                                 multiline
                                                 autoFocus
                                                 textAlignVertical="top"
-                                                style={[tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4 text-base leading-6 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                                style={[entryInputStyle, {fontFamily: fonts.body}]}
                                             />
                                         </>
                                     ) : (
                                         <>
-                                            <View style={tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`}>
+                                            <View style={entrySurfaceStyle}>
                                                 <View style={tw`flex-row items-start justify-between gap-3`}>
                                                     <Text style={[tw`flex-1 text-sm`, {
                                                         fontFamily: fonts.heading,
-                                                        color: "#E4E0D4"
+                                                        color: primaryTextColor
                                                     }]}>
                                                         List 3 good things about today.
                                                     </Text>
                                                     <Text style={[tw`text-[11px] font-semibold`, {
                                                         fontFamily: fonts.body,
-                                                        color: "rgba(228,224,212,0.68)"
+                                                        color: mutedTextColor
                                                     }]}>
                                                         {selectedDate}
                                                     </Text>
@@ -513,7 +546,7 @@ export function JournalScreen({
                                             </View>
 
                                             <View
-                                                style={tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`}>
+                                                style={surfSide ? tw`mt-4 flex-1 rounded-[24px] border border-black/10 bg-white/24 px-4 py-4` : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`}>
                                                 {[0, 1, 2].map((idx) => (
                                                     <TextInput
                                                         ref={idx === 0 ? gratitudeInputRef : undefined}
@@ -527,7 +560,12 @@ export function JournalScreen({
                                                         keyboardAppearance="dark"
                                                         placeholder="•"
                                                         placeholderTextColor="#6b7280"
-                                                        style={[tw`mb-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-3 text-base text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                                                        style={[
+                                                            surfSide
+                                                                ? tw`mb-3 rounded-2xl border border-black/10 bg-white/24 px-3 py-3 text-base text-[#111111]`
+                                                                : tw`mb-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-3 text-base text-[#E4E0D4]`,
+                                                            {fontFamily: fonts.body},
+                                                        ]}
                                                     />
                                                 ))}
                                             </View>
@@ -546,15 +584,15 @@ export function JournalScreen({
                                                 pressed && (route === "promptEntry" ? promptText.trim().length > 0 : text.trim().length > 0) && tw`opacity-75`,
                                             ]}
                                         >
-                                            <Ionicons name="send" size={17} color="#E4E0D4"/>
+                                            <Ionicons name="send" size={17} color={primaryTextColor}/>
                                         </Pressable>
                                     </View>
                                 </View>
                             </Animated.View>
                         </Animated.View>
-                    </ImageBackground>
+                    </ScreenBackground>
                 ) : null}
             </Animated.View>
-        </ImageBackground>
+        </ScreenBackground>
     );
 }

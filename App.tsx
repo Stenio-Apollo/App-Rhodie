@@ -538,7 +538,13 @@ function AppContent() {
                     accountOpen={accountOpen}
                     visualMode={visualModeState.mode}
                     onToggleVisualMode={() => {
-                        visualModeState.setMode(visualModeState.mode === "sunset" ? "overcast" : "sunset");
+                        visualModeState.setMode(
+                            visualModeState.mode === "overcast"
+                                ? "sunset"
+                                : visualModeState.mode === "sunset"
+                                    ? "surfSide"
+                                    : "overcast",
+                        );
                     }}
                     onToggleAccount={() => {
                         setMessagesOpen(false);
@@ -672,9 +678,12 @@ function AppContent() {
                             onOpenMessages={() => handleOpenMessages()}
                             onOpenDirectMessage={(author) => handleOpenMessages(author)}
                             onOpenInsights={openInsightsRoute}
+                            visualMode={visualModeState.mode}
                         />
                     ) : null}
-                    {!accountOpen && tab === "insights" ? <InsightsScreen onBackToPeers={openPeersRoute}/> : null}
+                    {!accountOpen && tab === "insights" ? (
+                        <InsightsScreen onBackToPeers={openPeersRoute} visualMode={visualModeState.mode}/>
+                    ) : null}
                     </Animated.View>
                     {showBottomTabBar ? (
                         <BottomTabBar
@@ -692,6 +701,7 @@ function AppContent() {
                                 setMessagesOpen(false);
                                 setMessageStartTarget(null);
                             }}
+                            visualMode={visualModeState.mode}
                         />
                     ) : null}
                 </View>

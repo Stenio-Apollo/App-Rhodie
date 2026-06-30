@@ -21,22 +21,28 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({status, tasks, onDelete, onComplete, visualMode}: KanbanColumnProps) {
+    const surfSide = visualMode === "surfSide";
+    const headerColor = surfSide ? "#111111" : status === "completed" ? CREAM : TEXT_PRIMARY;
     return (
         <View style={tw`w-80`}>
             <View
                 style={[
-                    tw`overflow-hidden rounded-[24px] bg-black/10 p-1`,
+                    tw`overflow-hidden rounded-[24px] p-1`,
+                    {backgroundColor: surfSide ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
                     {borderColor: visualMode === "sunset" ? "rgba(223,196,170,0.19)" : "rgba(181,89,65,0.19)"},
                 ]}
             >
                 <BlurView
                     intensity={30}
-                    tint="dark"
-                    style={tw`overflow-hidden rounded-[20px] border border-slate-700/60`}
+                    tint={surfSide ? "light" : "dark"}
+                    style={[
+                        tw`overflow-hidden rounded-[20px] border`,
+                        {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"},
+                    ]}
                 >
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.22)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: surfSide ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
                     />
                     <LinearGradient
                         colors={["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
@@ -55,12 +61,12 @@ export function KanbanColumn({status, tasks, onDelete, onComplete, visualMode}: 
                             <Text
                                 style={[tw`text-base font-extrabold uppercase tracking-[1px]`, {
                                     fontFamily: fonts.heading,
-                                    color: status === "completed" ? CREAM : TEXT_PRIMARY,
+                                    color: headerColor,
                                 }]}
                             >
                                 {statusLabel(status)}
                             </Text>
-                            <Badge label={`${tasks.length}`} tone={status === "completed" ? "default" : "accent"}/>
+                            <Badge label={`${tasks.length}`} tone="count"/>
                         </View>
 
                         {tasks.map((task) => (

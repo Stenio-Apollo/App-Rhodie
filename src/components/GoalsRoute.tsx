@@ -7,6 +7,7 @@ import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import {Input} from "./ui/Input";
+import {useScreenVisualMode} from "./ScreenBackground";
 import type {
     ArchivedWeeklyGoal,
     WeeklyGoal,
@@ -43,6 +44,7 @@ function ButtonShine() {
 }
 
 function ProgressDots({filled, total}: {filled: number; total: number}) {
+    const coast = useScreenVisualMode() === "surfSide";
     return (
         <View style={tw`flex-row items-center gap-2`}>
             {Array.from({length: total}).map((_, index) => {
@@ -53,9 +55,9 @@ function ProgressDots({filled, total}: {filled: number; total: number}) {
                         style={[
                             tw`h-2.5 w-2.5 rounded-full`,
                             {
-                                backgroundColor: isFilled ? "#B55941" : "rgba(228,224,212,0.18)",
+                                backgroundColor: isFilled ? "#FF3800" : coast ? "rgba(17,17,17,0.18)" : "rgba(228,224,212,0.18)",
                                 borderWidth: 1,
-                                borderColor: isFilled ? "#B55941" : "rgba(228,224,212,0.28)",
+                                borderColor: isFilled ? "#FF3800" : coast ? "rgba(17,17,17,0.28)" : "rgba(228,224,212,0.28)",
                             },
                         ]}
                     />
@@ -100,6 +102,13 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     ref,
 ) {
     const [history, setHistory] = useState<ArchivedWeeklyGoal[]>([]);
+    const coast = useScreenVisualMode() === "surfSide";
+    const primaryTextColor = coast ? "#111111" : "#E4E0D4";
+    const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "#cbd5e1";
+    const mutedTextColor = coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const panelBorderColor = coast ? "rgba(17,17,17,0.14)" : "#2c2c2c";
+    const panelBackgroundColor = coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
+    const accentColor = "#FF3800";
 
     useEffect(() => {
         if (!loadRecentAchievedGoals) return;
@@ -120,49 +129,62 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     return (
         <>
             <Text
-                style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                style={[tw`self-center text-center text-2xl font-black`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                 Goals
             </Text>
             <Text
-                style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                style={[tw`self-center text-center mt-1 text-sm`, {fontFamily: fonts.body, color: secondaryTextColor}]}>
                 Pick a focus for this week. Earn a point each time you hit it.
             </Text>
 
-            <View style={tw`mt-4 overflow-hidden rounded-[28px] bg-black/10 p-1`}>
+            <View
+                style={[
+                    tw`mt-4 overflow-hidden rounded-[28px] p-1`,
+                    {backgroundColor: coast ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                ]}
+            >
                 <BlurView
                     intensity={72}
-                    tint="dark"
-                    style={tw`overflow-hidden rounded-[24px] border border-slate-700`}
+                    tint={coast ? "light" : "dark"}
+                    style={[
+                        tw`overflow-hidden rounded-[24px] border`,
+                        {borderColor: coast ? "rgba(17,17,17,0.14)" : "#334155"},
+                    ]}
                 >
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.77)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
                     />
                     <LinearGradient
-                        colors={["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
+                        colors={coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                     />
                     <LinearGradient
-                        colors={["transparent", "rgba(0,0,0,0.35)"]}
+                        colors={coast ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                     />
 
                     <View style={tw`p-3`}>
-                        <View style={tw`rounded-2xl border border-[#F5DBC9]/22 bg-black/40 p-3`}>
+                        <View
+                            style={[
+                                tw`rounded-2xl border p-3`,
+                                {borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)", backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)"},
+                            ]}
+                        >
                             <View style={tw`flex-row items-center justify-between`}>
                                 <View style={tw`flex-1`}>
                                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                         fontFamily: fonts.strong,
-                                        color: "rgba(228,224,212,0.55)",
+                                        color: mutedTextColor,
                                     }]}>
                                         Your progress
                                     </Text>
                                     <Text style={[tw`mt-1 text-2xl`, {
                                         fontFamily: fonts.heading,
-                                        color: "#E4E0D4",
+                                        color: primaryTextColor,
                                     }]}>
                                         {weeklyGoalProgress.points} {weeklyGoalProgress.points === 1 ? "point" : "points"}
                                     </Text>
@@ -170,11 +192,11 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <Image
                                             source={badgeIcon}
                                             resizeMode="contain"
-                                            style={{width: 28, height: 20, tintColor: "#ba885a"}}
+                                            style={{width: 28, height: 20, tintColor: coast ? "#FF8000" : "#ba885a"}}
                                         />
                                         <Text style={[tw`text-xs`, {
                                             fontFamily: fonts.body,
-                                            color: "#E4E0D4",
+                                            color: primaryTextColor,
                                         }]}>
                                             {weeklyGoalProgress.badges} {weeklyGoalProgress.badges === 1 ? "badge" : "badges"} earned
                                         </Text>
@@ -184,7 +206,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                     <ProgressDots filled={filledForBadge} total={3}/>
                                     <Text style={[tw`mt-2 text-[10px]`, {
                                         fontFamily: fonts.body,
-                                        color: "rgba(228,224,212,0.6)",
+                                        color: coast ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
                                     }]}>
                                         {pointsToNextBadge} {pointsToNextBadge === 1 ? "point" : "points"} to next badge
                                     </Text>
@@ -194,10 +216,10 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
 
                         <View style={tw`mt-4`}>
                             <Text
-                                style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                 This week's goal
                             </Text>
-                            <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}>
+                            <Text style={[tw`mt-1 text-xs`, {fontFamily: fonts.body, color: secondaryTextColor}]}>
                                 {isGoalLocked
                                     ? "Completed this week. Goal changes unlock Sunday."
                                     : "Pick a focus for the week or write your own."}
@@ -205,12 +227,17 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                         </View>
 
                         {weeklyGoal ? (
-                            <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-black/35 px-3 py-3`}>
+                            <View
+                                style={[
+                                    tw`mt-3 rounded-xl border px-3 py-3`,
+                                    {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor},
+                                ]}
+                            >
                                 <Text
-                                    style={[tw`text-xs font-semibold text-slate-400`, {fontFamily: fonts.body}]}>
+                                    style={[tw`text-xs font-semibold`, {fontFamily: fonts.body, color: mutedTextColor}]}>
                                     Current focus
                                 </Text>
-                                <Text style={[tw`mt-1 text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                <Text style={[tw`mt-1 text-base`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                     {weeklyGoal.text}
                                 </Text>
                                 <Text
@@ -218,7 +245,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         tw`mt-2 text-[11px] font-semibold`,
                                         {
                                             fontFamily: fonts.body,
-                                            color: weeklyGoal.achievedAt ? "#B55941" : "rgba(228,224,212,0.68)",
+                                            color: weeklyGoal.achievedAt ? accentColor : coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
                                         },
                                     ]}
                                 >
@@ -238,7 +265,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         onPress={onMarkGoalAchieved}
                                         style={({pressed}) => [
                                             tw`mt-3 overflow-hidden rounded-xl px-3 py-2.5 items-center flex-row justify-center gap-2`,
-                                            {backgroundColor: "#B55941", ...buttonDepthStyle},
+                                            {backgroundColor: accentColor, ...buttonDepthStyle},
                                             pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                         ]}
                                     >
@@ -255,7 +282,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
 
                         <Text style={[tw`mt-4 text-[10px] uppercase tracking-[1px]`, {
                             fontFamily: fonts.strong,
-                            color: "rgba(228,224,212,0.55)",
+                            color: mutedTextColor,
                         }]}>
                             Suggested goals
                         </Text>
@@ -275,12 +302,12 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                             tw`overflow-hidden rounded-xl border px-3 py-3 flex-row items-center gap-3`,
                                             selected
                                                 ? {
-                                                    borderColor: "#B55941",
-                                                    backgroundColor: "rgba(181,89,65,0.18)",
+                                                    borderColor: accentColor,
+                                                    backgroundColor: coast ? "rgba(255,56,0,0.1)" : "rgba(181,89,65,0.18)",
                                                 }
                                                 : {
-                                                    borderColor: "#2c2c2c",
-                                                    backgroundColor: "rgba(0,0,0,0.35)",
+                                                    borderColor: panelBorderColor,
+                                                    backgroundColor: panelBackgroundColor,
                                                 },
                                             buttonDepthStyle,
                                             isGoalLocked && tw`opacity-45`,
@@ -290,31 +317,31 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <ButtonShine/>
                                         <View style={[
                                             tw`h-10 w-10 items-center justify-center rounded-full`,
-                                            {backgroundColor: selected ? "rgba(181,89,65,0.42)" : "rgba(228,224,212,0.08)"},
+                                            {backgroundColor: selected ? "rgba(255,56,0,0.22)" : coast ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
                                         ]}>
                                             <Ionicons
                                                 name={(preset.icon ?? "flag-outline") as React.ComponentProps<typeof Ionicons>["name"]}
                                                 size={20}
-                                                color={selected ? "#FFF6E8" : "#E4E0D4"}
+                                                color={selected ? accentColor : primaryTextColor}
                                             />
                                         </View>
                                         <View style={tw`flex-1`}>
                                             <View style={tw`flex-row items-center justify-between gap-2`}>
                                                 <Text
-                                                    style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                                    style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                                     {preset.title}
                                                 </Text>
                                                 {preset.category ? (
                                                     <Text style={[tw`text-[9px] uppercase tracking-[1px]`, {
                                                         fontFamily: fonts.strong,
-                                                        color: "rgba(228,224,212,0.55)",
+                                                        color: mutedTextColor,
                                                     }]}>
                                                         {preset.category}
                                                     </Text>
                                                 ) : null}
                                             </View>
                                             <Text
-                                                style={[tw`mt-1 text-[11px] leading-4 text-slate-300`, {fontFamily: fonts.body}]}>
+                                                style={[tw`mt-1 text-[11px] leading-4`, {fontFamily: fonts.body, color: secondaryTextColor}]}>
                                                 {preset.description}
                                             </Text>
                                         </View>
@@ -326,7 +353,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                         <View style={tw`mt-4`}>
                             <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                 fontFamily: fonts.strong,
-                                color: "rgba(228,224,212,0.55)",
+                                color: mutedTextColor,
                             }]}>
                                 Or write your own
                             </Text>
@@ -344,7 +371,12 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 returnKeyType="done"
                                 maxLength={120}
                                 editable={!isGoalLocked}
-                                style={tw`mt-2`}
+                                placeholderTextColor={coast ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                keyboardAppearance={coast ? "light" : "dark"}
+                                style={[
+                                    tw`mt-2`,
+                                    coast ? tw`border-black/10 bg-white/34 text-[#111111]` : null,
+                                ]}
                             />
                             <Pressable
                                 disabled={!customGoalReady || isGoalLocked}
@@ -355,7 +387,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 }}
                                 style={({pressed}) => [
                                     tw`mt-2 overflow-hidden rounded-xl px-3 py-2.5 items-center`,
-                                    {backgroundColor: "#B55941", ...buttonDepthStyle},
+                                    {backgroundColor: accentColor, ...buttonDepthStyle},
                                     (!customGoalReady || isGoalLocked) && tw`opacity-50`,
                                     pressed && customGoalReady && !isGoalLocked
                                         ? {opacity: 0.78, transform: [{translateY: 1}]}
@@ -364,7 +396,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                             >
                                 <ButtonShine/>
                                 <Text
-                                    style={[tw`text-sm font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                    style={[tw`text-sm font-bold`, {fontFamily: fonts.heading, color: "#FFF6E8"}]}>
                                     Use custom goal
                                 </Text>
                             </Pressable>
@@ -374,7 +406,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                             <View style={tw`mt-4`}>
                                 <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                     fontFamily: fonts.strong,
-                                    color: "rgba(228,224,212,0.55)",
+                                    color: mutedTextColor,
                                 }]}>
                                     Recent wins
                                 </Text>
@@ -382,19 +414,22 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                     {history.map((archived) => (
                                         <View
                                             key={`${archived.weekStartDate}-${archived.achievedAt}`}
-                                            style={tw`rounded-xl border border-[#2c2c2c] bg-black/35 px-3 py-2`}
+                                            style={[
+                                                tw`rounded-xl border px-3 py-2`,
+                                                {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor},
+                                            ]}
                                         >
                                             <View style={tw`flex-row items-center justify-between`}>
                                                 <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                                     fontFamily: fonts.strong,
-                                                    color: "rgba(228,224,212,0.55)",
+                                                    color: mutedTextColor,
                                                 }]}>
                                                     Week of {archived.weekStartDate}
                                                 </Text>
                                                 <Ionicons name="trophy-outline" size={14} color="#ba885a"/>
                                             </View>
                                             <Text
-                                                style={[tw`mt-1 text-sm text-[#E4E0D4]`, {fontFamily: fonts.heading}]}
+                                                style={[tw`mt-1 text-sm`, {fontFamily: fonts.heading, color: primaryTextColor}]}
                                                 numberOfLines={2}
                                             >
                                                 {archived.text}

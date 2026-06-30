@@ -49,6 +49,7 @@ interface BirthdayPickerProps {
     placeholder?: string;
     showClear?: boolean;
     pickerBackgroundClass?: string;
+    surfSide?: boolean;
 }
 
 export function BirthdayPicker({
@@ -58,6 +59,7 @@ export function BirthdayPicker({
                                    placeholder = "Select birthday",
                                    showClear = false,
                                    pickerBackgroundClass = "bg-black/20",
+                                   surfSide = false,
                                }: BirthdayPickerProps) {
     const [open, setOpen] = useState(false);
 
@@ -79,26 +81,44 @@ export function BirthdayPicker({
 
     return (
         <View>
-            <Text style={[tw`text-xs text-slate-400`, {fontFamily: fonts.body}]}>Birthday</Text>
+            <Text
+                style={[
+                    tw`text-xs`,
+                    {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                ]}
+            >
+                Birthday
+            </Text>
             <Pressable
                 onPress={() => {
                     haptics.selection();
                     setOpen((current) => !current);
                 }}
                 style={({pressed}) => [
-                    tw`mt-2 rounded-lg border border-[#2c2c2c] px-3 py-3`,
+                    tw`mt-2 rounded-lg border px-3 py-3`,
+                    {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
                     pressed && tw`opacity-90`,
                 ]}
             >
-                <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#fbf7f3"}]}>
+                <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: surfSide ? "#111111" : "#fbf7f3"}]}>
                     {birthdayLabel(month, day, placeholder)}
                 </Text>
             </Pressable>
 
             {open ? (
                 <View style={tw`mt-3 flex-row gap-3`}>
-                    <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] ${pickerBackgroundClass}`}>
-                        <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>
+                    <View
+                        style={[
+                            tw`flex-1 rounded-lg border ${pickerBackgroundClass}`,
+                            {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                tw`px-3 pt-3 text-[11px]`,
+                                {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                            ]}
+                        >
                             Month
                         </Text>
                         <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
@@ -113,13 +133,13 @@ export function BirthdayPicker({
                                         }}
                                         style={({pressed}) => [
                                             tw`px-3 py-3`,
-                                            active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
+                                            active ? {backgroundColor: surfSide ? "rgba(255,56,0,0.08)" : "rgba(251,247,243,0.12)"} : null,
                                             pressed && tw`opacity-90`,
                                         ]}
                                     >
                                         <Text style={[tw`text-sm`, {
                                             fontFamily: fonts.body,
-                                            color: active ? "#fbf7f3" : "#94a3b8",
+                                            color: active ? (surfSide ? "#FF3800" : "#fbf7f3") : surfSide ? "#111111" : "#94a3b8",
                                         }]}>
                                             {option.label}
                                         </Text>
@@ -129,8 +149,18 @@ export function BirthdayPicker({
                         </ScrollView>
                     </View>
 
-                    <View style={tw`flex-1 rounded-lg border border-[#2c2c2c] ${pickerBackgroundClass}`}>
-                        <Text style={[tw`px-3 pt-3 text-[11px] text-slate-400`, {fontFamily: fonts.body}]}>
+                    <View
+                        style={[
+                            tw`flex-1 rounded-lg border ${pickerBackgroundClass}`,
+                            {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                tw`px-3 pt-3 text-[11px]`,
+                                {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                            ]}
+                        >
                             Day
                         </Text>
                         <ScrollView style={tw`max-h-40`} nestedScrollEnabled showsVerticalScrollIndicator={false}>
@@ -145,20 +175,25 @@ export function BirthdayPicker({
                                         }}
                                         style={({pressed}) => [
                                             tw`px-3 py-3`,
-                                            active ? {backgroundColor: "rgba(251,247,243,0.12)"} : null,
+                                            active ? {backgroundColor: surfSide ? "rgba(255,56,0,0.08)" : "rgba(251,247,243,0.12)"} : null,
                                             pressed && tw`opacity-90`,
                                         ]}
                                     >
                                         <Text style={[tw`text-sm`, {
                                             fontFamily: fonts.body,
-                                            color: active ? "#fbf7f3" : "#94a3b8",
+                                            color: active ? (surfSide ? "#FF3800" : "#fbf7f3") : surfSide ? "#111111" : "#94a3b8",
                                         }]}>
                                             {Number(option)}
                                         </Text>
                                     </Pressable>
                                 );
                             }) : (
-                                <Text style={[tw`px-3 py-3 text-sm text-slate-500`, {fontFamily: fonts.body}]}>
+                                <Text
+                                    style={[
+                                        tw`px-3 py-3 text-sm`,
+                                        {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.48)" : "#64748b"},
+                                    ]}
+                                >
                                     Pick a month first
                                 </Text>
                             )}
@@ -175,7 +210,7 @@ export function BirthdayPicker({
                     }}
                     style={({pressed}) => [tw`mt-3 self-start`, pressed && tw`opacity-80`]}
                 >
-                    <Text style={[tw`text-xs text-[#B55941]`, {fontFamily: fonts.button}]}>
+                    <Text style={[tw`text-xs`, {fontFamily: fonts.button, color: surfSide ? "#111111" : "#B55941"}]}>
                         Clear birthday
                     </Text>
                 </Pressable>

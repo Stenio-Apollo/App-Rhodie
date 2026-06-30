@@ -1,14 +1,31 @@
 import {Text, View} from "react-native";
 import tw from "../../lib/tw";
 import {fonts} from "../../theme/fonts";
+import {useScreenVisualMode} from "../ScreenBackground";
 
 interface BadgeProps {
     label: string;
-    tone?: "default" | "accent";
+    tone?: "default" | "accent" | "count";
 }
 
 export function Badge({label, tone = "default"}: BadgeProps) {
+    const visualMode = useScreenVisualMode();
     const isAccent = tone === "accent";
+    const isCount = tone === "count";
+
+    if (isCount) {
+        return (
+            <Text
+                style={[
+                    tw`px-2 py-1 text-[10px] font-bold tracking-[1px]`,
+                    {fontFamily: fonts.strong, color: visualMode === "surfSide" ? "#111111" : "#DFC4AA"},
+                ]}
+            >
+                {label}
+            </Text>
+        );
+    }
+
     return (
         <View
             style={[

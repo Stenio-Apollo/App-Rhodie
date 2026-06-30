@@ -3,7 +3,6 @@ import {
     Alert,
     Animated,
     Image,
-    ImageBackground,
     Pressable,
     ScrollView,
     Share,
@@ -25,6 +24,8 @@ import {getDailyJournalPrompt} from "../lib/prompts";
 import type {CommunityAuthor, CommunityComment, CommunityPost, CommunityState} from "../state/useCommunity";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {OwnerActionSheet} from "../components/OwnerActionSheet";
+import type {VisualMode} from "../state/useVisualMode";
+import {ScreenBackground, useScreenVisualMode} from "../components/ScreenBackground";
 
 interface CommunityScreenProps {
     community: CommunityState;
@@ -32,6 +33,7 @@ interface CommunityScreenProps {
     onOpenMessages?: () => void;
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
     onOpenInsights?: () => void;
+    visualMode: VisualMode;
 }
 
 type ComposerMode = "prompt" | "gratitude" | "message";
@@ -116,11 +118,11 @@ function Avatar({
         <View
             style={[
                 tw`items-center justify-center rounded-full`,
-                isCurrentUser ? tw`bg-[#B55941]` : tw`bg-[#DFC4AA]`,
+                isCurrentUser ? {backgroundColor: "#FF3800"} : tw`bg-[#DFC4AA]`,
                 {width: size, height: size},
             ]}
         >
-            <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#111111"}]}>
+            <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: isCurrentUser ? "#FFF6E8" : "#111111"}]}>
                 {initial}
             </Text>
         </View>
@@ -138,6 +140,8 @@ function MetricButton({
     active?: boolean;
     onPress: () => void;
 }) {
+    const surfSide = useScreenVisualMode() === "surfSide";
+    const inactiveColor = surfSide ? "#111111" : "#ffffff";
     return (
         <Pressable
             onPress={onPress}
@@ -146,8 +150,8 @@ function MetricButton({
                 pressed && tw`opacity-75`,
             ]}
         >
-            <Ionicons name={icon} size={15} color={active ? "#FB7185" : "#ffffff"}/>
-            <Text style={[tw`text-[11px]`, {fontFamily: fonts.button, color: active ? "#ffffff" : "#ffffff"}]}>
+            <Ionicons name={icon} size={15} color={active ? "#FB7185" : inactiveColor}/>
+            <Text style={[tw`text-[11px]`, {fontFamily: fonts.button, color: inactiveColor}]}>
                 {label}
             </Text>
         </Pressable>
@@ -163,6 +167,7 @@ function AuthorMessageButton({
     currentUserId: string | null;
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
+    const surfSide = useScreenVisualMode() === "surfSide";
     if (!onOpenDirectMessage || author.id === currentUserId) return null;
 
     return (
@@ -175,12 +180,13 @@ function AuthorMessageButton({
                 pressed && tw`opacity-70`,
             ]}
         >
-            <Ionicons name="mail-outline" size={15} color="#ffffff"/>
+            <Ionicons name="mail-outline" size={15} color={surfSide ? "#111111" : "#ffffff"}/>
         </Pressable>
     );
 }
 
 function OwnerMenuButton({onPress}: { onPress: () => void }) {
+    const surfSide = useScreenVisualMode() === "surfSide";
     return (
         <Pressable
             accessibilityRole="button"
@@ -194,7 +200,7 @@ function OwnerMenuButton({onPress}: { onPress: () => void }) {
                 pressed && tw`opacity-70`,
             ]}
         >
-            <Ionicons name="ellipsis-horizontal" size={18} color="#ffffff"/>
+            <Ionicons name="ellipsis-horizontal" size={18} color={surfSide ? "#111111" : "#ffffff"}/>
         </Pressable>
     );
 }
@@ -210,6 +216,8 @@ function CommunityRouteEntry({
     onPress: () => void;
     badgeCount?: number;
 }) {
+    const surfSide = useScreenVisualMode() === "surfSide";
+    const color = surfSide ? "#111111" : "#E4E0D4";
     return (
         <Pressable
             accessibilityRole="button"
@@ -226,14 +234,14 @@ function CommunityRouteEntry({
             <Text
                 numberOfLines={1}
                 style={[
-                    tw`mb-1 text-[10px] font-bold text-[#E4E0D4]`,
-                    {fontFamily: fonts.heading},
+                    tw`mb-1 text-[10px] font-bold`,
+                    {fontFamily: fonts.heading, color},
                 ]}
             >
                 {label}
             </Text>
             <View>
-                <Ionicons name={icon} size={22} color="#E4E0D4"/>
+                <Ionicons name={icon} size={22} color={color}/>
                 {badgeCount > 0 ? (
                     <View style={tw`absolute -right-2 -top-2 min-w-4 items-center rounded-full bg-[#B55941] px-1`}>
                         <Text style={[tw`text-[9px] text-white`, {fontFamily: fonts.button}]}>
@@ -269,6 +277,9 @@ function CommentItem({
     onDelete: (comment: CommunityComment) => void;
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
+    const surfSide = useScreenVisualMode() === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#ffffff";
+    const bodyTextColor = surfSide ? "rgba(17,17,17,0.82)" : "rgba(255,255,255,0.9)";
     const [editing, setEditing] = useState(false);
     const [editText, setEditText] = useState(comment.body);
     const [actionsOpen, setActionsOpen] = useState(false);
@@ -287,7 +298,7 @@ function CommentItem({
         <View style={[tw`gap-2`, depth > 0 ? {marginLeft: Math.min(depth, 2) * 18} : null]}>
             {showDate ? (
                 <View style={tw`my-1 items-center`}>
-                    <Text style={[tw`px-3 py-1 text-[10px] text-white/65`, {fontFamily: fonts.body}]}>
+                    <Text style={[tw`px-3 py-1 text-[10px]`, {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.65)"}]}>
                         {formatTimestamp(comment.createdAt)}
                     </Text>
                 </View>
@@ -296,7 +307,7 @@ function CommentItem({
                 <View style={tw`flex-row items-start gap-2`}>
                     <Avatar author={comment.author} size={26} currentUserId={currentUserId}/>
                     <View style={tw`flex-1`}>
-                        <Text style={[tw`text-[11px] text-white`, {fontFamily: fonts.heading}]}>
+                        <Text style={[tw`text-[11px]`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                             {displayName(comment.author)}
                         </Text>
                     </View>
@@ -354,7 +365,7 @@ function CommentItem({
                         </View>
                     </View>
                 ) : (
-                    <Text style={[tw`mt-2 text-xs leading-4 text-[#ffffff]/90`, {fontFamily: fonts.body}]}>
+                    <Text style={[tw`mt-2 text-xs leading-4`, {fontFamily: fonts.body, color: bodyTextColor}]}>
                         {comment.body}
                     </Text>
                 )}
@@ -454,6 +465,10 @@ function PostCard({
     onShare: (post: CommunityPost) => void;
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
+    const surfSide = useScreenVisualMode() === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#ffffff";
+    const bodyTextColor = surfSide ? "rgba(17,17,17,0.82)" : "#E4E0D4";
+    const mutedTextColor = surfSide ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.7)";
     const [postEditing, setPostEditing] = useState(false);
     const [postEditText, setPostEditText] = useState(post.body);
     const [postActionsOpen, setPostActionsOpen] = useState(false);
@@ -497,7 +512,7 @@ function PostCard({
                     <Avatar author={post.author} currentUserId={currentUserId}/>
                     <View style={tw`flex-1`}>
                         <View style={tw`flex-row items-start gap-3`}>
-                            <Text style={[tw`flex-1 text-sm text-white`, {fontFamily: fonts.heading}]}>
+                            <Text style={[tw`flex-1 text-sm`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                 {displayName(post.author)}
                             </Text>
                             {isOwnPost ? (
@@ -555,7 +570,7 @@ function PostCard({
                                 </View>
                             </View>
                         ) : (
-                            <Text style={[tw`mt-2 text-sm leading-5 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            <Text style={[tw`mt-2 text-sm leading-5`, {fontFamily: fonts.body, color: bodyTextColor}]}>
                                 {post.body}
                             </Text>
                         )}
@@ -622,7 +637,7 @@ function PostCard({
                             <View
                                 style={tw`mt-4 flex-row items-center justify-between rounded-2xl border border-slate-700 px-3 py-2`}
                             >
-                                <Text style={[tw`flex-1 text-xs text-white`, {fontFamily: fonts.body}]}>
+                                <Text style={[tw`flex-1 text-xs`, {fontFamily: fonts.body, color: primaryTextColor}]}>
                                     Replying to {displayName(replyTarget.author)}
                                 </Text>
                                 <Pressable
@@ -632,7 +647,7 @@ function PostCard({
                                         pressed && tw`opacity-70`,
                                     ]}
                                 >
-                                    <Ionicons name="close" size={14} color="#ffffff"/>
+                                    <Ionicons name="close" size={14} color={primaryTextColor}/>
                                 </Pressable>
                             </View>
                         ) : null}
@@ -662,7 +677,7 @@ function PostCard({
                                     pressed && tw`opacity-75`,
                                 ]}
                             >
-                                <Ionicons name="send" size={17} color="#E4E0D4"/>
+                                <Ionicons name="send" size={17} color={surfSide ? "#111111" : "#E4E0D4"}/>
                             </Pressable>
                         </View>
                     </Animated.View>
@@ -674,7 +689,7 @@ function PostCard({
                     onDelete={() => onDeletePost(post)}
                 />
             </TranslucentCard>
-            <Text style={[tw`self-end pr-2 text-[11px] text-slate-700`, {fontFamily: fonts.body}]}>
+            <Text style={[tw`self-end pr-2 text-[11px]`, {fontFamily: fonts.body, color: mutedTextColor}]}>
                 {formatTime(post.createdAt)}
             </Text>
         </View>
@@ -687,12 +702,19 @@ export function CommunityScreen({
                                     onOpenMessages,
                                     onOpenDirectMessage,
                                     onOpenInsights,
+                                    visualMode,
                                 }: CommunityScreenProps) {
     const [postText, setPostText] = useState("");
     const [composerMode, setComposerMode] = useState<ComposerMode>("prompt");
     const today = useMemo(() => toLocalISODate(), []);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(today), [today]);
     const selectedComposerMode = COMPOSER_MODES.find((mode) => mode.key === composerMode) ?? COMPOSER_MODES[0];
+    const surfSide = visualMode === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#ffffff";
+    const bodyTextColor = surfSide ? "rgba(17,17,17,0.74)" : "rgba(228,224,212,0.7)";
+    const inputStyle = surfSide
+        ? tw`mt-4 min-h-[88px] rounded-2xl border border-black/10 bg-white/24 px-4 py-3 text-[#111111]`
+        : tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700/60 bg-black/22 px-4 py-3 text-[#E4E0D4]`;
 
     async function handleCreatePost() {
         const body = postText.trim();
@@ -784,7 +806,12 @@ export function CommunityScreen({
     const {keyboardInset} = useKeyboardInset();
 
     return (
-        <ImageBackground source={backgroundImage} style={tw`flex-1 bg-black`} imageStyle={tw`opacity-11`}>
+        <ScreenBackground
+            visualMode={visualMode}
+            source={backgroundImage}
+            style={tw`bg-black`}
+            imageStyle={tw`opacity-11`}
+        >
             <Animated.View style={[tw`flex-1`, {paddingBottom: keyboardInset}]}>
                 <View style={tw`absolute right-3 top-16 z-20 items-center gap-5`}>
                     {onOpenMessages ? (
@@ -810,15 +837,15 @@ export function CommunityScreen({
                     keyboardDismissMode="interactive"
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={tw`overflow-hidden rounded-[28px] bg-black/10 p-1`}>
+                    <View style={[tw`overflow-hidden rounded-[28px] p-1`, {backgroundColor: surfSide ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
                         <BlurView
                             intensity={30}
-                            tint="dark"
-                            style={tw`overflow-hidden rounded-[24px] border border-slate-700/60`}
+                            tint={surfSide ? "light" : "dark"}
+                            style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"}]}
                         >
                             <View
                                 pointerEvents="none"
-                                style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.22)"}]}
+                                style={[StyleSheet.absoluteFill, {backgroundColor: surfSide ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
                             />
                             <LinearGradient
                                 colors={["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
@@ -832,11 +859,11 @@ export function CommunityScreen({
                                 style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                             />
                             <View style={tw`p-4`}>
-                        <Text style={[tw`text-2xl text-white`, {fontFamily: fonts.heading}]}>Connect</Text>
-                        <Text style={[tw`mt-1 text-sm leading-5 text-[#E4E0D4]/70`, {fontFamily: fonts.body}]}>
+                        <Text style={[tw`text-2xl`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Connect</Text>
+                        <Text style={[tw`mt-1 text-sm leading-5`, {fontFamily: fonts.body, color: bodyTextColor}]}>
                             Post a prompt response, gratitude, or a positive note with your peers.
                         </Text>
-                        <View style={tw`mt-4 flex-row rounded-2xl border border-slate-700/60 bg-black/22 p-1`}>
+                        <View style={surfSide ? tw`mt-4 flex-row rounded-2xl border border-black/10 bg-white/24 p-1` : tw`mt-4 flex-row rounded-2xl border border-slate-700/60 bg-black/22 p-1`}>
                             {COMPOSER_MODES.map((mode) => {
                                 const active = mode.key === composerMode;
                                 return (
@@ -849,14 +876,14 @@ export function CommunityScreen({
                                         style={({pressed}) => [
                                             tw`flex-1 items-center rounded-xl px-2 py-2`,
                                             active && {
-                                                backgroundColor: "#DFC4AA",
+                                                backgroundColor: "#FF3800",
                                                 borderWidth: 1,
-                                                borderColor: "rgba(43,43,43,0.22)",
+                                                borderColor: "#C82D00",
                                                 shadowColor: "#000000",
-                                                shadowOffset: {width: 0, height: 5},
-                                                shadowOpacity: 0.24,
-                                                shadowRadius: 8,
-                                                elevation: 6,
+                                                shadowOffset: {width: 0, height: 7},
+                                                shadowOpacity: 0.36,
+                                                shadowRadius: 10,
+                                                elevation: 9,
                                             },
                                             pressed && tw`opacity-80`,
                                         ]}
@@ -866,7 +893,7 @@ export function CommunityScreen({
                                                 tw`text-[11px]`,
                                                 {
                                                     fontFamily: fonts.button,
-                                                    color: active ? "#111111" : "rgba(228,224,212,0.68)"
+                                                    color: active ? "#FFF6E8" : surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)"
                                                 },
                                             ]}
                                         >
@@ -877,11 +904,17 @@ export function CommunityScreen({
                             })}
                         </View>
                         {composerMode === "prompt" ? (
-                            <View style={tw`mt-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2.5`}>
-                                <Text style={[tw`text-[11px] text-white`, {fontFamily: fonts.heading}]}>
+                            <View
+                                style={
+                                    surfSide
+                                        ? tw`mt-3 rounded-2xl border border-black/10 bg-white/24 px-3 py-2.5`
+                                        : tw`mt-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2.5`
+                                }
+                            >
+                                <Text style={[tw`text-[11px]`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                     Today's prompt
                                 </Text>
-                                <Text style={[tw`mt-1 text-xs leading-4 text-[#E4E0D4]/75`, {fontFamily: fonts.body}]}>
+                                <Text style={[tw`mt-1 text-xs leading-4`, {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)"}]}>
                                     {todaysPrompt}
                                 </Text>
                             </View>
@@ -890,10 +923,10 @@ export function CommunityScreen({
                             value={postText}
                             onChangeText={setPostText}
                             placeholder={selectedComposerMode.placeholder}
-                            placeholderTextColor="rgba(228,224,212,0.45)"
-                            keyboardAppearance="dark"
+                            placeholderTextColor={surfSide ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.45)"}
+                            keyboardAppearance={surfSide ? "light" : "dark"}
                             multiline
-                            style={[tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700/60 bg-black/22 px-4 py-3 text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                            style={[inputStyle, {fontFamily: fonts.body}]}
                         />
                         <View style={tw`mt-3 flex-row justify-end`}>
                             <Button
@@ -903,7 +936,7 @@ export function CommunityScreen({
                                 }}
                                 disabled={community.busy || postText.trim().length === 0}
                                 shine
-                                style={tw`rounded-full bg-black px-4 py-2`}
+                                style={[tw`rounded-full px-4 py-2`, {backgroundColor: "#FF3800"}]}
                                 textStyle={{color: "#FFF6E8"}}
                             />
                         </View>
@@ -920,12 +953,12 @@ export function CommunityScreen({
 
                     {!community.isLoaded ? (
                         <Text
-                            style={[tw`rounded-2xl bg-black/22 border border-slate-700/60 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, surfSide ? tw`border-black/10 bg-white/24 text-[#111111]` : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
                             Loading peers...
                         </Text>
                     ) : community.posts.length === 0 ? (
                         <Text
-                            style={[tw`rounded-2xl bg-black/22 border border-slate-700/60 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, surfSide ? tw`border-black/10 bg-white/24 text-[#111111]` : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
                             No posts yet.
                         </Text>
                     ) : (
@@ -965,6 +998,6 @@ export function CommunityScreen({
                     )}
                 </ScrollView>
             </Animated.View>
-        </ImageBackground>
+        </ScreenBackground>
     );
 }

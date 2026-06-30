@@ -1,5 +1,5 @@
 import {useMemo, useState} from "react";
-import {Image, ImageBackground, Pressable, ScrollView, Text, View} from "react-native";
+import {Image, Pressable, ScrollView, Text, View} from "react-native";
 import {Asset} from "expo-asset";
 import {SvgUri} from "react-native-svg";
 import tw from "../lib/tw";
@@ -15,6 +15,7 @@ import type {StickyNote} from "../state/useStickyNote";
 import {StickyNoteModal} from "../components/StickyNoteModal";
 import type {VisualMode} from "../state/useVisualMode";
 import {TranslucentCard} from "../components/TranslucentCard";
+import {ScreenBackground} from "../components/ScreenBackground";
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -96,11 +97,26 @@ export function TodayScreen({
         shadowRadius: 8,
         elevation: 6,
     };
+    const surfSide = visualMode === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
+    const mutedTextColor = surfSide ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
+    const secondaryTextClass = surfSide ? tw`text-black/70` : tw`text-slate-300`;
+    const nestedItemStyle = surfSide
+        ? tw`mt-2 rounded-2xl border border-black/10 bg-white/24 px-3 py-2`
+        : tw`mt-2 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2`;
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`}
-                         imageStyle={visualMode === "sunset" ? tw`opacity-27` : tw`opacity-40`}>
-            <View style={[tw`flex-1 bg-black/3 3`, {paddingHorizontal: 1}]}>
+        <ScreenBackground
+            visualMode={visualMode}
+            source={bg}
+            imageStyle={visualMode === "sunset" ? tw`opacity-27` : tw`opacity-40`}
+        >
+            <View
+                style={[
+                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/3 3`,
+                    {paddingHorizontal: 1},
+                ]}
+            >
                 <View style={tw`absolute right-4 top-4 z-20 items-end gap-2`}>
                     <Pressable
                         accessibilityRole="button"
@@ -115,7 +131,7 @@ export function TodayScreen({
                         <Image
                             source={stickyNoteIcon}
                             resizeMode="contain"
-                            style={{width: 26, height: 26, tintColor: "#DFC4AA"}}
+                            style={{width: 26, height: 26, tintColor: "#DAC8AE"}}
                         />
                     </Pressable>
                 </View>
@@ -123,7 +139,7 @@ export function TodayScreen({
                       style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
                     <Text style={[tw`text-xs font-semibold`, {
                         fontFamily: fonts.body,
-                        color: "rgba(228,224,212,0.6)"
+                        color: surfSide ? "rgba(17,17,17,0.62)" : "rgba(228,224,212,0.6)"
                     }]}>Today • {today}</Text>
                     {profile?.birthday && isToday(profile.birthday) ? (
                         <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>
@@ -142,13 +158,13 @@ export function TodayScreen({
                 >
                     <Text style={[tw`text-center px-4 py-1 text-lg font-semibold`, {
                         fontFamily: fonts.heading,
-                        color: "#E4E0D4"
+                        color: primaryTextColor
                     }]}>
                         QUOTE OF THE DAY
                     </Text>
                     <Text style={[tw`mt-3 pb-[7px] text-center text-lg leading-snug`, {
                         fontFamily: fonts.body,
-                        color: "#E4E0D4"
+                        color: primaryTextColor
                     }]}
                           numberOfLines={3}>
                         {todaysQuote}
@@ -172,11 +188,11 @@ export function TodayScreen({
                         style={({pressed}) => [pressed && tw`opacity-85`]}
                     >
                         <TranslucentCard radius={24} style={tw`p-4`}>
-                            <Text style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Weekly
+                            <Text style={[tw`text-sm font-semibold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Weekly
                                 goal</Text>
                             {weeklyGoal ? (
                                 <>
-                                    <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
+                                    <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: primaryTextColor}]}
                                           numberOfLines={3}>
                                         {weeklyGoal.text}
                                     </Text>
@@ -189,7 +205,7 @@ export function TodayScreen({
                                             tw`mt-1 text-[11px] font-semibold`,
                                             {
                                                 fontFamily: fonts.body,
-                                                color: weeklyGoal.achievedAt ? "#B55941" : "rgba(228,224,212,0.68)"
+                                                color: weeklyGoal.achievedAt ? "#B55941" : mutedTextColor
                                             },
                                         ]}
                                     >
@@ -197,12 +213,12 @@ export function TodayScreen({
                                     </Text>
                                 </>
                             ) : (
-                                <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Choose a
+                                <Text style={[tw`mt-2 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>Choose a
                                     weekly
                                     goal from Calendar.</Text>
                             )}
                             <View style={tw`mt-3 flex-row items-center justify-between`}>
-                                <Text style={[tw`text-xs text-slate-300`, {fontFamily: fonts.body}]}>
+                                <Text style={[tw`text-xs`, secondaryTextClass, {fontFamily: fonts.body}]}>
                                     Points: {weeklyGoalProgress.points}
                                 </Text>
                                 <View style={tw`flex-row items-center`}>
@@ -214,11 +230,11 @@ export function TodayScreen({
                                             {
                                                 width: 33,
                                                 height: 24,
-                                                tintColor: "#ba885a",
+                                                tintColor: surfSide ? "#FF8000" : "#ba885a",
                                             },
                                         ]}
                                     />
-                                    <Text style={[tw`text-xs text-slate-300`, {fontFamily: fonts.body}]}>
+                                    <Text style={[tw`text-xs`, secondaryTextClass, {fontFamily: fonts.body}]}>
                                         Badges: {weeklyGoalProgress.badges}
                                     </Text>
                                 </View>
@@ -232,14 +248,14 @@ export function TodayScreen({
                     >
                         <TranslucentCard radius={24} style={tw`p-4`}>
                             <Text
-                                style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Gratitude</Text>
+                                style={[tw`text-sm font-semibold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Gratitude</Text>
                             {latestGratitude ? (
-                                <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: "#E4E0D4"}]}
+                                <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: primaryTextColor}]}
                                       numberOfLines={4}>
                                     {latestGratitude.text}
                                 </Text>
                             ) : (
-                                <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>No gratitude
+                                <Text style={[tw`mt-2 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>No gratitude
                                     entry
                                     yet for
                                     today.</Text>
@@ -253,33 +269,33 @@ export function TodayScreen({
                     >
                         <TranslucentCard radius={24} style={tw`p-4`}>
                             <View style={tw`flex-row items-center gap-2`}>
-                                <SvgUri width={16} height={16} uri={tasksIconUri} fill="#E4E0D4" stroke="#E4E0D4"/>
+                                <SvgUri width={16} height={16} uri={tasksIconUri} fill={primaryTextColor} stroke={primaryTextColor}/>
                                 <Text
-                                    style={[tw`text-sm font-semibold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Tasks</Text>
+                                    style={[tw`text-sm font-semibold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Tasks</Text>
                             </View>
                             {dueToday.length === 0 ? (
-                                <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Nothing due
+                                <Text style={[tw`mt-2 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>Nothing due
                                     today.</Text>
                             ) : (
                                 dueToday.map((task) => (
                                     <View
                                         key={task.id}
-                                        style={tw`mt-2 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2`}
+                                        style={nestedItemStyle}
                                     >
                                         <Text
                                             style={[tw`text-base`, {
                                                 fontFamily: fonts.heading,
-                                                color: "#E4E0D4"
+                                                color: primaryTextColor
                                             }]}>{task.title}</Text>
                                         {task.description ? (
-                                            <Text style={[tw`mt-1 text-xs text-slate-300`, {fontFamily: fonts.body}]}
+                                            <Text style={[tw`mt-1 text-xs`, secondaryTextClass, {fontFamily: fonts.body}]}
                                                   numberOfLines={2}>
                                                 {task.description}
                                             </Text>
                                         ) : null}
                                         <View style={tw`mt-2 flex-row items-center justify-between`}>
                                             <Text
-                                                style={[tw`text-[11px] font-semibold text-[#E4E0D4]/80`, {fontFamily: fonts.body}]}>
+                                                style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"}]}>
                                                 {statusLabel[task.status]}{task.dueTime ? ` • ${task.dueTime}` : ""}
                                             </Text>
                                             {task.priority ? (
@@ -307,6 +323,6 @@ export function TodayScreen({
                     onClose={() => setStickyNoteOpen(false)}
                 />
             </View>
-        </ImageBackground>
+        </ScreenBackground>
     );
 }

@@ -8,6 +8,8 @@ import type {CommunityAuthor} from "../state/useCommunity";
 import type {DirectMessage, DirectMessageConversation, DirectMessagesState} from "../state/useDirectMessages";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {OwnerActionSheet} from "../components/OwnerActionSheet";
+import type {VisualMode} from "../state/useVisualMode";
+import {ScreenBackground, useScreenVisualMode} from "../components/ScreenBackground";
 
 type DmStartTarget = {
     key: number;
@@ -18,6 +20,7 @@ interface DirectMessagesScreenProps {
     dm: DirectMessagesState;
     startTarget: DmStartTarget | null;
     onClose: () => void;
+    visualMode: VisualMode;
 }
 
 function displayName(author: CommunityAuthor): string {
@@ -74,6 +77,7 @@ function messageReceipt(
 
 function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number }) {
     const initial = displayName(author)[0]?.toUpperCase() ?? "R";
+    const surfSide = useScreenVisualMode() === "surfSide";
     if (author.avatarUrl) {
         return (
             <Image
@@ -84,7 +88,7 @@ function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number })
     }
 
     return (
-        <View style={[tw`items-center justify-center rounded-full bg-[#B55941]`, {width: size, height: size}]}>
+        <View style={[tw`items-center justify-center rounded-full`, {width: size, height: size, backgroundColor: surfSide ? "#FF3800" : "#B55941"}]}>
             <Text style={[tw`text-sm text-[#FFF6E8]`, {fontFamily: fonts.heading}]}>{initial}</Text>
         </View>
     );
@@ -99,12 +103,16 @@ function ConversationButton({
     selected: boolean;
     onPress: () => void;
 }) {
+    const surfSide = useScreenVisualMode() === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#ffffff";
+    const secondaryTextColor = surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     return (
         <Pressable
             onPress={onPress}
             style={({pressed}) => [
-                tw`rounded-3xl border border-slate-700 px-4 py-3`,
-                selected ? tw`bg-white/10` : tw`bg-black/70`,
+                tw`rounded-3xl border px-4 py-3`,
+                surfSide ? tw`border-black/10` : tw`border-slate-700`,
+                selected ? tw`bg-white/24` : surfSide ? tw`bg-white/18` : tw`bg-black/70`,
                 pressed && tw`opacity-80`,
             ]}
         >
@@ -112,18 +120,18 @@ function ConversationButton({
                 <Avatar author={conversation.participant}/>
                 <View style={tw`flex-1`}>
                     <View style={tw`flex-row items-center gap-2`}>
-                        <Text style={[tw`flex-1 text-sm text-white`, {fontFamily: fonts.heading}]}>
+                        <Text style={[tw`flex-1 text-sm`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                             {displayName(conversation.participant)}
                         </Text>
                         {conversation.unreadCount > 0 ? (
-                            <View style={tw`min-w-5 items-center rounded-full bg-[#B55941] px-1.5 py-0.5`}>
+                            <View style={[tw`min-w-5 items-center rounded-full px-1.5 py-0.5`, {backgroundColor: surfSide ? "#FF3800" : "#B55941"}]}>
                                 <Text style={[tw`text-[10px] text-white`, {fontFamily: fonts.button}]}>
                                     {conversation.unreadCount}
                                 </Text>
                             </View>
                         ) : null}
                     </View>
-                    <Text numberOfLines={1} style={[tw`mt-1 text-xs text-[#E4E0D4]/70`, {fontFamily: fonts.body}]}>
+                    <Text numberOfLines={1} style={[tw`mt-1 text-xs`, {fontFamily: fonts.body, color: secondaryTextColor}]}>
                         {conversation.lastMessage?.body ?? "Start a message"}
                     </Text>
                 </View>
@@ -132,7 +140,7 @@ function ConversationButton({
     );
 }
 
-export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesScreenProps) {
+export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: DirectMessagesScreenProps) {
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [messageText, setMessageText] = useState("");
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -141,6 +149,12 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
     const {keyboardInset} = useKeyboardInset();
     const routeOpacity = useRef(new Animated.Value(0)).current;
     const routeTranslateY = useRef(new Animated.Value(-14)).current;
+    const surfSide = visualMode === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#ffffff";
+    const secondaryTextColor = surfSide ? "rgba(17,17,17,0.62)" : "rgba(255,255,255,0.55)";
+    const emptyStateStyle = surfSide
+        ? tw`rounded-2xl bg-white/24 px-4 py-3 text-center text-sm text-[#111111]`
+        : tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`;
 
     useEffect(() => {
         Animated.parallel([
@@ -234,7 +248,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
     }
 
     return (
-        <Animated.View style={[tw`absolute inset-0 z-20 bg-black`, {paddingBottom: keyboardInset}]}>
+        <ScreenBackground visualMode={visualMode} style={[tw`absolute inset-0 z-20 bg-black`, {paddingBottom: keyboardInset}]}>
             <Animated.View style={[tw`flex-1`, {opacity: routeOpacity, transform: [{translateY: routeTranslateY}]}]}>
             <View style={tw`flex-row items-center justify-between border-b border-slate-700 px-4 py-3`}>
                 <View style={tw`flex-row items-center gap-2`}>
@@ -248,10 +262,10 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                                 pressed && tw`opacity-70`,
                             ]}
                         >
-                            <Ionicons name="chevron-back" size={20} color="#ffffff"/>
+                            <Ionicons name="chevron-back" size={20} color={primaryTextColor}/>
                         </Pressable>
                     ) : null}
-                    <Text style={[tw`text-xl text-white`, {fontFamily: fonts.heading}]}>
+                    <Text style={[tw`text-xl`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                         {selectedConversation ? displayName(selectedConversation.participant) : "Messages"}
                     </Text>
                 </View>
@@ -264,7 +278,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                         pressed && tw`opacity-70`,
                     ]}
                 >
-                    <Ionicons name="close" size={20} color="#ffffff"/>
+                    <Ionicons name="close" size={20} color={primaryTextColor}/>
                 </Pressable>
             </View>
 
@@ -282,7 +296,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                         showsVerticalScrollIndicator={false}
                     >
                         {selectedConversation.messages.length === 0 ? (
-                            <Text style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            <Text style={[emptyStateStyle, {fontFamily: fonts.body}]}>
                                 No messages yet.
                             </Text>
                         ) : (
@@ -299,7 +313,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                                     <Fragment key={message.id}>
                                         {showDate ? (
                                             <View style={tw`my-1 items-center`}>
-                                                <Text style={[tw`px-3 py-1 text-[10px] text-white/65`, {fontFamily: fonts.body}]}>
+                                                <Text style={[tw`px-3 py-1 text-[10px]`, {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.65)"}]}>
                                                     {formatDateLabel(message.createdAt)}
                                                 </Text>
                                             </View>
@@ -315,10 +329,10 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                                                 delayLongPress={320}
 	                                                style={({pressed}) => [
 	                                                    tw`rounded-3xl border border-slate-700 px-4 py-3`,
-	                                                    mine ? tw`bg-[#B55941]` : tw`bg-black/70`,
+	                                                    mine ? {backgroundColor: surfSide ? "#FF3800" : "#B55941"} : surfSide ? tw`bg-white/24` : tw`bg-black/70`,
 	                                                    actionSelected ? {
-	                                                        borderColor: "#B55941",
-	                                                        shadowColor: "#B55941",
+	                                                        borderColor: surfSide ? "#FF3800" : "#B55941",
+	                                                        shadowColor: surfSide ? "#FF3800" : "#B55941",
 	                                                        shadowOffset: {width: 0, height: 0},
 	                                                        shadowOpacity: 0.42,
 	                                                        shadowRadius: 12,
@@ -371,16 +385,16 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                                                         </View>
                                                     </View>
                                                 ) : (
-                                                    <Text style={[tw`text-sm leading-5 text-white`, {fontFamily: fonts.body}]}>
+                                                    <Text style={[tw`text-sm leading-5`, {fontFamily: fonts.body, color: mine ? "#ffffff" : primaryTextColor}]}>
                                                         {message.body}
                                                     </Text>
                                                 )}
                                             </Pressable>
-                                            <Text style={[tw`mt-1 px-2 text-[10px] text-white/45`, {fontFamily: fonts.body}]}>
+                                            <Text style={[tw`mt-1 px-2 text-[10px]`, {fontFamily: fonts.body, color: secondaryTextColor}]}>
                                                 {formatMessageTime(message.createdAt)}
                                             </Text>
                                             {receipt ? (
-                                                <Text style={[tw`px-2 text-[10px] text-white/55`, {fontFamily: fonts.body}]}>
+                                                <Text style={[tw`px-2 text-[10px]`, {fontFamily: fonts.body, color: secondaryTextColor}]}>
                                                     {receipt}
                                                 </Text>
                                             ) : null}
@@ -399,7 +413,12 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                             placeholderTextColor="rgba(228,224,212,0.45)"
                             keyboardAppearance="dark"
                             multiline
-                            style={[tw`max-h-24 flex-1 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}
+                            style={[
+                                surfSide
+                                    ? tw`max-h-24 flex-1 rounded-2xl border border-black/10 bg-white/24 px-3 py-2 text-sm text-[#111111]`
+                                    : tw`max-h-24 flex-1 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`,
+                                {fontFamily: fonts.body},
+                            ]}
                         />
                         <Pressable
                             disabled={dm.busy || messageText.trim().length === 0}
@@ -412,7 +431,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                                 pressed && tw`opacity-75`,
                             ]}
                         >
-                            <Ionicons name="send" size={17} color="#E4E0D4"/>
+                            <Ionicons name="send" size={17} color={surfSide ? "#111111" : "#E4E0D4"}/>
                         </Pressable>
                     </View>
                 </View>
@@ -423,11 +442,11 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                     showsVerticalScrollIndicator={false}
                 >
                     {!dm.isLoaded ? (
-                        <Text style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                        <Text style={[emptyStateStyle, {fontFamily: fonts.body}]}>
                             Loading messages...
                         </Text>
                     ) : dm.conversations.length === 0 ? (
-                        <Text style={[tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                        <Text style={[emptyStateStyle, {fontFamily: fonts.body}]}>
                             No messages yet.
                         </Text>
                     ) : (
@@ -459,7 +478,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose}: DirectMessagesS
                 }}
             />
             </Animated.View>
-        </Animated.View>
+        </ScreenBackground>
     );
 }
 

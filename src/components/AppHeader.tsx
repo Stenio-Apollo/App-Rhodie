@@ -27,6 +27,13 @@ export function AppHeader({
                               onToggleVisualMode,
                               onToggleAccount,
                           }: AppHeaderProps) {
+    const surfSide = visualMode === "surfSide";
+    const headerTextColor = "#E4E0D4";
+    const modeButton = visualMode === "sunset"
+        ? {label: "Sunset", backgroundColor: "#FF3800", textColor: "#FFF6E8"}
+        : visualMode === "surfSide"
+            ? {label: "Coast", backgroundColor: "#F0F8FF", textColor: "#111111"}
+            : {label: "Overcast", backgroundColor: "#3895c5", textColor: "#FFF6E8"};
     const headerButtonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},
@@ -36,7 +43,7 @@ export function AppHeader({
     };
     const headerModeButtonStyle = {
         ...headerButtonDepthStyle,
-        backgroundColor: visualMode === "sunset" ? "#B55941" : "#3895c5",
+        backgroundColor: modeButton.backgroundColor,
         borderWidth: 1,
         borderColor: "rgba(43,43,43,0.22)",
     };
@@ -46,7 +53,7 @@ export function AppHeader({
                 <Text
                     style={[
                         tw`text-xl rounded-lg border border-white px-2 py-1`,
-                        {color: "#E4E0D4", fontFamily: fonts.heading, letterSpacing: 0.5},
+                        {color: headerTextColor, fontFamily: fonts.heading, letterSpacing: 0.5},
                     ]}
                 >
                     rh.
@@ -70,14 +77,14 @@ export function AppHeader({
                             {avatarUrl ? (
                                 <Image source={{uri: avatarUrl}} style={tw`h-8 w-8 rounded-full bg-black/40`}/>
                             ) : (
-                                <View style={tw`h-8 w-8 items-center justify-center rounded-full bg-black/40`}>
-                                    <Text style={[tw`text-xs text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                <View style={tw`h-8 w-8 items-center justify-center rounded-full border border-white/45 bg-black/40`}>
+                                    <Text style={[tw`text-xs`, {fontFamily: fonts.heading, color: "#FFF6E8"}]}>
                                         {(fullName?.trim()?.[0] ?? "R").toUpperCase()}
                                     </Text>
                                 </View>
                             )}
                         </Pressable>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                        <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: headerTextColor}]}>
                             {fullName ? `Welcome, ${fullName}` : "Welcome back"}
                         </Text>
                     </View>
@@ -85,11 +92,11 @@ export function AppHeader({
             </View>
             <View style={tw`flex-row items-center gap-2`}>
                 <Button
-                    label={visualMode === "sunset" ? "Sunset" : "Overcast"}
+                    label={modeButton.label}
                     onPress={onToggleVisualMode}
                     shine
                     style={[tw`rounded-full px-3 py-1.5`, headerModeButtonStyle]}
-                    textStyle={[tw`text-[11px]`, {color: "#FFF6E8"}]}
+                    textStyle={[tw`text-[11px]`, {color: modeButton.textColor}]}
                 />
                 <Pressable
                     accessibilityRole="button"

@@ -2,7 +2,6 @@ import {useEffect, useMemo, useRef, useState} from "react";
 import {
     Animated,
     Easing,
-    ImageBackground,
     Pressable,
     ScrollView,
     Text,
@@ -22,6 +21,7 @@ import {GoalsRoute} from "../components/GoalsRoute";
 import {TranslucentCard} from "../components/TranslucentCard";
 import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
+import {ScreenBackground} from "../components/ScreenBackground";
 
 function CalendarRouteEntry({
                                 label,
@@ -29,14 +29,20 @@ function CalendarRouteEntry({
                                 onPress,
                                 disabled = false,
                                 active = false,
+                                surfSide = false,
                             }: {
     label: string;
     icon: React.ComponentProps<typeof Ionicons>["name"];
     onPress: () => void;
     disabled?: boolean;
     active?: boolean;
+    surfSide?: boolean;
 }) {
-    const color = disabled ? "rgba(228,224,212,0.35)" : active ? "#000000" : "#E4E0D4";
+    const color = disabled
+        ? (surfSide ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
+        : surfSide
+            ? (active ? "#FF3800" : "#000000")
+            : active ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -120,6 +126,9 @@ export function CalendarScreen({
         ? require("../../public/images/rhram1.jpg")
         : require("../../public/images/rh211.jpg");
     const {keyboardInset} = useKeyboardInset();
+    const surfSide = visualMode === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
+    const secondaryTextClass = surfSide ? tw`text-black/70` : tw`text-slate-300`;
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -129,7 +138,7 @@ export function CalendarScreen({
             map[task.dueDate] = {...(map[task.dueDate] ?? {}), marked: true};
         });
 
-        map[selectedDate] = {...(map[selectedDate] ?? {}), selected: true, selectedColor: "#B55941"};
+        map[selectedDate] = {...(map[selectedDate] ?? {}), selected: true, selectedColor: "#FF3800"};
         return map;
     }, [selectedDate, tasks]);
 
@@ -215,9 +224,12 @@ export function CalendarScreen({
     }
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
+        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-33`}>
             <Animated.View
-                style={[tw`flex-1 bg-black/33`, {paddingHorizontal: 1, paddingBottom: keyboardInset}]}
+                style={[
+                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/33`,
+                    {paddingHorizontal: 1, paddingBottom: keyboardInset},
+                ]}
             >
                 <View style={tw`absolute right-3 top-16 z-20 items-center gap-5`}>
                     <CalendarRouteEntry
@@ -225,23 +237,27 @@ export function CalendarScreen({
                         icon="calendar-outline"
                         onPress={openCalendarRoute}
                         active={route === "calendar"}
+                        surfSide={surfSide}
                     />
                     <CalendarRouteEntry
                         label="Google"
                         icon="logo-google"
                         onPress={handleGoogleRoutePress}
                         disabled={!googleCalendar.available || googleCalendar.busy}
+                        surfSide={surfSide}
                     />
                     <CalendarRouteEntry
                         label="Tasks"
                         icon="checkbox-outline"
                         onPress={onOpenTasks}
+                        surfSide={surfSide}
                     />
                     <CalendarRouteEntry
                         label="Goals"
                         icon="flag-outline"
                         onPress={() => openGoalsRoute()}
                         active={route === "goals"}
+                        surfSide={surfSide}
                     />
                 </View>
                 {route === "goals" ? (
@@ -258,7 +274,7 @@ export function CalendarScreen({
                             pressed && {opacity: 0.6, transform: [{translateY: 1}]},
                         ]}
                     >
-                        <Ionicons name="close" size={18} color="#E4E0D4"/>
+                        <Ionicons name="close" size={18} color={primaryTextColor}/>
                     </Pressable>
                 ) : null}
                 <ScrollView
@@ -272,9 +288,9 @@ export function CalendarScreen({
                         {route === "calendar" ? (
                             <View style={tw`mt-[49px]`}>
                                 <Text
-                                    style={[tw`self-center text-center text-2xl font-black text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>Calendar</Text>
+                                    style={[tw`self-center text-center text-2xl font-black`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Calendar</Text>
                                 <Text
-                                    style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Tap
+                                    style={[tw`self-center text-center mt-1 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>Tap
                                     a day to filter due tasks.</Text>
 
                                 {showTutorial && onDismissTutorial ? (
@@ -303,20 +319,20 @@ export function CalendarScreen({
                                 />
 
                                 <Text
-                                    style={[tw`mt-3 text-center text-lg font-extrabold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{selectedDate}</Text>
+                                    style={[tw`mt-3 text-center text-lg font-extrabold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>{selectedDate}</Text>
                                 {selectedTasks.length === 0 ? (
                                     <TranslucentCard radius={16} style={tw`mt-2 p-3`}>
-                                        <Text style={[tw`text-slate-300`, {fontFamily: fonts.body}]}>No tasks due this day.</Text>
+                                        <Text style={[secondaryTextClass, {fontFamily: fonts.body}]}>No tasks due this day.</Text>
                                     </TranslucentCard>
                                 ) : (
                                     selectedTasks.map((task) => (
                                         <View key={task.id}>
                                         <TranslucentCard radius={16} style={tw`mt-2 p-3`}>
                                             <Text
-                                                style={[tw`self-center text-center text-base font-bold text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>{task.title}</Text>
+                                                style={[tw`self-center text-center text-base font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>{task.title}</Text>
                                             {!!task.description &&
                                                 <Text
-                                                    style={[tw`self-center text-center mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>{task.description}</Text>}
+                                                    style={[tw`self-center text-center mt-1 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>{task.description}</Text>}
                                             <Text
                                                 style={[tw`self-center text-center mt-2 text-xs font-bold uppercase text-slate-400`, {fontFamily: fonts.body}]}>
                                                 {task.status.replace("_", " ")} • {task.priority}
@@ -359,6 +375,6 @@ export function CalendarScreen({
                     </Animated.View>
                 </ScrollView>
             </Animated.View>
-        </ImageBackground>
+        </ScreenBackground>
     );
 }

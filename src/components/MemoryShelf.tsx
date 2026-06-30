@@ -9,11 +9,12 @@ import {haptics} from "../lib/haptics";
 import {toLocalISODate} from "../lib/date-utils";
 import {getDailyJournalPrompt} from "../lib/prompts";
 import type {JournalEntry, JournalState} from "../state/useJournal";
+import {useScreenVisualMode} from "./ScreenBackground";
 
 type CategoryFilter = "all" | "prompt" | "gratitude";
 
-const ACCENT = "#B55941";
-const CREAM = "#DFC4AA";
+const ACCENT = "#FF3800";
+const CREAM = "#F0F8FF";
 const TEXT_PRIMARY = "#E4E0D4";
 
 const buttonDepthStyle = {
@@ -86,21 +87,26 @@ function formatLookbackLabel(deltaDays: number): string {
 }
 
 function StatPill({label, value}: {label: string; value: string | number}) {
+    const coast = useScreenVisualMode() === "surfSide";
     return (
         <View
             style={[
-                tw`flex-1 overflow-hidden rounded-2xl border border-[#F5DBC9]/22 px-3 py-2.5`,
-                {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
+                tw`flex-1 overflow-hidden rounded-2xl border px-3 py-2.5`,
+                {
+                    borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)",
+                    backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                    ...buttonDepthStyle,
+                },
             ]}
         >
             <ButtonShine/>
             <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                 fontFamily: fonts.strong,
-                color: "rgba(228,224,212,0.55)",
+                color: coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)",
             }]}>
                 {label}
             </Text>
-            <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: TEXT_PRIMARY}]}>
+            <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: coast ? "#111111" : TEXT_PRIMARY}]}>
                 {value}
             </Text>
         </View>
@@ -116,6 +122,7 @@ function FilterChip({
     active: boolean;
     onPress: () => void;
 }) {
+    const coast = useScreenVisualMode() === "surfSide";
     return (
         <Pressable
             accessibilityRole="button"
@@ -127,15 +134,19 @@ function FilterChip({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-full border px-3.5 py-1.5`,
                 active
-                    ? {borderColor: CREAM, backgroundColor: CREAM, ...buttonDepthStyle}
-                    : {borderColor: "rgba(223,196,170,0.28)", backgroundColor: "rgba(15,15,15,0.85)", ...buttonDepthStyle},
+                    ? {borderColor: coast ? "#C82D00" : CREAM, backgroundColor: coast ? "#FF3800" : CREAM, ...buttonDepthStyle}
+                    : {
+                        borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)",
+                        backgroundColor: coast ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)",
+                        ...buttonDepthStyle,
+                    },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
             ]}
         >
             <ButtonShine/>
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: active ? "#0f0f0f" : CREAM,
+                color: active ? (coast ? "#FFF6E8" : "#0f0f0f") : coast ? "#111111" : CREAM,
             }]}>
                 {label}
             </Text>
@@ -164,28 +175,32 @@ function EntryCard({
 }) {
     const isPrompt = entry.category === "prompt";
     const entryPrompt = isPrompt ? getDailyJournalPrompt(entry.date) : null;
+    const coast = useScreenVisualMode() === "surfSide";
+    const accentColor = coast ? "#FF3800" : ACCENT;
+    const primaryTextColor = coast ? "#111111" : TEXT_PRIMARY;
+    const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.58)";
     return (
         <View
             style={[
                 tw`overflow-hidden rounded-2xl border p-4`,
                 {
-                    borderColor: isPrompt ? "rgba(181,89,65,0.55)" : "rgba(223,196,170,0.28)",
-                    backgroundColor: "rgba(0,0,0,0.35)",
+                    borderColor: coast ? "rgba(17,17,17,0.14)" : isPrompt ? "rgba(255,56,0,0.55)" : "rgba(223,196,170,0.28)",
+                    backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)",
                     ...buttonDepthStyle,
                 },
             ]}
         >
             <ButtonShine/>
             <View style={tw`flex-row items-center justify-between`}>
-                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: CREAM}]}>
+                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: coast ? "#111111" : CREAM}]}>
                     {entry.date}
                 </Text>
                 <View
                     style={[
                         tw`rounded-full border px-3 py-1`,
                         isPrompt
-                            ? {borderColor: ACCENT, backgroundColor: ACCENT}
-                            : {borderColor: CREAM, backgroundColor: CREAM},
+                            ? {borderColor: accentColor, backgroundColor: accentColor}
+                            : {borderColor: coast ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: coast ? "rgba(255,255,255,0.78)" : CREAM},
                     ]}
                 >
                     <Text style={[tw`text-[10px] tracking-[1px]`, {
@@ -198,7 +213,7 @@ function EntryCard({
             </View>
             <Text style={[tw`mt-2 text-[11px]`, {
                 fontFamily: fonts.body,
-                color: "rgba(228,224,212,0.58)",
+                color: secondaryTextColor,
             }]}>
                 {new Date(entry.createdAt).toLocaleString([], {
                     month: "short",
@@ -209,11 +224,11 @@ function EntryCard({
             </Text>
             {entryPrompt ? (
                 <View style={tw`mt-3 rounded-xl p-3`}>
-                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: CREAM}]}>
+                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: coast ? "#111111" : CREAM}]}>
                         Prompt responded to
                     </Text>
                     <Text
-                        style={[tw`mt-1 text-sm leading-5`, {fontFamily: fonts.body, color: TEXT_PRIMARY}]}
+                        style={[tw`mt-1 text-sm leading-5`, {fontFamily: fonts.body, color: primaryTextColor}]}
                         numberOfLines={4}
                     >
                         {entryPrompt}
@@ -224,15 +239,18 @@ function EntryCard({
                 <TextInput
                     value={editingText}
                     onChangeText={setEditingText}
-                    keyboardAppearance="dark"
+                    keyboardAppearance={coast ? "light" : "dark"}
                     multiline
-                    style={[tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`, {fontFamily: fonts.body, color: TEXT_PRIMARY}]}
+                    style={[
+                        coast ? tw`mt-3 rounded-xl border border-black/10 bg-white/34 px-3 py-2` : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
+                        {fontFamily: fonts.body, color: primaryTextColor},
+                    ]}
                 />
             ) : (
                 <Text
                     style={[tw`mt-3 text-sm leading-5`, {
                         fontFamily: fonts.body,
-                        color: TEXT_PRIMARY,
+                        color: primaryTextColor,
                     }]}
                     numberOfLines={5}
                 >
@@ -240,7 +258,7 @@ function EntryCard({
                 </Text>
             )}
             <View style={tw`mt-3 flex-row items-center justify-between`}>
-                <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: "rgba(228,224,212,0.55)"}]}>
+                <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)"}]}>
                     {new Date(entry.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -273,6 +291,7 @@ function ActionPill({
     onPress: () => void;
     accent?: boolean;
 }) {
+    const coast = useScreenVisualMode() === "surfSide";
     return (
         <Pressable
             accessibilityRole="button"
@@ -284,18 +303,22 @@ function ActionPill({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
                 accent
-                    ? {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle}
-                    : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
+                    ? {borderColor: coast ? "#C82D00" : ACCENT, backgroundColor: coast ? "#FF3800" : ACCENT, ...buttonDepthStyle}
+                    : {
+                        borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.42)",
+                        backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                        ...buttonDepthStyle,
+                    },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
             ]}
         >
             <ButtonShine/>
             {icon ? (
-                <Ionicons name={icon} size={12} color={accent ? "#FFF6E8" : CREAM}/>
+                <Ionicons name={icon} size={12} color={accent ? "#FFF6E8" : coast ? "#111111" : CREAM}/>
             ) : null}
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: accent ? "#FFF6E8" : CREAM,
+                color: accent ? "#FFF6E8" : coast ? "#111111" : CREAM,
             }]}>
                 {label}
             </Text>
@@ -393,26 +416,41 @@ export function MemoryShelf({
 
     const hasAnyEntries = entries.length > 0;
     const isFiltered = Boolean(searchTerm.trim()) || categoryFilter !== "all" || scopeToDate;
+    const coast = useScreenVisualMode() === "surfSide";
+    const accentColor = coast ? "#FF3800" : ACCENT;
+    const primaryTextColor = coast ? "#111111" : TEXT_PRIMARY;
+    const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
+    const mutedTextColor = coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const panelBorderColor = coast ? "rgba(17,17,17,0.14)" : "#2c2c2c";
+    const panelBackgroundColor = coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
 
     return (
-        <View style={tw`overflow-hidden rounded-[28px] bg-black/10 p-1`}>
+        <View
+            style={[
+                tw`overflow-hidden rounded-[28px] p-1`,
+                {backgroundColor: coast ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+            ]}
+        >
             <BlurView
                 intensity={72}
-                tint="dark"
-                style={tw`overflow-hidden rounded-[24px] border border-slate-700`}
+                tint={coast ? "light" : "dark"}
+                style={[
+                    tw`overflow-hidden rounded-[24px] border`,
+                    {borderColor: coast ? "rgba(17,17,17,0.14)" : "#334155"},
+                ]}
             >
                 <View
                     pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.77)"}]}
+                    style={[StyleSheet.absoluteFill, {backgroundColor: coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
                 />
                 <LinearGradient
-                    colors={["rgba(181,89,65,0.08)", "rgba(255,255,255,0.02)", "transparent"]}
+                    colors={coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,56,0,0.08)", "rgba(255,255,255,0.02)", "transparent"]}
                     locations={[0, 0.5, 1]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                 />
                 <LinearGradient
-                    colors={["transparent", "rgba(0,0,0,0.35)"]}
+                    colors={coast ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                 />
@@ -420,12 +458,12 @@ export function MemoryShelf({
                 <View style={tw`p-3`}>
                     <View style={tw`flex-row items-center justify-between`}>
                         <View style={tw`flex-1`}>
-                            <Text style={[tw`text-base font-bold`, {fontFamily: fonts.heading, color: TEXT_PRIMARY}]}>
+                            <Text style={[tw`text-base font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                 Memory shelf
                             </Text>
                             <Text style={[tw`mt-1 text-xs`, {
                                 fontFamily: fonts.body,
-                                color: "rgba(228,224,212,0.7)",
+                                color: secondaryTextColor,
                             }]}>
                                 Search, revisit, and reflect on what you've written.
                             </Text>
@@ -437,7 +475,7 @@ export function MemoryShelf({
                                 onPress={handleSurpriseMe}
                                 style={({pressed}) => [
                                     tw`overflow-hidden flex-row items-center gap-1 rounded-full border px-3 py-2`,
-                                    {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle},
+                                    {borderColor: accentColor, backgroundColor: accentColor, ...buttonDepthStyle},
                                     pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                 ]}
                             >
@@ -468,20 +506,20 @@ export function MemoryShelf({
 
                             <View
                                 style={[
-                                    tw`mt-4 overflow-hidden flex-row items-center gap-2 rounded-2xl border border-[#2c2c2c] px-3 py-2.5`,
-                                    {backgroundColor: "rgba(0,0,0,0.35)", ...buttonDepthStyle},
+                                    tw`mt-4 overflow-hidden flex-row items-center gap-2 rounded-2xl border px-3 py-2.5`,
+                                    {borderColor: panelBorderColor, backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)", ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
-                                <Ionicons name="search" size={16} color={CREAM}/>
+                                <Ionicons name="search" size={16} color={coast ? "#111111" : CREAM}/>
                                 <TextInput
                                     value={searchTerm}
                                     onChangeText={setSearchTerm}
                                     placeholder="Search your entries"
-                                    placeholderTextColor="rgba(228,224,212,0.5)"
-                                    keyboardAppearance="dark"
+                                    placeholderTextColor={coast ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.5)"}
+                                    keyboardAppearance={coast ? "light" : "dark"}
                                     returnKeyType="search"
-                                    style={[tw`flex-1 text-sm`, {fontFamily: fonts.body, color: TEXT_PRIMARY}]}
+                                    style={[tw`flex-1 text-sm`, {fontFamily: fonts.body, color: primaryTextColor}]}
                                 />
                                 {searchTerm.length > 0 ? (
                                     <Pressable
@@ -490,7 +528,7 @@ export function MemoryShelf({
                                         onPress={() => setSearchTerm("")}
                                         hitSlop={8}
                                     >
-                                        <Ionicons name="close-circle" size={16} color={CREAM}/>
+                                        <Ionicons name="close-circle" size={16} color={coast ? "#111111" : CREAM}/>
                                     </Pressable>
                                 ) : null}
                             </View>
@@ -503,15 +541,15 @@ export function MemoryShelf({
 
                             <View
                                 style={[
-                                    tw`mt-4 overflow-hidden rounded-2xl border border-[#2c2c2c] p-3`,
-                                    {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
+                                    tw`mt-4 overflow-hidden rounded-2xl border p-3`,
+                                    {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
                                 <View style={tw`flex-row items-center justify-between`}>
                                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                         fontFamily: fonts.strong,
-                                        color: "rgba(228,224,212,0.55)",
+                                        color: mutedTextColor,
                                     }]}>
                                         Recent days
                                     </Text>
@@ -522,13 +560,13 @@ export function MemoryShelf({
                                             onPress={handleClearDateScope}
                                             style={({pressed}) => [
                                                 tw`overflow-hidden rounded-full border px-3 py-1`,
-                                                {borderColor: CREAM, backgroundColor: "rgba(223,196,170,0.14)"},
+                                                {borderColor: coast ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(223,196,170,0.14)"},
                                                 pressed && {opacity: 0.78},
                                             ]}
                                         >
                                             <Text style={[tw`text-[10px] font-semibold`, {
                                                 fontFamily: fonts.strong,
-                                                color: CREAM,
+                                                color: coast ? "#111111" : CREAM,
                                             }]}>
                                                 Show all dates
                                             </Text>
@@ -548,15 +586,15 @@ export function MemoryShelf({
                                                 style={({pressed}) => [
                                                     tw`overflow-hidden rounded-full border px-3 py-1.5`,
                                                     isSelected
-                                                        ? {borderColor: ACCENT, backgroundColor: "rgba(181,89,65,0.42)", ...buttonDepthStyle}
-                                                        : {borderColor: "rgba(223,196,170,0.32)", backgroundColor: "rgba(0,0,0,0.35)", ...buttonDepthStyle},
+                                                        ? {borderColor: accentColor, backgroundColor: coast ? "rgba(255,56,0,0.12)" : "rgba(255,56,0,0.42)", ...buttonDepthStyle}
+                                                        : {borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)", backgroundColor: coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)", ...buttonDepthStyle},
                                                     pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
                                                 <ButtonShine/>
                                                 <Text style={[tw`text-[11px] font-semibold`, {
                                                     fontFamily: fonts.strong,
-                                                    color: isSelected ? "#FFF6E8" : CREAM,
+                                                    color: isSelected ? (coast ? accentColor : "#FFF6E8") : coast ? "#111111" : CREAM,
                                                 }]}>
                                                     {isToday ? `${date} • today` : date}
                                                 </Text>
@@ -570,7 +608,7 @@ export function MemoryShelf({
                                 <View style={tw`mt-4`}>
                                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                         fontFamily: fonts.strong,
-                                        color: "rgba(228,224,212,0.55)",
+                                        color: mutedTextColor,
                                     }]}>
                                         Looking back
                                     </Text>
@@ -582,25 +620,25 @@ export function MemoryShelf({
                                                 accessibilityLabel={`View entries from ${formatLookbackLabel(item.delta)}`}
                                                 onPress={() => handleSelectDate(item.date)}
                                                 style={({pressed}) => [
-                                                    tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-3`,
-                                                    {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
+                                                    tw`overflow-hidden rounded-2xl border px-3 py-3`,
+                                                    {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
                                                     pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
                                                 <ButtonShine/>
                                                 <View style={tw`flex-row items-center justify-between`}>
                                                     <View style={tw`flex-row items-center gap-1.5`}>
-                                                        <Ionicons name="time-outline" size={12} color={ACCENT}/>
+                                                        <Ionicons name="time-outline" size={12} color={accentColor}/>
                                                         <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                                             fontFamily: fonts.strong,
-                                                            color: "rgba(228,224,212,0.55)",
+                                                            color: mutedTextColor,
                                                         }]}>
                                                             {formatLookbackLabel(item.delta)}
                                                         </Text>
                                                     </View>
                                                     <Text style={[tw`text-[11px] font-semibold`, {
                                                         fontFamily: fonts.strong,
-                                                        color: CREAM,
+                                                        color: coast ? "#111111" : CREAM,
                                                     }]}>
                                                         {item.date}
                                                     </Text>
@@ -608,7 +646,7 @@ export function MemoryShelf({
                                                 <Text
                                                     style={[tw`mt-2 text-sm leading-5`, {
                                                         fontFamily: fonts.body,
-                                                        color: TEXT_PRIMARY,
+                                                        color: primaryTextColor,
                                                     }]}
                                                     numberOfLines={2}
                                                 >
@@ -616,7 +654,7 @@ export function MemoryShelf({
                                                 </Text>
                                                 <Text style={[tw`mt-1 text-[10px]`, {
                                                     fontFamily: fonts.body,
-                                                    color: "rgba(228,224,212,0.55)",
+                                                    color: mutedTextColor,
                                                 }]}>
                                                     {item.count} {item.count === 1 ? "entry" : "entries"}
                                                 </Text>
@@ -632,20 +670,20 @@ export function MemoryShelf({
                         {!hasAnyEntries ? (
                             <View
                                 style={[
-                                    tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-5`,
-                                    {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
+                                    tw`overflow-hidden rounded-2xl border px-3 py-5`,
+                                    {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
                                 <Text style={[tw`text-center text-sm`, {
                                     fontFamily: fonts.heading,
-                                    color: TEXT_PRIMARY,
+                                    color: primaryTextColor,
                                 }]}>
                                     Your shelf is empty.
                                 </Text>
                                 <Text style={[tw`mt-2 text-center text-xs leading-5`, {
                                     fontFamily: fonts.body,
-                                    color: "rgba(228,224,212,0.65)",
+                                    color: coast ? "rgba(17,17,17,0.65)" : "rgba(228,224,212,0.65)",
                                 }]}>
                                     Write a prompt response or list three good things to add your first memory here.
                                 </Text>
@@ -653,14 +691,14 @@ export function MemoryShelf({
                         ) : visibleEntries.length === 0 ? (
                             <View
                                 style={[
-                                    tw`overflow-hidden rounded-2xl border border-[#2c2c2c] px-3 py-5`,
-                                    {backgroundColor: "rgba(0,0,0,0.4)", ...buttonDepthStyle},
+                                    tw`overflow-hidden rounded-2xl border px-3 py-5`,
+                                    {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
                                 ]}
                             >
                                 <ButtonShine/>
                                 <Text style={[tw`text-center text-sm`, {
                                     fontFamily: fonts.body,
-                                    color: "rgba(228,224,212,0.78)",
+                                    color: coast ? "rgba(17,17,17,0.78)" : "rgba(228,224,212,0.78)",
                                 }]}>
                                     {isFiltered
                                         ? "Nothing matches the current filters."

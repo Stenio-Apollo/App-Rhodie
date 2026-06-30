@@ -22,6 +22,7 @@ const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; act
 
 const ACTIVE_NAV_COLOR = "#B55941";
 const SUNSET_NAV_COLOR = "#B55941";
+const SURF_SIDE_NAV_COLOR = "#FF3800";
 const INACTIVE_COLOR = "#E4E0D4";
 const ROW_HORIZONTAL_PADDING = 3;
 const PILL_HORIZONTAL_INSET = 3;
@@ -48,11 +49,14 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
     const [rowWidth, setRowWidth] = useState(0);
     const tabCount = TAB_ITEMS.length;
     const activeIndex = accountOpen ? -1 : TAB_ITEMS.findIndex((item) => item.key === activeTab);
-    const activeNavColor = visualMode === "sunset" ? SUNSET_NAV_COLOR : ACTIVE_NAV_COLOR;
-    const navBorderSoft = hexToRgba(activeNavColor, 0.23);
-    const navBorderStrong = hexToRgba(activeNavColor, 0.39);
-    const pillBorderColor = hexToRgba(activeNavColor, 0.43);
-    const rippleBorderColor = hexToRgba(activeNavColor, 0.33);
+    const surfSide = visualMode === "surfSide";
+    const activeNavColor = surfSide ? SURF_SIDE_NAV_COLOR : visualMode === "sunset" ? SUNSET_NAV_COLOR : ACTIVE_NAV_COLOR;
+    const navFrameColor = surfSide ? "#111111" : activeNavColor;
+    const inactiveColor = surfSide ? "#111111" : INACTIVE_COLOR;
+    const navBorderSoft = hexToRgba(navFrameColor, 0.23);
+    const navBorderStrong = hexToRgba(navFrameColor, 0.39);
+    const pillBorderColor = hexToRgba(navFrameColor, 0.43);
+    const rippleBorderColor = hexToRgba(navFrameColor, 0.33);
 
     const tabWidth = rowWidth > 0 ? (rowWidth - ROW_HORIZONTAL_PADDING * 2) / tabCount : 0;
     const pillWidth = Math.max(0, tabWidth - PILL_HORIZONTAL_INSET * 2);
@@ -217,13 +221,13 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
             >
                 <BlurView
                     intensity={72}
-                    tint="dark"
+                    tint={surfSide ? "light" : "dark"}
                     style={[tw`overflow-hidden rounded-full border`, {borderColor: navBorderStrong}]}
                 >
                     {/* Base tint behind everything */}
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.49)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: surfSide ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.49)"}]}
                     />
 
                     {/* Top rim highlight — the "shine" */}
@@ -288,7 +292,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
 
                         {TAB_ITEMS.map((item) => {
                             const active = !accountOpen && activeTab === item.key;
-                            const iconColor = active ? activeNavColor : INACTIVE_COLOR;
+                            const iconColor = active ? activeNavColor : inactiveColor;
                             const iconName = active ? item.activeIcon : item.icon;
                             return (
                                 <Pressable
@@ -308,7 +312,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                                         minimumFontScale={0.75}
                                         style={[
                                             tw`text-[10px] font-bold mb-1`,
-                                            {fontFamily: fonts.heading, color: INACTIVE_COLOR},
+                                            {fontFamily: fonts.heading, color: inactiveColor},
                                         ]}
                                     >
                                         {item.label}

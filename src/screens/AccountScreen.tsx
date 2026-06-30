@@ -1,5 +1,5 @@
 import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, ImageBackground, Linking, Pressable, ScrollView, Text, View,} from "react-native";
+import {Alert, Linking, Pressable, ScrollView, Text, View,} from "react-native";
 import type {Session} from "@supabase/supabase-js";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
@@ -11,6 +11,7 @@ import {BirthdayPicker, formatBirthday, parseBirthdayParts} from "../components/
 import type {VisualMode} from "../state/useVisualMode";
 import {TranslucentCard} from "../components/TranslucentCard";
 import {haptics} from "../lib/haptics";
+import {ScreenBackground} from "../components/ScreenBackground";
 
 type AccountRoute = "account" | "support" | "guide" | "subscription";
 
@@ -19,13 +20,15 @@ function AccountRouteEntry({
                                icon,
                                active,
                                onPress,
+                               surfSide = false,
                            }: {
     label: string;
     icon: ComponentProps<typeof Ionicons>["name"];
     active: boolean;
     onPress: () => void;
+    surfSide?: boolean;
 }) {
-    const color = active ? "#000000" : "#E4E0D4";
+    const color = surfSide ? (active ? "#FF3800" : "#000000") : active ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -175,9 +178,9 @@ export function AccountScreen({
     };
     const sunsetButtonStyle = {
         ...accountButtonDepthStyle,
-        backgroundColor: "#E1B996",
+        backgroundColor: "#FF3800",
         borderWidth: 1,
-        borderColor: "rgba(43,43,43,0.22)",
+        borderColor: "#C82D00",
     };
     const blackButtonStyle = {
         ...accountButtonDepthStyle,
@@ -187,13 +190,22 @@ export function AccountScreen({
     };
     const deleteButtonStyle = {
         ...accountButtonDepthStyle,
-        backgroundColor: "#111111",
+        backgroundColor: "#FF3800",
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.16)",
+        borderColor: "#C82D00",
     };
     const lightButtonTextStyle = {color: "#FFF6E8"};
     const darkButtonTextStyle = {color: "#111111"};
-    const accountHeaderColorStyle = {color: "#DFC4AA", opacity: 0.7};
+    const surfSide = visualMode === "surfSide";
+    const accountHeaderColorStyle = surfSide ? {color: "#111111"} : {color: "#DFC4AA", opacity: 0.7};
+    const accountBodyTextStyle = {color: surfSide ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
+    const accountMutedTextStyle = {color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"};
+    const profileInputStyle = surfSide
+        ? tw`mt-4 border-black/10 bg-white/34 px-4 py-3 text-[#111111] opacity-100`
+        : tw`mt-4 px-4 py-3 opacity-49`;
+    const profileEmailInputStyle = surfSide
+        ? tw`mt-3 border-black/10 bg-white/34 px-4 py-3 text-[#111111] opacity-100`
+        : tw`mt-3 px-4 py-3 opacity-49`;
 
     useEffect(() => {
         mountedRef.current = true;
@@ -340,26 +352,34 @@ export function AccountScreen({
             : null;
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-33`}>
-            <View style={[tw`flex-1 bg-black/79`, {paddingHorizontal: 1}]}>
+        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-33`}>
+            <View
+                style={[
+                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/79`,
+                    {paddingHorizontal: 1},
+                ]}
+            >
                 <View style={tw`absolute right-3 top-16 z-20 items-center gap-5`}>
                     <AccountRouteEntry
                         label="Support"
                         icon="mail-outline"
                         active={route === "support"}
                         onPress={() => setRoute("support")}
+                        surfSide={surfSide}
                     />
                     <AccountRouteEntry
                         label="Replay"
                         icon="refresh-circle-outline"
                         active={route === "guide"}
                         onPress={() => setRoute("guide")}
+                        surfSide={surfSide}
                     />
                     <AccountRouteEntry
                         label="Subscription"
                         icon="card-outline"
                         active={route === "subscription"}
                         onPress={() => setRoute("subscription")}
+                        surfSide={surfSide}
                     />
                 </View>
                 {route !== "account" ? (
@@ -376,7 +396,7 @@ export function AccountScreen({
                             pressed && {opacity: 0.6, transform: [{translateY: 1}]},
                         ]}
                     >
-                        <Ionicons name="close" size={18} color="#E4E0D4"/>
+                        <Ionicons name="close" size={18} color={surfSide ? "#111111" : "#E4E0D4"}/>
                     </Pressable>
                 ) : null}
                 <ScrollView
@@ -392,7 +412,7 @@ export function AccountScreen({
                                         fontFamily: fonts.heading,
                                         ...accountHeaderColorStyle,
                                     }]}>Account</Text>
-                                    <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                                    <Text style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, ...accountBodyTextStyle}]}>
                                         Manage your Rhodie profile and account security from one place.
                                     </Text>
                                 </View>
@@ -401,7 +421,7 @@ export function AccountScreen({
                             <TranslucentCard radius={24} style={tw`p-4`}>
                                 <Text
                                     style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Profile</Text>
-                                <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>Update the
+                                <Text style={[tw`mt-1 text-xs`, {fontFamily: fonts.body, ...accountMutedTextStyle}]}>Update the
                                     name and
                                     birthday used across the app.</Text>
 
@@ -409,17 +429,27 @@ export function AccountScreen({
                                     placeholder="Your name"
                                     value={name}
                                     onChangeText={setName}
-                                    style={tw`mt-4 px-4 py-3 opacity-49`}
+                                    placeholderTextColor={surfSide ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                    keyboardAppearance={surfSide ? "light" : "dark"}
+                                    style={profileInputStyle}
                                 />
 
                                 <Input
                                     placeholder="Email"
                                     value={session.user.email ?? "No email on file"}
                                     editable={false}
-                                    style={tw`mt-3 px-4 py-3 opacity-49`}
+                                    placeholderTextColor={surfSide ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                    keyboardAppearance={surfSide ? "light" : "dark"}
+                                    style={profileEmailInputStyle}
                                 />
 
-                                <View style={tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/44 px-4 py-3`}>
+                                <View
+                                    style={
+                                        surfSide
+                                            ? tw`mt-3 rounded-xl border border-black/10 bg-white/34 px-4 py-3`
+                                            : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/44 px-4 py-3`
+                                    }
+                                >
                                     <BirthdayPicker
                                         month={birthdayMonth}
                                         day={birthdayDay}
@@ -429,7 +459,8 @@ export function AccountScreen({
                                         }}
                                         placeholder="Optional birthday"
                                         showClear
-                                        pickerBackgroundClass="bg-black/47"
+                                        pickerBackgroundClass={surfSide ? "bg-white" : "bg-black/47"}
+                                        surfSide={surfSide}
 
                                     />
                                 </View>
@@ -444,7 +475,7 @@ export function AccountScreen({
                                         disabled={saveBusy}
                                         shine
                                         style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
-                                        textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                        textStyle={[tw`text-[10px]`, lightButtonTextStyle]}
                                     />
                                 </View>
 
@@ -461,7 +492,7 @@ export function AccountScreen({
                             <TranslucentCard radius={24} style={[tw`p-4`, {borderColor: "#7f1d1d"}]}>
                                 <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Account
                                     security</Text>
-                                <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Deleting your
+                                <Text style={[tw`mt-1 text-sm`, {fontFamily: fonts.body, ...accountBodyTextStyle}]}>Deleting your
                                     account
                                     is permanent. It removes your app data, but store subscriptions still need to be
                                     managed in
@@ -482,7 +513,7 @@ export function AccountScreen({
                                         disabled={deleteBusy}
                                         shine
                                         style={deleteButtonStyle}
-                                        textStyle={accountHeaderColorStyle}
+                                        textStyle={lightButtonTextStyle}
                                     />
                                 </View>
                             </TranslucentCard>
@@ -492,11 +523,11 @@ export function AccountScreen({
                     {route === "support" ? (
                         <TranslucentCard radius={24} style={tw`p-4`}>
                             <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Support</Text>
-                            <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>Need help with
+                            <Text style={[tw`mt-1 text-sm`, {fontFamily: fonts.body, ...accountBodyTextStyle}]}>Need help with
                                 billing, syncing, or your account? Reach out directly and we’ll open your email
                                 app.</Text>
                             <Text
-                                style={[tw`mt-3 text-xs text-slate-400`, {fontFamily: fonts.body}]}>s3.gerlin@gmail.com</Text>
+                                style={[tw`mt-3 text-xs`, {fontFamily: fonts.body, ...accountMutedTextStyle}]}>s3.gerlin@gmail.com</Text>
                             <View style={tw`mt-4 flex-row justify-end`}>
                                 <Button
                                     label="Email support"
@@ -506,7 +537,7 @@ export function AccountScreen({
                                     variant="outlineAccent"
                                     shine
                                     style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
-                                    textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                    textStyle={[tw`text-[10px]`, lightButtonTextStyle]}
                                 />
                             </View>
                         </TranslucentCard>
@@ -515,7 +546,7 @@ export function AccountScreen({
                     {route === "guide" ? (
                         <TranslucentCard radius={24} style={tw`p-4`}>
                             <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>App guide</Text>
-                            <Text style={[tw`mt-1 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                            <Text style={[tw`mt-1 text-sm`, {fontFamily: fonts.body, ...accountBodyTextStyle}]}>
                                 Replay the first-run onboarding and restore the in-app tutorial cards.
                             </Text>
                             <View style={tw`mt-4 flex-row justify-end`}>
@@ -525,7 +556,7 @@ export function AccountScreen({
                                     variant="outlineAccent"
                                     shine
                                     style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
-                                    textStyle={[tw`text-[10px]`, darkButtonTextStyle]}
+                                    textStyle={[tw`text-[10px]`, lightButtonTextStyle]}
                                 />
                             </View>
                         </TranslucentCard>
@@ -535,15 +566,15 @@ export function AccountScreen({
                         <TranslucentCard radius={24} style={tw`p-4`}>
                             <Text
                                 style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Subscription</Text>
-                            <Text style={[tw`mt-1 text-xs text-slate-400`, {fontFamily: fonts.body}]}>View your current
+                            <Text style={[tw`mt-1 text-xs`, {fontFamily: fonts.body, ...accountMutedTextStyle}]}>View your current
                                 billing state and manage the store subscription.</Text>
 
                             <TranslucentCard radius={16} style={tw`mt-4 px-4 py-3`}>
                                 <Text style={[tw`text-xs`, {fontFamily: fonts.body, ...accountHeaderColorStyle}]}>Status</Text>
-                                <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>
+                                <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: surfSide ? "#111111" : "#E4E0D4"}]}>
                                     {getSubscriptionStatusLabel(subscription)}
                                 </Text>
-                                <Text style={[tw`mt-2 text-sm text-slate-300`, {fontFamily: fonts.body}]}>
+                                <Text style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, ...accountBodyTextStyle}]}>
                                     {getSubscriptionDetail(subscription)}
                                 </Text>
                                 {subscriptionWarning ? (
@@ -585,16 +616,16 @@ export function AccountScreen({
                                     disabled={subscription.restoreBusy}
                                     shine
                                     style={[tw`rounded-xl px-4 py-2`, sunsetButtonStyle]}
-                                    textStyle={[tw`text-xs`, darkButtonTextStyle]}
+                                    textStyle={[tw`text-xs`, lightButtonTextStyle]}
                                 />
                             </View>
-                            <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
+                            <Text style={[tw`mt-4 text-xs`, {fontFamily: fonts.body, ...accountMutedTextStyle}]}>
                                 By continuing, you agree to the{" "}
                                 <Text
                                     onPress={() => {
                                         void handleOpenExternalUrl(termsOfUseUrl, "Terms of Use");
                                     }}
-                                    style={{color: "#B55941"}}
+                                    style={{color: "#FF3800"}}
                                 >
                                     Terms of Use
                                 </Text>
@@ -603,7 +634,7 @@ export function AccountScreen({
                                     onPress={() => {
                                         void handleOpenExternalUrl(termsOfUseUrl, "EULA");
                                     }}
-                                    style={{color: "#B55941"}}
+                                    style={{color: "#FF3800"}}
                                 >
                                     EULA
                                 </Text>
@@ -613,7 +644,7 @@ export function AccountScreen({
                                     onPress={() => {
                                         void handleOpenExternalUrl(privacyPolicyUrl, "Privacy Policy");
                                     }}
-                                    style={{color: "#B55941"}}
+                                    style={{color: "#FF3800"}}
                                 >
                                     Privacy Policy
                                 </Text>
@@ -623,6 +654,6 @@ export function AccountScreen({
                     ) : null}
                 </ScrollView>
             </View>
-        </ImageBackground>
+        </ScreenBackground>
     );
 }

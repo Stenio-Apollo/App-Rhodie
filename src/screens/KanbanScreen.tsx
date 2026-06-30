@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Animated, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
+import {Alert, Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 import {Ionicons} from "@expo/vector-icons";
@@ -13,8 +13,9 @@ import {TutorialCard} from "../components/TutorialCard";
 import {fonts} from "../theme/fonts";
 import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
+import {ScreenBackground, useScreenVisualMode} from "../components/ScreenBackground";
 
-const ACCENT = "#B55941";
+const ACCENT = "#FF3800";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
 
@@ -57,11 +58,15 @@ function ThemedField({
     placeholder: string;
     inputRef?: React.RefObject<TextInput>;
 }) {
+    const visualMode = useScreenVisualMode();
+    const surfSide = visualMode === "surfSide";
     return (
         <View
             style={[
-                tw`overflow-hidden rounded-xl border border-[#2c2c2c] px-3 py-2.5`,
-                {backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
+                tw`overflow-hidden rounded-xl border px-3 py-2.5`,
+                surfSide
+                    ? {borderColor: "rgba(17,17,17,0.14)", backgroundColor: "rgba(255,255,255,0.34)", ...buttonDepthStyle}
+                    : {borderColor: "#2c2c2c", backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
             ]}
         >
             <ButtonShine/>
@@ -70,9 +75,9 @@ function ThemedField({
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                placeholderTextColor="rgba(223,196,170,0.5)"
-                keyboardAppearance="dark"
-                style={[tw`text-sm`, {fontFamily: fonts.body, color: TEXT_PRIMARY}]}
+                placeholderTextColor={surfSide ? "rgba(17,17,17,0.45)" : visualMode === "overcast" ? "rgba(240,248,255,0.49)" : "rgba(223,196,170,0.5)"}
+                keyboardAppearance={surfSide ? "light" : "dark"}
+                style={[tw`text-sm`, {fontFamily: fonts.body, color: surfSide ? "#111111" : TEXT_PRIMARY}]}
             />
         </View>
     );
@@ -91,6 +96,7 @@ function ThemedButton({
     accent?: boolean;
     disabled?: boolean;
 }) {
+    const surfSide = useScreenVisualMode() === "surfSide";
     return (
         <Pressable
             accessibilityRole="button"
@@ -101,19 +107,21 @@ function ThemedButton({
                 tw`overflow-hidden flex-row items-center justify-center gap-1.5 rounded-xl border px-3.5 py-2.5`,
                 accent
                     ? {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle}
-                    : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                    : surfSide
+                        ? {borderColor: "rgba(17,17,17,0.14)", backgroundColor: "rgba(255,255,255,0.34)", ...buttonDepthStyle}
+                        : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
                 disabled && tw`opacity-50`,
                 pressed && !disabled && {opacity: 0.78, transform: [{translateY: 1}]},
             ]}
         >
             <ButtonShine/>
             {icon ? (
-                <Ionicons name={icon} size={14} color={accent ? "#FFF6E8" : CREAM}/>
+                <Ionicons name={icon} size={14} color={accent ? "#FFF6E8" : surfSide ? "#111111" : CREAM}/>
             ) : null}
             <Text
                 style={[tw`text-[12px] font-semibold`, {
                     fontFamily: fonts.strong,
-                    color: accent ? "#FFF6E8" : CREAM,
+                    color: accent ? "#FFF6E8" : surfSide ? "#111111" : CREAM,
                 }]}
             >
                 {label}
@@ -169,6 +177,9 @@ export function KanbanScreen({
     const titleInputRef = useRef<TextInput>(null);
     const {keyboardInset} = useKeyboardInset();
     const fabBottom = useMemo(() => Animated.add(keyboardInset, 47), [keyboardInset]);
+    const surfSide = visualMode === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : TEXT_PRIMARY;
+    const accentTextColor = surfSide ? "#111111" : CREAM;
 
     const filteredGrouped = useMemo(() => {
         if (!filterDate) return grouped;
@@ -190,7 +201,7 @@ export function KanbanScreen({
             map[dueDate] = {...(map[dueDate] ?? {}), selected: true, selectedColor: ACCENT};
         }
         if (filterDate && filterDate !== dueDate) {
-            map[filterDate] = {...(map[filterDate] ?? {}), selected: true, selectedColor: CREAM};
+            map[filterDate] = {...(map[filterDate] ?? {}), selected: true, selectedColor: ACCENT};
         }
         return map;
     }, [dueDate, filterDate, tasks]);
@@ -228,8 +239,13 @@ export function KanbanScreen({
     }
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-30`}>
-            <View style={[tw`flex-1 bg-black/19`, {paddingHorizontal: 1}]}>
+        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-30`}>
+            <View
+                style={[
+                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/19`,
+                    {paddingHorizontal: 1},
+                ]}
+            >
                 <View style={tw`flex-1 px-2 pt-[51px]`}>
                         {showTutorial && onDismissTutorial ? (
                             <View style={tw`mb-3`}>
@@ -241,15 +257,15 @@ export function KanbanScreen({
                             </View>
                         ) : null}
 
-                        <View style={tw`mt-2 overflow-hidden rounded-[28px] bg-black/10 p-1`}>
+                        <View style={[tw`mt-2 overflow-hidden rounded-[28px] p-1`, {backgroundColor: surfSide ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
                             <BlurView
                                 intensity={30}
-                                tint="dark"
-                                style={tw`overflow-hidden rounded-[24px] border border-slate-700/60`}
+                                tint={surfSide ? "light" : "dark"}
+                                style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"}]}
                             >
                                 <View
                                     pointerEvents="none"
-                                    style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.22)"}]}
+                                    style={[StyleSheet.absoluteFill, {backgroundColor: surfSide ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
                                 />
                                 <LinearGradient
                                     colors={["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
@@ -266,7 +282,7 @@ export function KanbanScreen({
                                 <View style={tw`gap-2 p-3`}>
                                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                                         fontFamily: fonts.strong,
-                                        color: CREAM,
+                                        color: accentTextColor,
                                         opacity: 0.7,
                                     }]}>
                                         New task
@@ -286,15 +302,19 @@ export function KanbanScreen({
                                     <View style={tw`flex-row items-center justify-between gap-2`}>
                                         <View
                                             style={[
-                                                tw`flex-1 overflow-hidden flex-row items-center gap-2 rounded-xl border border-[#2c2c2c] px-3 py-2.5`,
-                                                {backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
+                                                tw`flex-1 overflow-hidden flex-row items-center gap-2 rounded-xl border px-3 py-2.5`,
+                                                surfSide
+                                                    ? {borderColor: "rgba(17,17,17,0.14)", backgroundColor: "rgba(255,255,255,0.34)", ...buttonDepthStyle}
+                                                    : {borderColor: "#2c2c2c", backgroundColor: "rgba(15,15,15,0.94)", ...buttonDepthStyle},
                                             ]}
                                         >
                                             <ButtonShine/>
-                                            <Ionicons name="calendar-outline" size={14} color={CREAM}/>
+                                            <Ionicons name="calendar-outline" size={14} color={surfSide ? "#111111" : CREAM}/>
                                             <Text style={[tw`flex-1 text-sm`, {
                                                 fontFamily: fonts.body,
-                                                color: dueDate ? TEXT_PRIMARY : "rgba(223,196,170,0.55)",
+                                                color: dueDate
+                                                    ? primaryTextColor
+                                                    : surfSide ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.55)",
                                             }]}>
                                                 {dueDate ? `Due ${formattedDueDate}` : "No due date"}
                                             </Text>
@@ -308,7 +328,7 @@ export function KanbanScreen({
                                                     }}
                                                     hitSlop={8}
                                                 >
-                                                    <Ionicons name="close-circle" size={16} color={CREAM}/>
+                                                    <Ionicons name="close-circle" size={16} color={surfSide ? "#111111" : CREAM}/>
                                                 </Pressable>
                                             ) : null}
                                         </View>
@@ -344,7 +364,7 @@ export function KanbanScreen({
                                     <View style={tw`mt-1`}>
                                         <Text style={[tw`mb-2 text-[10px] uppercase tracking-[1px]`, {
                                             fontFamily: fonts.strong,
-                                            color: CREAM,
+                                            color: accentTextColor,
                                             opacity: 0.7,
                                         }]}>
                                             Priority
@@ -363,15 +383,29 @@ export function KanbanScreen({
                                                             style={({pressed}) => [
                                                                 tw`overflow-hidden rounded-xl border px-3.5 py-2`,
                                                                 isActive
-                                                                    ? {borderColor: CREAM, backgroundColor: CREAM, ...buttonDepthStyle}
-                                                                    : {borderColor: "rgba(223,196,170,0.42)", backgroundColor: "rgba(15,15,15,0.92)", ...buttonDepthStyle},
+                                                                    ? {
+                                                                        borderColor: surfSide ? "#8FBBD0" : CREAM,
+                                                                        backgroundColor: surfSide ? "#B9D8E8" : CREAM,
+                                                                        ...buttonDepthStyle,
+                                                                    }
+                                                                    : surfSide
+                                                                        ? {
+                                                                            borderColor: "rgba(17,17,17,0.14)",
+                                                                            backgroundColor: "rgba(255,255,255,0.78)",
+                                                                            ...buttonDepthStyle,
+                                                                        }
+                                                                        : {
+                                                                            borderColor: "rgba(223,196,170,0.42)",
+                                                                            backgroundColor: "rgba(15,15,15,0.92)",
+                                                                            ...buttonDepthStyle,
+                                                                        },
                                                                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                             ]}
                                                         >
                                                             <ButtonShine/>
                                                             <Text style={[tw`text-[11px] font-semibold uppercase tracking-[1px]`, {
                                                                 fontFamily: fonts.strong,
-                                                                color: isActive ? "#0f0f0f" : CREAM,
+                                                                color: surfSide || isActive ? "#0f0f0f" : CREAM,
                                                             }]}>
                                                                 {item}
                                                             </Text>
@@ -419,7 +453,7 @@ export function KanbanScreen({
                             pressed && {opacity: 0.6, transform: [{translateY: 1}]},
                         ]}
                     >
-                        <Ionicons name="close" size={18} color={TEXT_PRIMARY}/>
+                        <Ionicons name="close" size={18} color={primaryTextColor}/>
                     </Pressable>
                 ) : null}
 
@@ -453,6 +487,6 @@ export function KanbanScreen({
                     </Pressable>
                 </Animated.View>
             </View>
-        </ImageBackground>
+        </ScreenBackground>
     );
 }

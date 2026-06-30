@@ -1,5 +1,5 @@
 import {useMemo, useState} from "react";
-import {ImageBackground, Pressable, ScrollView, Text, View} from "react-native";
+import {Pressable, ScrollView, Text, View} from "react-native";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
@@ -9,6 +9,7 @@ import {PlannerEventSheet} from "../components/PlannerEventSheet";
 import type {PlannerEvent, PlannerEventsState} from "../state/usePlannerEvents";
 import {TutorialCard} from "../components/TutorialCard";
 import type {VisualMode} from "../state/useVisualMode";
+import {ScreenBackground} from "../components/ScreenBackground";
 
 const DAY_START_HOUR = 6;
 const DAY_END_HOUR = 23;
@@ -191,6 +192,9 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const bg = visualMode === "sunset"
         ? require("../../public/images/rhbull3.jpg")
         : require("../../public/images/rh16.jpg");
+    const surfSide = visualMode === "surfSide";
+    const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
+    const mutedTextColor = surfSide ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
 
     const dayEvents = useMemo(
         () =>
@@ -235,8 +239,13 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const isToday = date === today;
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-39`}>
-            <View style={[tw`flex-1 bg-black/47`, {paddingHorizontal: 1}]}>
+        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-39`}>
+            <View
+                style={[
+                    surfSide ? tw`flex-1 bg-white/10` : tw`flex-1 bg-black/47`,
+                    {paddingHorizontal: 1},
+                ]}
+            >
                 <View style={tw`flex-row items-center justify-between px-4 pt-3 pb-2`}>
                     <Pressable
                         onPress={goPrev}
@@ -245,11 +254,11 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                             pressed && tw`opacity-70`,
                         ]}
                     >
-                        <Text style={[tw`text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>‹</Text>
+                        <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: primaryTextColor}]}>‹</Text>
                     </Pressable>
 
                     <View style={tw`flex-1 items-center`}>
-                        <Text style={[tw`text-lg text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                        <Text style={[tw`text-lg`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                             {formatDateHeader(date)}
                         </Text>
                         {!isToday ? (
@@ -276,7 +285,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                             pressed && tw`opacity-70`,
                         ]}
                     >
-                        <Text style={[tw`text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>›</Text>
+                        <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: primaryTextColor}]}>›</Text>
                     </Pressable>
                 </View>
 
@@ -316,8 +325,8 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                                     {slot.isHourMark ? (
                                         <Text
                                             style={[
-                                                tw`text-[10px] text-[#E4E0D4]/55`,
-                                                {fontFamily: fonts.body},
+                                                tw`text-[10px]`,
+                                                {fontFamily: fonts.body, color: mutedTextColor},
                                             ]}
                                         >
                                             {slot.label}
@@ -330,8 +339,8 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                                         {
                                             borderTopWidth: slot.isHourMark ? 1 : 0.5,
                                             borderTopColor: slot.isHourMark
-                                                ? "rgba(228,224,212,0.18)"
-                                                : "rgba(228,224,212,0.08)",
+                                                ? surfSide ? "rgba(17,17,17,0.24)" : "rgba(228,224,212,0.18)"
+                                                : surfSide ? "rgba(17,17,17,0.12)" : "rgba(228,224,212,0.08)",
                                         },
                                     ]}
                                 />
@@ -430,8 +439,8 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                     {dayEvents.length === 0 && planner.isLoaded ? (
                         <Text
                             style={[
-                                tw`absolute top-1/3 self-center text-sm text-[#E4E0D4]/60`,
-                                {fontFamily: fonts.body},
+                                tw`absolute top-1/3 self-center text-sm`,
+                                {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"},
                             ]}
                         >
                             Tap any slot to plan your day
@@ -457,6 +466,6 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                     }}
                 />
             </View>
-        </ImageBackground>
+        </ScreenBackground>
     );
 }

@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
-import {ImageBackground, Linking, Pressable, ScrollView, Text, View} from "react-native";
+import {Linking, Pressable, ScrollView, Text, View} from "react-native";
 import {LinearGradient} from "expo-linear-gradient";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
@@ -12,6 +12,8 @@ import {
     summarizeForApp,
 } from "../lib/mental-health-feed";
 import {haptics} from "../lib/haptics";
+import type {VisualMode} from "../state/useVisualMode";
+import {ScreenBackground} from "../components/ScreenBackground";
 
 async function openExternal(url: string): Promise<void> {
     try {
@@ -57,6 +59,7 @@ const buttonShadow = {
 
 interface InsightsScreenProps {
     onBackToPeers?: () => void;
+    visualMode: VisualMode;
 }
 
 function ButtonShine() {
@@ -79,7 +82,7 @@ function ButtonShine() {
     );
 }
 
-export function InsightsScreen({onBackToPeers}: InsightsScreenProps) {
+export function InsightsScreen({onBackToPeers, visualMode}: InsightsScreenProps) {
     const [articles, setArticles] = useState<ExternalArticle[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -120,7 +123,7 @@ export function InsightsScreen({onBackToPeers}: InsightsScreenProps) {
     );
 
     return (
-        <ImageBackground source={bg} style={tw`flex-1`} imageStyle={tw`opacity-58`}>
+        <ScreenBackground visualMode={visualMode} source={bg} imageStyle={tw`opacity-58`}>
             <View style={[tw`flex-1 bg-black/8`, {paddingHorizontal: 1}]}>
                 <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-4 pt-5 pb-28`}>
                     <View
@@ -329,6 +332,6 @@ export function InsightsScreen({onBackToPeers}: InsightsScreenProps) {
                     </View>
                 </ScrollView>
             </View>
-        </ImageBackground>
+        </ScreenBackground>
     );
 }
