@@ -20,19 +20,19 @@ export function TranslucentCard({
                                     radius = 24,
                                 }: PropsWithChildren<TranslucentCardProps>) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide";
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const lightMode = surfSide || visualMode === "overcast";
-    const solidSurfaceColor = sonny ? "#2F4F4F" : "#708090";
+    const riverMode = visualMode === "river";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const lightMode = riverMode || coastMode;
+    const solidSurfaceColor = georgiaMode ? "#2F4F4F" : "#708090";
     const borderColor = lightMode ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)";
-    const surfaceColor = river || sonny ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)";
-    const topGradient: GradientColors = river || sonny
+    const surfaceColor = coastMode || georgiaMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)";
+    const topGradient: GradientColors = coastMode || georgiaMode
         ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"]
         : lightMode
         ? ["rgba(255,255,255,0.32)", "rgba(240,248,255,0.14)", "transparent"]
         : ["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"];
-    const bottomGradient: GradientColors = river || sonny
+    const bottomGradient: GradientColors = coastMode || georgiaMode
         ? ["transparent", "rgba(0,0,0,0.1)"]
         : lightMode
         ? ["transparent", "rgba(223,196,170,0.18)"]
@@ -43,7 +43,7 @@ export function TranslucentCard({
             <View
                 style={[
                     tw`overflow-hidden p-1`,
-                    {backgroundColor: river || sonny ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                    {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
                     {borderRadius: radius + 4},
                     style,
                 ]}

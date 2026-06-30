@@ -14,13 +14,13 @@ import {useScreenVisualMode} from "./ScreenBackground";
 type CategoryFilter = "all" | "prompt" | "gratitude";
 
 const ACCENT = "#FF3800";
-const GEORGIA_ACCENT = "#FF3800";
+const SONNY_ACCENT = "#FF3800";
 const DARK_BADGE_COLOR = "#ba885a";
 const COAST_BADGE_COLOR = DARK_BADGE_COLOR;
 const CREAM = "#F0F8FF";
 const TEXT_PRIMARY = "#E4E0D4";
-const RIVER_SURFACE_COLOR = "#708090";
-const SONNY_SURFACE_COLOR = "#2F4F4F";
+const COAST_SURFACE_COLOR = "#708090";
+const GEORGIA_SURFACE_COLOR = "#2F4F4F";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -93,17 +93,17 @@ function formatLookbackLabel(deltaDays: number): string {
 
 function StatPill({label, value}: {label: string; value: string | number}) {
     const visualMode = useScreenVisualMode();
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const coast = visualMode === "surfSide" || river;
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const coastOrRiver = visualMode === "river" || coastMode;
     return (
         <View
             style={[
                 tw`flex-1 overflow-hidden rounded-2xl border px-3 py-2.5`,
                 {
-                    borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)",
-                    backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                    borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)",
+                    backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
                     ...buttonDepthStyle,
                 },
             ]}
@@ -111,11 +111,11 @@ function StatPill({label, value}: {label: string; value: string | number}) {
             <ButtonShine/>
             <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                 fontFamily: fonts.strong,
-                color: coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)",
+                color: coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)",
             }]}>
                 {label}
             </Text>
-            <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: coast ? "#111111" : TEXT_PRIMARY}]}>
+            <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: coastOrRiver ? "#111111" : TEXT_PRIMARY}]}>
                 {value}
             </Text>
         </View>
@@ -132,12 +132,12 @@ function FilterChip({
     onPress: () => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const coast = visualMode === "surfSide" || river;
-    const accentColor = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
-    const accentBorderColor = visualMode === "georgia" ? "#CB0000" : "#C82D00";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const accentColor = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
+    const accentBorderColor = visualMode === "sonny" ? "#CB0000" : "#C82D00";
     return (
         <Pressable
             accessibilityRole="button"
@@ -149,10 +149,10 @@ function FilterChip({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-full border px-3.5 py-1.5`,
                 active
-                    ? {borderColor: coast ? "#C82D00" : visualMode === "georgia" ? accentBorderColor : CREAM, backgroundColor: coast ? "#FF3800" : visualMode === "georgia" ? accentColor : CREAM, ...buttonDepthStyle}
+                    ? {borderColor: coastOrRiver ? "#C82D00" : visualMode === "sonny" ? accentBorderColor : CREAM, backgroundColor: coastOrRiver ? "#FF3800" : visualMode === "sonny" ? accentColor : CREAM, ...buttonDepthStyle}
                     : {
-                        borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)",
-                        backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)",
+                        borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)",
+                        backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)",
                         ...buttonDepthStyle,
                     },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
@@ -161,7 +161,7 @@ function FilterChip({
             <ButtonShine/>
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: active ? (coast || visualMode === "georgia" ? "#FFF6E8" : "#0f0f0f") : coast ? "#111111" : CREAM,
+                color: active ? (coastOrRiver || visualMode === "sonny" ? "#FFF6E8" : "#0f0f0f") : coastOrRiver ? "#111111" : CREAM,
             }]}>
                 {label}
             </Text>
@@ -191,28 +191,28 @@ function EntryCard({
     const isPrompt = entry.category === "prompt";
     const entryPrompt = isPrompt ? getDailyJournalPrompt(entry.date) : null;
     const visualMode = useScreenVisualMode();
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const coast = visualMode === "surfSide" || river;
-    const badgeColor = coast ? COAST_BADGE_COLOR : DARK_BADGE_COLOR;
-    const cardBorderColor = coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
-    const primaryTextColor = coast ? "#111111" : TEXT_PRIMARY;
-    const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.58)";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const badgeColor = coastOrRiver ? COAST_BADGE_COLOR : DARK_BADGE_COLOR;
+    const cardBorderColor = coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
+    const primaryTextColor = coastOrRiver ? "#111111" : TEXT_PRIMARY;
+    const secondaryTextColor = coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.58)";
     return (
         <View
             style={[
                 tw`overflow-hidden rounded-2xl border p-4`,
                 {
                     borderColor: cardBorderColor,
-                    backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)",
+                    backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)",
                     ...buttonDepthStyle,
                 },
             ]}
         >
             <ButtonShine/>
             <View style={tw`flex-row items-center justify-between`}>
-                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: coast ? "#111111" : CREAM}]}>
+                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: coastOrRiver ? "#111111" : CREAM}]}>
                     {entry.date}
                 </Text>
                 <View
@@ -242,7 +242,7 @@ function EntryCard({
             </Text>
             {entryPrompt ? (
                 <View style={[tw`mt-3 rounded-xl border p-3`, {borderColor: cardBorderColor}]}>
-                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: coast ? "#111111" : CREAM}]}>
+                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: coastOrRiver ? "#111111" : CREAM}]}>
                         Prompt responded to
                     </Text>
                     <Text
@@ -257,10 +257,10 @@ function EntryCard({
                 <TextInput
                     value={editingText}
                     onChangeText={setEditingText}
-                    keyboardAppearance={coast ? "light" : "dark"}
+                    keyboardAppearance={coastOrRiver ? "light" : "dark"}
                     multiline
                     style={[
-                        coast || sonny ? [coast ? tw`mt-3 rounded-xl border border-black/10 px-3 py-2` : tw`mt-3 rounded-xl border border-[#2c2c2c] px-3 py-2`, {backgroundColor: river || sonny ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
+                        coastOrRiver || georgiaMode ? [coastOrRiver ? tw`mt-3 rounded-xl border border-black/10 px-3 py-2` : tw`mt-3 rounded-xl border border-[#2c2c2c] px-3 py-2`, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
                         {fontFamily: fonts.body, color: primaryTextColor},
                     ]}
                 />
@@ -276,7 +276,7 @@ function EntryCard({
                 </Text>
             )}
             <View style={tw`mt-3 flex-row items-center justify-between`}>
-                <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)"}]}>
+                <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)"}]}>
                     {new Date(entry.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -310,12 +310,12 @@ function ActionPill({
     accent?: boolean;
 }) {
     const visualMode = useScreenVisualMode();
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const coast = visualMode === "surfSide" || river;
-    const accentColor = visualMode === "georgia" ? GEORGIA_ACCENT : ACCENT;
-    const accentBorderColor = visualMode === "georgia" ? "#CB0000" : ACCENT;
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const accentColor = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
+    const accentBorderColor = visualMode === "sonny" ? "#CB0000" : ACCENT;
     return (
         <Pressable
             accessibilityRole="button"
@@ -327,10 +327,10 @@ function ActionPill({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
                 accent
-                    ? {borderColor: coast ? "#C82D00" : accentBorderColor, backgroundColor: coast ? "#FF3800" : accentColor, ...buttonDepthStyle}
+                    ? {borderColor: coastOrRiver ? "#C82D00" : accentBorderColor, backgroundColor: coastOrRiver ? "#FF3800" : accentColor, ...buttonDepthStyle}
                     : {
-                        borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.42)",
-                        backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                        borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.42)",
+                        backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
                         ...buttonDepthStyle,
                     },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
@@ -338,11 +338,11 @@ function ActionPill({
         >
             <ButtonShine/>
             {icon ? (
-                <Ionicons name={icon} size={12} color={accent ? "#FFF6E8" : coast ? "#111111" : CREAM}/>
+                <Ionicons name={icon} size={12} color={accent ? "#FFF6E8" : coastOrRiver ? "#111111" : CREAM}/>
             ) : null}
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: accent ? "#FFF6E8" : coast ? "#111111" : CREAM,
+                color: accent ? "#FFF6E8" : coastOrRiver ? "#111111" : CREAM,
             }]}>
                 {label}
             </Text>
@@ -441,46 +441,46 @@ export function MemoryShelf({
     const hasAnyEntries = entries.length > 0;
     const isFiltered = Boolean(searchTerm.trim()) || categoryFilter !== "all" || scopeToDate;
     const visualMode = useScreenVisualMode();
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const solidMode = river || sonny;
-    const coast = visualMode === "surfSide" || river;
-    const georgia = visualMode === "georgia";
-    const accentColor = georgia ? GEORGIA_ACCENT : coast ? "#FF3800" : ACCENT;
-    const primaryTextColor = coast ? "#111111" : TEXT_PRIMARY;
-    const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
-    const mutedTextColor = coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
-    const panelBorderColor = coast ? "rgba(17,17,17,0.14)" : "#2c2c2c";
-    const panelBackgroundColor = solidMode ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const solidMode = coastMode || georgiaMode;
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const sonnyMode = visualMode === "sonny";
+    const accentColor = sonnyMode ? SONNY_ACCENT : coastOrRiver ? "#FF3800" : ACCENT;
+    const primaryTextColor = coastOrRiver ? "#111111" : TEXT_PRIMARY;
+    const secondaryTextColor = coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
+    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const panelBorderColor = coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c";
+    const panelBackgroundColor = solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
 
     return (
         <View
             style={[
                 tw`overflow-hidden rounded-[28px] p-1`,
-                {backgroundColor: solidMode ? solidSurfaceColor : coast ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                {backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
             ]}
         >
             <BlurView
                 intensity={72}
-                tint={coast ? "light" : "dark"}
+                tint={coastOrRiver ? "light" : "dark"}
                 style={[
                     tw`overflow-hidden rounded-[24px] border`,
-                    {borderColor: coast ? "rgba(17,17,17,0.14)" : "#334155"},
+                    {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#334155"},
                 ]}
             >
                 <View
                     pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
+                    style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
                 />
                 <LinearGradient
-                    colors={solidMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
+                    colors={solidMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : coastOrRiver ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
                     locations={[0, 0.5, 1]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                 />
                 <LinearGradient
-                    colors={solidMode ? ["transparent", "rgba(0,0,0,0.1)"] : coast ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
+                    colors={solidMode ? ["transparent", "rgba(0,0,0,0.1)"] : coastOrRiver ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                 />
@@ -541,13 +541,13 @@ export function MemoryShelf({
                                 ]}
                             >
                                 <ButtonShine/>
-                                <Ionicons name="search" size={16} color={coast ? "#111111" : CREAM}/>
+                                <Ionicons name="search" size={16} color={coastOrRiver ? "#111111" : CREAM}/>
                                 <TextInput
                                     value={searchTerm}
                                     onChangeText={setSearchTerm}
                                     placeholder="Search your entries"
-                                    placeholderTextColor={coast ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.5)"}
-                                    keyboardAppearance={coast ? "light" : "dark"}
+                                    placeholderTextColor={coastOrRiver ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.5)"}
+                                    keyboardAppearance={coastOrRiver ? "light" : "dark"}
                                     returnKeyType="search"
                                     style={[tw`flex-1 text-sm`, {fontFamily: fonts.body, color: primaryTextColor}]}
                                 />
@@ -558,7 +558,7 @@ export function MemoryShelf({
                                         onPress={() => setSearchTerm("")}
                                         hitSlop={8}
                                     >
-                                        <Ionicons name="close-circle" size={16} color={coast ? "#111111" : CREAM}/>
+                                        <Ionicons name="close-circle" size={16} color={coastOrRiver ? "#111111" : CREAM}/>
                                     </Pressable>
                                 ) : null}
                             </View>
@@ -590,13 +590,13 @@ export function MemoryShelf({
                                             onPress={handleClearDateScope}
                                             style={({pressed}) => [
                                                 tw`overflow-hidden rounded-full border px-3 py-1`,
-                                                {borderColor: coast ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: panelBackgroundColor},
+                                                {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: panelBackgroundColor},
                                                 pressed && {opacity: 0.78},
                                             ]}
                                         >
                                             <Text style={[tw`text-[10px] font-semibold`, {
                                                 fontFamily: fonts.strong,
-                                                color: coast ? "#111111" : CREAM,
+                                                color: coastOrRiver ? "#111111" : CREAM,
                                             }]}>
                                                 Show all dates
                                             </Text>
@@ -616,15 +616,15 @@ export function MemoryShelf({
                                                 style={({pressed}) => [
                                                     tw`overflow-hidden rounded-full border px-3 py-1.5`,
                                                     isSelected
-                                                        ? {borderColor: accentColor, backgroundColor: coast ? "rgba(255,56,0,0.12)" : "rgba(255,56,0,0.42)", ...buttonDepthStyle}
-                                                        : {borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)", backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
+                                                        ? {borderColor: accentColor, backgroundColor: coastOrRiver ? "rgba(255,56,0,0.12)" : "rgba(255,56,0,0.42)", ...buttonDepthStyle}
+                                                        : {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)", backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
                                                     pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
                                                 <ButtonShine/>
                                                 <Text style={[tw`text-[11px] font-semibold`, {
                                                     fontFamily: fonts.strong,
-                                                    color: isSelected ? (coast ? accentColor : "#FFF6E8") : coast ? "#111111" : CREAM,
+                                                    color: isSelected ? (coastOrRiver ? accentColor : "#FFF6E8") : coastOrRiver ? "#111111" : CREAM,
                                                 }]}>
                                                     {isToday ? `${date} • today` : date}
                                                 </Text>
@@ -668,7 +668,7 @@ export function MemoryShelf({
                                                     </View>
                                                     <Text style={[tw`text-[11px] font-semibold`, {
                                                         fontFamily: fonts.strong,
-                                                        color: coast ? "#111111" : CREAM,
+                                                        color: coastOrRiver ? "#111111" : CREAM,
                                                     }]}>
                                                         {item.date}
                                                     </Text>
@@ -713,7 +713,7 @@ export function MemoryShelf({
                                 </Text>
                                 <Text style={[tw`mt-2 text-center text-xs leading-5`, {
                                     fontFamily: fonts.body,
-                                    color: coast ? "rgba(17,17,17,0.65)" : "rgba(228,224,212,0.65)",
+                                    color: coastOrRiver ? "rgba(17,17,17,0.65)" : "rgba(228,224,212,0.65)",
                                 }]}>
                                     Write a prompt response or list three good things to add your first memory here.
                                 </Text>
@@ -728,7 +728,7 @@ export function MemoryShelf({
                                 <ButtonShine/>
                                 <Text style={[tw`text-center text-sm`, {
                                     fontFamily: fonts.body,
-                                    color: coast ? "rgba(17,17,17,0.78)" : "rgba(228,224,212,0.78)",
+                                    color: coastOrRiver ? "rgba(17,17,17,0.78)" : "rgba(228,224,212,0.78)",
                                 }]}>
                                     {isFiltered
                                         ? "Nothing matches the current filters."

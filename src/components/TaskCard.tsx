@@ -11,7 +11,7 @@ import {useScreenVisualMode} from "./ScreenBackground";
 const ACCENT = "#B55941";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
-const SONNY_SURFACE_COLOR = "#2F4F4F";
+const GEORGIA_SURFACE_COLOR = "#2F4F4F";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -58,7 +58,7 @@ function ActionPill({
     onPress: () => void;
     accent?: boolean;
 }) {
-    const sonny = useScreenVisualMode() === "sunset";
+    const georgiaMode = useScreenVisualMode() === "georgia";
     return (
         <Pressable
             accessibilityRole="button"
@@ -69,8 +69,8 @@ function ActionPill({
                 accent
                     ? {borderColor: ACCENT, backgroundColor: ACCENT, ...buttonDepthStyle}
                     : {
-                        borderColor: sonny ? "rgba(51,65,85,0.6)" : "rgba(223,196,170,0.42)",
-                        backgroundColor: sonny ? SONNY_SURFACE_COLOR : "rgba(15,15,15,0.92)",
+                        borderColor: georgiaMode ? "rgba(51,65,85,0.6)" : "rgba(223,196,170,0.42)",
+                        backgroundColor: georgiaMode ? GEORGIA_SURFACE_COLOR : "rgba(15,15,15,0.92)",
                         ...buttonDepthStyle,
                     },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
@@ -98,7 +98,7 @@ interface TaskCardProps {
 }
 
 export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
-    const sonny = useScreenVisualMode() === "sunset";
+    const georgiaMode = useScreenVisualMode() === "georgia";
     return (
         <Pressable
             onPress={haptics.tapTask}
@@ -110,8 +110,8 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                 style={[
                     tw`overflow-hidden rounded-2xl border p-3`,
                     {
-                        borderColor: sonny ? "rgba(51,65,85,0.6)" : "#2c2c2c",
-                        backgroundColor: sonny ? SONNY_SURFACE_COLOR : "rgba(15,15,15,0.94)",
+                        borderColor: georgiaMode ? "rgba(51,65,85,0.6)" : "#2c2c2c",
+                        backgroundColor: georgiaMode ? GEORGIA_SURFACE_COLOR : "rgba(15,15,15,0.94)",
                         ...buttonDepthStyle,
                     },
                 ]}

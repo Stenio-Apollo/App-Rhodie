@@ -65,9 +65,9 @@ const SWIPE_DISTANCE_THRESHOLD = 70;
 const SWIPE_VERTICAL_LIMIT = 55;
 
 function getVisualModeShellColor(visualMode: VisualMode): string {
-    if (visualMode === "sunset") return "#2F4F4F";
-    if (visualMode === "surfSide") return "#DDEAF2";
-    if (visualMode === "georgia") return "#000000";
+    if (visualMode === "georgia") return "#2F4F4F";
+    if (visualMode === "river") return "#DDEAF2";
+    if (visualMode === "sonny") return "#000000";
     return "#708090";
 }
 
@@ -550,13 +550,13 @@ function AppContent() {
                     visualMode={visualModeState.mode}
                     onToggleVisualMode={() => {
                         visualModeState.setMode(
-                            visualModeState.mode === "overcast"
-                                ? "sunset"
-                                : visualModeState.mode === "sunset"
-                                    ? "surfSide"
-                                    : visualModeState.mode === "surfSide"
-                                        ? "georgia"
-                                        : "overcast",
+                            visualModeState.mode === "coast"
+                                ? "georgia"
+                                : visualModeState.mode === "georgia"
+                                    ? "river"
+                                    : visualModeState.mode === "river"
+                                        ? "sonny"
+                                        : "coast",
                         );
                     }}
                     onToggleAccount={() => {

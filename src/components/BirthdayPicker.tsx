@@ -48,9 +48,10 @@ interface BirthdayPickerProps {
     onChange: (next: { month: string; day: string }) => void;
     placeholder?: string;
     showClear?: boolean;
+    clearTextColor?: string;
     pickerBackgroundClass?: string;
-    surfSide?: boolean;
-    georgia?: boolean;
+    coastOrRiver?: boolean;
+    sonnyMode?: boolean;
 }
 
 export function BirthdayPicker({
@@ -59,13 +60,14 @@ export function BirthdayPicker({
                                    onChange,
                                    placeholder = "Select birthday",
                                    showClear = false,
+                                   clearTextColor,
                                    pickerBackgroundClass = "bg-black/20",
-                                   surfSide = false,
-                                   georgia = false,
+                                   coastOrRiver = false,
+                                   sonnyMode = false,
                                }: BirthdayPickerProps) {
     const [open, setOpen] = useState(false);
     const accentColor = "#FF3800";
-    const accentSurfaceColor = georgia ? "rgba(255,56,0,0.14)" : "rgba(255,56,0,0.08)";
+    const accentSurfaceColor = sonnyMode ? "rgba(255,56,0,0.14)" : "rgba(255,56,0,0.08)";
 
     useEffect(() => {
         if (!month) {
@@ -88,7 +90,7 @@ export function BirthdayPicker({
             <Text
                 style={[
                     tw`text-xs`,
-                    {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                    {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"},
                 ]}
             >
                 Birthday
@@ -100,11 +102,11 @@ export function BirthdayPicker({
                 }}
                 style={({pressed}) => [
                     tw`mt-2 rounded-lg border px-3 py-3`,
-                    {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
+                    {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
                     pressed && tw`opacity-90`,
                 ]}
             >
-                <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: surfSide ? "#111111" : "#fbf7f3"}]}>
+                <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: coastOrRiver ? "#111111" : "#fbf7f3"}]}>
                     {birthdayLabel(month, day, placeholder)}
                 </Text>
             </Pressable>
@@ -114,13 +116,13 @@ export function BirthdayPicker({
                     <View
                         style={[
                             tw`flex-1 rounded-lg border ${pickerBackgroundClass}`,
-                            {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
+                            {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
                         ]}
                     >
                         <Text
                             style={[
                                 tw`px-3 pt-3 text-[11px]`,
-                                {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                                {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"},
                             ]}
                         >
                             Month
@@ -137,13 +139,13 @@ export function BirthdayPicker({
                                         }}
                                         style={({pressed}) => [
                                             tw`px-3 py-3`,
-                                            active ? {backgroundColor: surfSide || georgia ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
+                                            active ? {backgroundColor: coastOrRiver || sonnyMode ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
                                             pressed && tw`opacity-90`,
                                         ]}
                                     >
                                         <Text style={[tw`text-sm`, {
                                             fontFamily: fonts.body,
-                                            color: active ? (surfSide || georgia ? accentColor : "#fbf7f3") : surfSide ? "#111111" : "#94a3b8",
+                                            color: active ? (coastOrRiver || sonnyMode ? accentColor : "#fbf7f3") : coastOrRiver ? "#111111" : "#94a3b8",
                                         }]}>
                                             {option.label}
                                         </Text>
@@ -156,13 +158,13 @@ export function BirthdayPicker({
                     <View
                         style={[
                             tw`flex-1 rounded-lg border ${pickerBackgroundClass}`,
-                            {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
+                            {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
                         ]}
                     >
                         <Text
                             style={[
                                 tw`px-3 pt-3 text-[11px]`,
-                                {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                                {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"},
                             ]}
                         >
                             Day
@@ -179,13 +181,13 @@ export function BirthdayPicker({
                                         }}
                                         style={({pressed}) => [
                                             tw`px-3 py-3`,
-                                            active ? {backgroundColor: surfSide || georgia ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
+                                            active ? {backgroundColor: coastOrRiver || sonnyMode ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
                                             pressed && tw`opacity-90`,
                                         ]}
                                     >
                                         <Text style={[tw`text-sm`, {
                                             fontFamily: fonts.body,
-                                            color: active ? (surfSide || georgia ? accentColor : "#fbf7f3") : surfSide ? "#111111" : "#94a3b8",
+                                            color: active ? (coastOrRiver || sonnyMode ? accentColor : "#fbf7f3") : coastOrRiver ? "#111111" : "#94a3b8",
                                         }]}>
                                             {Number(option)}
                                         </Text>
@@ -195,7 +197,7 @@ export function BirthdayPicker({
                                 <Text
                                     style={[
                                         tw`px-3 py-3 text-sm`,
-                                        {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.48)" : "#64748b"},
+                                        {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.48)" : "#64748b"},
                                     ]}
                                 >
                                     Pick a month first
@@ -214,7 +216,7 @@ export function BirthdayPicker({
                     }}
                     style={({pressed}) => [tw`mt-3 self-start`, pressed && tw`opacity-80`]}
                 >
-                    <Text style={[tw`text-xs`, {fontFamily: fonts.button, color: surfSide ? "#111111" : "#B55941"}]}>
+                    <Text style={[tw`text-xs`, {fontFamily: fonts.button, color: clearTextColor ?? (coastOrRiver ? "#111111" : "#B55941")}]}>
                         Clear birthday
                     </Text>
                 </Pressable>

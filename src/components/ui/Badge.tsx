@@ -10,7 +10,7 @@ interface BadgeProps {
 
 export function Badge({label, tone = "default"}: BadgeProps) {
     const visualMode = useScreenVisualMode();
-    const lightMode = visualMode === "surfSide" || visualMode === "overcast";
+    const lightMode = visualMode === "river" || visualMode === "coast";
     const isAccent = tone === "accent";
     const isCount = tone === "count";
 

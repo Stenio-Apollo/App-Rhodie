@@ -15,8 +15,8 @@ import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {ScreenBackground} from "../components/ScreenBackground";
 
-const RIVER_SURFACE_COLOR = "#708090";
-const SONNY_SURFACE_COLOR = "#2F4F4F";
+const COAST_SURFACE_COLOR = "#708090";
+const GEORGIA_SURFACE_COLOR = "#2F4F4F";
 
 function isoToday(): string {
     return toLocalISODate();
@@ -44,16 +44,16 @@ function JournalRouteEntry({
                                icon,
                                active,
                                onPress,
-                               surfSide = false,
+                               coastOrRiver = false,
                            }: {
     label: string;
     icon: ComponentProps<typeof Ionicons>["name"];
     active: boolean;
     onPress: () => void;
-    surfSide?: boolean;
+    coastOrRiver?: boolean;
 }) {
     const badgeColor = "#ba885a";
-    const color = active ? badgeColor : surfSide ? "#000000" : "#E4E0D4";
+    const color = active ? badgeColor : coastOrRiver ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -104,31 +104,31 @@ export function JournalScreen({
     const gratitudeInputRef = useRef<TextInput>(null);
     const routeOpacity = useRef(new Animated.Value(1)).current;
     const routeTranslateY = useRef(new Animated.Value(0)).current;
-    const bg = visualMode === "sunset"
+    const bg = visualMode === "georgia"
         ? require("../../public/images/rhbull1.jpg")
         : require("../../public/images/rh201.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const promptEntryBg = require("../../public/images/newspaper 1.jpg");
     const {keyboardInset} = useKeyboardInset();
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const solidMode = river || sonny;
-    const surfSide = visualMode === "surfSide" || river;
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const solidMode = coastMode || georgiaMode;
+    const coastOrRiver = visualMode === "river" || coastMode;
     const badgeColor = "#ba885a";
-    const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
-    const mutedTextColor = surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
-    const entrySurfaceStyle = surfSide || sonny
+    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
+    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
+    const entrySurfaceStyle = coastOrRiver || georgiaMode
         ? [
             tw`rounded-[24px] border p-4`,
-            surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+            coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`;
-    const entryInputStyle = surfSide || sonny
+    const entryInputStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-4 flex-1 rounded-[24px] border px-4 py-4 text-base leading-6`,
-            surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4 text-base leading-6 text-[#E4E0D4]`;
@@ -271,21 +271,21 @@ export function JournalScreen({
                         icon="create-outline"
                         active={route === "write" || route === "promptEntry" || route === "gratitudeEntry"}
                         onPress={() => setRoute("write")}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                     <JournalRouteEntry
                         label="Memory"
                         icon="albums-outline"
                         active={route === "memory"}
                         onPress={() => setRoute("memory")}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                     <JournalRouteEntry
                         label="Audio"
                         icon="mic-outline"
                         active={route === "audio"}
                         onPress={() => setRoute("audio")}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                 </View>
                 {route === "memory" || route === "audio" ? (
@@ -338,7 +338,7 @@ export function JournalScreen({
                         <Text
                             style={[tw`text-center text-xs font-semibold`, {
                                 fontFamily: fonts.body,
-                                color: surfSide ? "rgba(0,0,0,0.79)" : badgeColor
+                                color: coastOrRiver ? "rgba(0,0,0,0.79)" : badgeColor
                             }]}>{selectedDate}</Text>
 
                         <Text
@@ -586,10 +586,10 @@ export function JournalScreen({
                                             </View>
 
                                             <View
-                                                style={surfSide || sonny
+                                                style={coastOrRiver || georgiaMode
                                                     ? [
                                                         tw`mt-4 flex-1 rounded-[24px] border px-4 py-4`,
-                                                        surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+                                                        coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
                                                         {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
                                                     ]
                                                     : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`}
@@ -608,10 +608,10 @@ export function JournalScreen({
                                                         placeholder="•"
                                                         placeholderTextColor="#6b7280"
                                                         style={[
-                                                            surfSide || sonny
+                                                            coastOrRiver || georgiaMode
                                                                 ? [
                                                                     tw`mb-3 rounded-2xl border px-3 py-3 text-base`,
-                                                                    surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+                                                                    coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
                                                                     {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
                                                                 ]
                                                                 : tw`mb-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-3 text-base text-[#E4E0D4]`,

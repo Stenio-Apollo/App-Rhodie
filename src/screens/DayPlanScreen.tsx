@@ -189,12 +189,12 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
     const [sheetStartAt, setSheetStartAt] = useState<string | undefined>(undefined);
     const [sheetEvent, setSheetEvent] = useState<PlannerEvent | undefined>(undefined);
-    const bg = visualMode === "sunset"
+    const bg = visualMode === "georgia"
         ? require("../../public/images/rhbull3.jpg")
         : require("../../public/images/rh16.jpg");
-    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
-    const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
-    const mutedTextColor = surfSide ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
+    const coastOrRiver = visualMode === "river" || visualMode === "coast";
+    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
+    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
 
     const dayEvents = useMemo(
         () =>
@@ -339,8 +339,8 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                                         {
                                             borderTopWidth: slot.isHourMark ? 1 : 0.5,
                                             borderTopColor: slot.isHourMark
-                                                ? surfSide ? "rgba(17,17,17,0.24)" : "rgba(228,224,212,0.18)"
-                                                : surfSide ? "rgba(17,17,17,0.12)" : "rgba(228,224,212,0.08)",
+                                                ? coastOrRiver ? "rgba(17,17,17,0.24)" : "rgba(228,224,212,0.18)"
+                                                : coastOrRiver ? "rgba(17,17,17,0.12)" : "rgba(228,224,212,0.08)",
                                         },
                                     ]}
                                 />
@@ -440,7 +440,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                         <Text
                             style={[
                                 tw`absolute top-1/3 self-center text-sm`,
-                                {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"},
+                                {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"},
                             ]}
                         >
                             Tap any slot to plan your day

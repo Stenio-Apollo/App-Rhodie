@@ -15,24 +15,24 @@ import {ScreenBackground} from "../components/ScreenBackground";
 
 type AccountRoute = "account" | "support" | "guide" | "subscription";
 
-const RIVER_SURFACE_COLOR = "#708090";
-const SONNY_SURFACE_COLOR = "#2F4F4F";
+const COAST_SURFACE_COLOR = "#708090";
+const GEORGIA_SURFACE_COLOR = "#2F4F4F";
 
 function AccountRouteEntry({
                                label,
                                icon,
                                active,
                                onPress,
-                               surfSide = false,
+                               coastOrRiver = false,
                            }: {
     label: string;
     icon: ComponentProps<typeof Ionicons>["name"];
     active: boolean;
     onPress: () => void;
-    surfSide?: boolean;
+    coastOrRiver?: boolean;
 }) {
     const badgeColor = "#ba885a";
-    const color = active ? badgeColor : surfSide ? "#000000" : "#E4E0D4";
+    const color = active ? badgeColor : coastOrRiver ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -164,18 +164,19 @@ export function AccountScreen({
     const [notice, setNotice] = useState<string | null>(null);
     const [noticeTone, setNoticeTone] = useState<"success" | "error">("success");
     const [route, setRoute] = useState<AccountRoute>("account");
-    const bg = visualMode === "sunset"
+    const bg = visualMode === "georgia"
         ? require("../../public/images/news paper.jpg")
         : require("../../public/images/newspaper 1.jpg");
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const solidMode = river || sonny;
-    const surfSide = visualMode === "surfSide" || river;
-    const georgia = visualMode === "georgia";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const solidMode = coastMode || georgiaMode;
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const sonnyMode = visualMode === "sonny";
     const badgeColor = "#ba885a";
+    const coastHeaderColor = "#111111";
     const themeAccentColor = "#FF3800";
-    const themeAccentBorderColor = georgia ? "#CB0000" : "#C82D00";
+    const themeAccentBorderColor = sonnyMode ? "#CB0000" : "#C82D00";
     const accountButtonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},
@@ -189,7 +190,7 @@ export function AccountScreen({
         borderWidth: 1,
         borderColor: "rgba(223,196,170,0.33)",
     };
-    const sunsetButtonStyle = {
+    const accentButtonStyle = {
         ...accountButtonDepthStyle,
         backgroundColor: themeAccentColor,
         borderWidth: 1,
@@ -209,20 +210,24 @@ export function AccountScreen({
     };
     const lightButtonTextStyle = {color: "#FFF6E8"};
     const darkButtonTextStyle = {color: "#111111"};
-    const accountHeaderColorStyle = surfSide ? {color: badgeColor} : {color: "#DFC4AA", opacity: 0.7};
-    const accountBodyTextStyle = {color: surfSide ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
-    const accountMutedTextStyle = {color: surfSide ? "rgba(17,17,17,0.58)" : "#94a3b8"};
-    const profileInputStyle = surfSide || sonny
+    const accountHeaderColorStyle = coastMode
+        ? {color: coastHeaderColor}
+        : visualMode === "river"
+            ? {color: badgeColor}
+            : {color: "#DFC4AA", opacity: 0.7};
+    const accountBodyTextStyle = {color: coastOrRiver ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
+    const accountMutedTextStyle = {color: coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"};
+    const profileInputStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-4 px-4 py-3 opacity-100`,
-            surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
         ]
         : tw`mt-4 px-4 py-3 opacity-49`;
-    const profileEmailInputStyle = surfSide || sonny
+    const profileEmailInputStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-3 px-4 py-3 opacity-100`,
-            surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
         ]
         : tw`mt-3 px-4 py-3 opacity-49`;
@@ -385,21 +390,21 @@ export function AccountScreen({
                         icon="mail-outline"
                         active={route === "support"}
                         onPress={() => setRoute("support")}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                     <AccountRouteEntry
                         label="Replay"
                         icon="refresh-circle-outline"
                         active={route === "guide"}
                         onPress={() => setRoute("guide")}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                     <AccountRouteEntry
                         label="Subscription"
                         icon="card-outline"
                         active={route === "subscription"}
                         onPress={() => setRoute("subscription")}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                 </View>
                 {route !== "account" ? (
@@ -416,7 +421,7 @@ export function AccountScreen({
                             pressed && {opacity: 0.6, transform: [{translateY: 1}]},
                         ]}
                     >
-                        <Ionicons name="close" size={18} color={surfSide ? "#111111" : "#E4E0D4"}/>
+                        <Ionicons name="close" size={18} color={coastOrRiver ? "#111111" : "#E4E0D4"}/>
                     </Pressable>
                 ) : null}
                 <ScrollView
@@ -449,8 +454,8 @@ export function AccountScreen({
                                     placeholder="Your name"
                                     value={name}
                                     onChangeText={setName}
-                                    placeholderTextColor={surfSide ? "rgba(17,17,17,0.45)" : "#6b7280"}
-                                    keyboardAppearance={surfSide ? "light" : "dark"}
+                                    placeholderTextColor={coastOrRiver ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                    keyboardAppearance={coastOrRiver ? "light" : "dark"}
                                     style={profileInputStyle}
                                 />
 
@@ -458,17 +463,17 @@ export function AccountScreen({
                                     placeholder="Email"
                                     value={session.user.email ?? "No email on file"}
                                     editable={false}
-                                    placeholderTextColor={surfSide ? "rgba(17,17,17,0.45)" : "#6b7280"}
-                                    keyboardAppearance={surfSide ? "light" : "dark"}
+                                    placeholderTextColor={coastOrRiver ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                    keyboardAppearance={coastOrRiver ? "light" : "dark"}
                                     style={profileEmailInputStyle}
                                 />
 
                                 <View
                                     style={
-                                        surfSide || sonny
+                                        coastOrRiver || georgiaMode
                                             ? [
                                                 tw`mt-3 rounded-xl border px-4 py-3`,
-                                                surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+                                                coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
                                                 {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"},
                                             ]
                                             : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0f0f0f]/44 px-4 py-3`
@@ -483,9 +488,10 @@ export function AccountScreen({
                                         }}
                                         placeholder="Optional birthday"
                                         showClear
-                                        pickerBackgroundClass={surfSide ? "bg-white" : "bg-black/47"}
-                                        surfSide={surfSide}
-                                        georgia={georgia}
+                                        clearTextColor={georgiaMode ? "#111111" : undefined}
+                                        pickerBackgroundClass={coastOrRiver ? "bg-white" : "bg-black/47"}
+                                        coastOrRiver={coastOrRiver}
+                                        sonnyMode={sonnyMode}
 
                                     />
                                 </View>
@@ -499,7 +505,7 @@ export function AccountScreen({
                                         variant="outlineAccent"
                                         disabled={saveBusy}
                                         shine
-                                        style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                        style={[tw`rounded-xl px-3 py-1.5`, accentButtonStyle]}
                                         textStyle={[tw`text-[10px]`, lightButtonTextStyle]}
                                     />
                                 </View>
@@ -561,7 +567,7 @@ export function AccountScreen({
                                     }}
                                     variant="outlineAccent"
                                     shine
-                                    style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                    style={[tw`rounded-xl px-3 py-1.5`, accentButtonStyle]}
                                     textStyle={[tw`text-[10px]`, lightButtonTextStyle]}
                                 />
                             </View>
@@ -580,7 +586,7 @@ export function AccountScreen({
                                     onPress={confirmResetOnboarding}
                                     variant="outlineAccent"
                                     shine
-                                    style={[tw`rounded-xl px-3 py-1.5`, sunsetButtonStyle]}
+                                    style={[tw`rounded-xl px-3 py-1.5`, accentButtonStyle]}
                                     textStyle={[tw`text-[10px]`, lightButtonTextStyle]}
                                 />
                             </View>
@@ -596,7 +602,7 @@ export function AccountScreen({
 
                             <TranslucentCard radius={16} style={tw`mt-4 px-4 py-3`}>
                                 <Text style={[tw`text-xs`, {fontFamily: fonts.body, ...accountHeaderColorStyle}]}>Status</Text>
-                                <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: surfSide ? "#111111" : "#E4E0D4"}]}>
+                                <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: coastOrRiver ? "#111111" : "#E4E0D4"}]}>
                                     {getSubscriptionStatusLabel(subscription)}
                                 </Text>
                                 <Text style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, ...accountBodyTextStyle}]}>
@@ -640,7 +646,7 @@ export function AccountScreen({
                                     variant="secondary"
                                     disabled={subscription.restoreBusy}
                                     shine
-                                    style={[tw`rounded-xl px-4 py-2`, sunsetButtonStyle]}
+                                    style={[tw`rounded-xl px-4 py-2`, accentButtonStyle]}
                                     textStyle={[tw`text-xs`, lightButtonTextStyle]}
                                 />
                             </View>

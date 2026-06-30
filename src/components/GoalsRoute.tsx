@@ -45,7 +45,7 @@ function ButtonShine() {
 
 function ProgressDots({filled, total}: {filled: number; total: number}) {
     const visualMode = useScreenVisualMode();
-    const coast = visualMode === "surfSide" || visualMode === "overcast";
+    const coastOrRiver = visualMode === "river" || visualMode === "coast";
     const accentColor = "#FF3800";
     return (
         <View style={tw`flex-row items-center gap-2`}>
@@ -57,9 +57,9 @@ function ProgressDots({filled, total}: {filled: number; total: number}) {
                         style={[
                             tw`h-2.5 w-2.5 rounded-full`,
                             {
-                                backgroundColor: isFilled ? accentColor : coast ? "rgba(17,17,17,0.18)" : "rgba(228,224,212,0.18)",
+                                backgroundColor: isFilled ? accentColor : coastOrRiver ? "rgba(17,17,17,0.18)" : "rgba(228,224,212,0.18)",
                                 borderWidth: 1,
-                                borderColor: isFilled ? accentColor : coast ? "rgba(17,17,17,0.28)" : "rgba(228,224,212,0.28)",
+                                borderColor: isFilled ? accentColor : coastOrRiver ? "rgba(17,17,17,0.28)" : "rgba(228,224,212,0.28)",
                             },
                         ]}
                     />
@@ -105,17 +105,17 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
 ) {
     const [history, setHistory] = useState<ArchivedWeeklyGoal[]>([]);
     const visualMode = useScreenVisualMode();
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const coast = visualMode === "surfSide" || river;
-    const solidSurfaceColor = sonny ? "#2F4F4F" : "#708090";
-    const primaryTextColor = coast ? "#111111" : "#E4E0D4";
-    const secondaryTextColor = coast ? "rgba(17,17,17,0.68)" : "#cbd5e1";
-    const mutedTextColor = coast ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
-    const panelBorderColor = coast ? "rgba(17,17,17,0.14)" : "#2c2c2c";
-    const panelBackgroundColor = river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const solidSurfaceColor = georgiaMode ? "#2F4F4F" : "#708090";
+    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
+    const secondaryTextColor = coastOrRiver ? "rgba(17,17,17,0.68)" : "#cbd5e1";
+    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const panelBorderColor = coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c";
+    const panelBackgroundColor = coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
     const accentColor = "#FF3800";
-    const accentSoftColor = visualMode === "georgia" ? "rgba(255,56,0,0.18)" : "rgba(181,89,65,0.18)";
+    const accentSoftColor = visualMode === "sonny" ? "rgba(255,56,0,0.18)" : "rgba(181,89,65,0.18)";
     const accentSelectedColor = "rgba(255,56,0,0.22)";
 
     useEffect(() => {
@@ -148,29 +148,29 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
             <View
                 style={[
                     tw`mt-4 overflow-hidden rounded-[28px] p-1`,
-                    {backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                    {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
                 ]}
             >
                 <BlurView
                     intensity={72}
-                    tint={coast ? "light" : "dark"}
+                    tint={coastOrRiver ? "light" : "dark"}
                     style={[
                         tw`overflow-hidden rounded-[24px] border`,
-                        {borderColor: coast ? "rgba(17,17,17,0.14)" : "#334155"},
+                        {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#334155"},
                     ]}
                 >
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
                     />
                     <LinearGradient
-                        colors={river || sonny ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : coast ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
+                        colors={coastMode || georgiaMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : coastOrRiver ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                     />
                     <LinearGradient
-                        colors={river || sonny ? ["transparent", "rgba(0,0,0,0.1)"] : coast ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
+                        colors={coastMode || georgiaMode ? ["transparent", "rgba(0,0,0,0.1)"] : coastOrRiver ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                     />
@@ -179,7 +179,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                         <View
                             style={[
                                 tw`rounded-2xl border p-3`,
-                                {borderColor: coast ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)", backgroundColor: river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)"},
+                                {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)", backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)"},
                             ]}
                         >
                             <View style={tw`flex-row items-center justify-between`}>
@@ -200,7 +200,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <Image
                                             source={badgeIcon}
                                             resizeMode="contain"
-                                            style={{width: 28, height: 20, tintColor: coast ? "#FF8000" : "#ba885a"}}
+                                            style={{width: 28, height: 20, tintColor: "#ba885a"}}
                                         />
                                         <Text style={[tw`text-xs`, {
                                             fontFamily: fonts.body,
@@ -214,7 +214,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                     <ProgressDots filled={filledForBadge} total={3}/>
                                     <Text style={[tw`mt-2 text-[10px]`, {
                                         fontFamily: fonts.body,
-                                        color: coast ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
+                                        color: coastOrRiver ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
                                     }]}>
                                         {pointsToNextBadge} {pointsToNextBadge === 1 ? "point" : "points"} to next badge
                                     </Text>
@@ -253,7 +253,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         tw`mt-2 text-[11px] font-semibold`,
                                         {
                                             fontFamily: fonts.body,
-                                            color: weeklyGoal.achievedAt ? accentColor : coast ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
+                                            color: weeklyGoal.achievedAt ? accentColor : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
                                         },
                                     ]}
                                 >
@@ -311,7 +311,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                             selected
                                                 ? {
                                                     borderColor: accentColor,
-                                                    backgroundColor: coast ? "rgba(255,56,0,0.1)" : accentSoftColor,
+                                                    backgroundColor: coastOrRiver ? "rgba(255,56,0,0.1)" : accentSoftColor,
                                                 }
                                                 : {
                                                     borderColor: panelBorderColor,
@@ -325,7 +325,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <ButtonShine/>
                                         <View style={[
                                             tw`h-10 w-10 items-center justify-center rounded-full`,
-                                            {backgroundColor: selected ? accentSelectedColor : river || sonny ? solidSurfaceColor : coast ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
+                                            {backgroundColor: selected ? accentSelectedColor : coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
                                         ]}>
                                             <Ionicons
                                                 name={(preset.icon ?? "flag-outline") as React.ComponentProps<typeof Ionicons>["name"]}
@@ -379,11 +379,11 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 returnKeyType="done"
                                 maxLength={120}
                                 editable={!isGoalLocked}
-                                placeholderTextColor={coast ? "rgba(17,17,17,0.45)" : "#6b7280"}
-                                keyboardAppearance={coast ? "light" : "dark"}
+                                placeholderTextColor={coastOrRiver ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                keyboardAppearance={coastOrRiver ? "light" : "dark"}
                                 style={[
                                     tw`mt-2`,
-                                    coast || sonny ? [coast ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`, {backgroundColor: river || sonny ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
+                                    coastOrRiver || georgiaMode ? [coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
                                 ]}
                             />
                             <Pressable

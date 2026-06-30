@@ -11,16 +11,16 @@ interface ScreenBackgroundProps {
     imageStyle?: StyleProp<ImageStyle>;
 }
 
-const surfSideGradientColors = [
+const riverGradientColors = [
     "#DDEAF2",
     "#EFE8DF",
 ] as const;
 
-const georgiaBackgroundColor = "#000000";
-const riverBackgroundColor = "#708090";
-const sonnyBackgroundColor = "#2F4F4F";
+const sonnyBackgroundColor = "#000000";
+const coastBackgroundColor = "#708090";
+const georgiaBackgroundColor = "#2F4F4F";
 
-const ScreenVisualModeContext = createContext<VisualMode>("overcast");
+const ScreenVisualModeContext = createContext<VisualMode>("coast");
 
 export function useScreenVisualMode() {
     return useContext(ScreenVisualModeContext);
@@ -33,17 +33,25 @@ export function ScreenBackground({
                                      style,
                                      imageStyle,
                                  }: PropsWithChildren<ScreenBackgroundProps>) {
-    if (visualMode === "surfSide") {
+    if (visualMode === "river") {
         return (
             <ScreenVisualModeContext.Provider value={visualMode}>
                 <LinearGradient
-                    colors={surfSideGradientColors}
+                    colors={riverGradientColors}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 1}}
                     style={[tw`flex-1`, style]}
                 >
                     {children}
                 </LinearGradient>
+            </ScreenVisualModeContext.Provider>
+        );
+    }
+
+    if (visualMode === "sonny") {
+        return (
+            <ScreenVisualModeContext.Provider value={visualMode}>
+                <View style={[tw`flex-1`, {backgroundColor: sonnyBackgroundColor}, style]}>{children}</View>
             </ScreenVisualModeContext.Provider>
         );
     }
@@ -56,18 +64,10 @@ export function ScreenBackground({
         );
     }
 
-    if (visualMode === "sunset") {
+    if (visualMode === "coast") {
         return (
             <ScreenVisualModeContext.Provider value={visualMode}>
-                <View style={[tw`flex-1`, {backgroundColor: sonnyBackgroundColor}, style]}>{children}</View>
-            </ScreenVisualModeContext.Provider>
-        );
-    }
-
-    if (visualMode === "overcast") {
-        return (
-            <ScreenVisualModeContext.Provider value={visualMode}>
-                <View style={[tw`flex-1`, {backgroundColor: riverBackgroundColor}, style]}>{children}</View>
+                <View style={[tw`flex-1`, {backgroundColor: coastBackgroundColor}, style]}>{children}</View>
             </ScreenVisualModeContext.Provider>
         );
     }

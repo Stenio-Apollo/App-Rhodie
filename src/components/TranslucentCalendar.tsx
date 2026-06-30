@@ -15,14 +15,14 @@ interface TranslucentCalendarProps {
 
 export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalendarProps) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide";
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const georgia = visualMode === "georgia";
-    const lightMode = surfSide || river;
-    const solidMode = river || sonny || georgia;
-    const solidSurfaceColor = georgia ? "#000000" : sonny ? "#2F4F4F" : "#708090";
-    const todayTextColor = georgia ? "#FF3800" : lightMode ? "#111111" : "#FF3800";
+    const riverMode = visualMode === "river";
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const sonnyMode = visualMode === "sonny";
+    const lightMode = riverMode || coastMode;
+    const solidMode = coastMode || georgiaMode || sonnyMode;
+    const solidSurfaceColor = sonnyMode ? "#000000" : georgiaMode ? "#2F4F4F" : "#708090";
+    const todayTextColor = sonnyMode ? "#FF3800" : lightMode ? "#111111" : "#FF3800";
     const calendarTheme = {
         calendarBackground: "transparent",
         monthTextColor: lightMode ? "#111111" : "#E4E0D4",
@@ -39,7 +39,7 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
         textSectionTitleColor: lightMode ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)",
     };
 
-    if (lightMode || sonny || georgia) {
+    if (lightMode || georgiaMode || sonnyMode) {
         return (
             <View
                 style={[
@@ -57,7 +57,7 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
                 <BlurView
                     intensity={72}
                     tint={lightMode ? "light" : "dark"}
-                    style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: lightMode ? "rgba(17,17,17,0.14)" : georgia ? "rgba(247,247,247,0.18)" : "rgba(51,65,85,0.6)"}]}
+                    style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: lightMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(247,247,247,0.18)" : "rgba(51,65,85,0.6)"}]}
                 >
                     <View
                         pointerEvents="none"

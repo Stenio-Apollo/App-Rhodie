@@ -29,21 +29,21 @@ function CalendarRouteEntry({
                                 onPress,
                                 disabled = false,
                                 active = false,
-                                surfSide = false,
+                                coastOrRiver = false,
                             }: {
     label: string;
     icon: React.ComponentProps<typeof Ionicons>["name"];
     onPress: () => void;
     disabled?: boolean;
     active?: boolean;
-    surfSide?: boolean;
+    coastOrRiver?: boolean;
 }) {
     const badgeColor = "#ba885a";
     const color = disabled
-        ? (surfSide ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
+        ? (coastOrRiver ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
         : active
             ? badgeColor
-            : surfSide ? "#000000" : "#E4E0D4";
+            : coastOrRiver ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -123,14 +123,14 @@ export function CalendarScreen({
     const customGoalInputRef = useRef<TextInput>(null);
     const routeOpacity = useRef(new Animated.Value(1)).current;
     const routeTranslateY = useRef(new Animated.Value(0)).current;
-    const bg = visualMode === "sunset"
+    const bg = visualMode === "georgia"
         ? require("../../public/images/rhram1.jpg")
         : require("../../public/images/rh211.jpg");
     const {keyboardInset} = useKeyboardInset();
-    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
+    const coastOrRiver = visualMode === "river" || visualMode === "coast";
     const accentColor = "#FF3800";
-    const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
-    const secondaryTextClass = surfSide ? tw`text-black/70` : tw`text-slate-300`;
+    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
+    const secondaryTextClass = coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -239,27 +239,27 @@ export function CalendarScreen({
                         icon="calendar-outline"
                         onPress={openCalendarRoute}
                         active={route === "calendar"}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                     <CalendarRouteEntry
                         label="Google"
                         icon="logo-google"
                         onPress={handleGoogleRoutePress}
                         disabled={!googleCalendar.available || googleCalendar.busy}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                     <CalendarRouteEntry
                         label="Tasks"
                         icon="checkbox-outline"
                         onPress={onOpenTasks}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                     <CalendarRouteEntry
                         label="Goals"
                         icon="flag-outline"
                         onPress={() => openGoalsRoute()}
                         active={route === "goals"}
-                        surfSide={surfSide}
+                        coastOrRiver={coastOrRiver}
                     />
                 </View>
                 {route === "goals" ? (

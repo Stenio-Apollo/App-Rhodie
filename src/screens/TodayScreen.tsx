@@ -17,8 +17,8 @@ import type {VisualMode} from "../state/useVisualMode";
 import {TranslucentCard} from "../components/TranslucentCard";
 import {ScreenBackground} from "../components/ScreenBackground";
 
-const RIVER_SURFACE_COLOR = "#708090";
-const SONNY_SURFACE_COLOR = "#2F4F4F";
+const COAST_SURFACE_COLOR = "#708090";
+const GEORGIA_SURFACE_COLOR = "#2F4F4F";
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -87,7 +87,7 @@ export function TodayScreen({
         [tasks, today],
     );
 
-    const bg = visualMode === "sunset"
+    const bg = visualMode === "georgia"
         ? require("../../public/images/rhhorse1.jpg")
         : require("../../public/images/rh14.jpg");
     const badgeIcon = require("../../public/images/badge.png");
@@ -100,20 +100,20 @@ export function TodayScreen({
         shadowRadius: 8,
         elevation: 6,
     };
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const solidMode = river || sonny;
-    const surfSide = visualMode === "surfSide" || river;
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const solidMode = coastMode || georgiaMode;
+    const coastOrRiver = visualMode === "river" || coastMode;
     const badgeColor = "#ba885a";
-    const primaryTextColor = surfSide ? "#111111" : "#E4E0D4";
-    const taskIconColor = visualMode === "surfSide" || river ? "#DAC8AE" : primaryTextColor;
-    const mutedTextColor = surfSide ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
-    const secondaryTextClass = surfSide ? tw`text-black/70` : tw`text-slate-300`;
-    const nestedItemStyle = surfSide || sonny
+    const primaryTextColor = coastOrRiver ? "#111111" : "#E4E0D4";
+    const taskIconColor = visualMode === "river" || coastMode ? "#DAC8AE" : primaryTextColor;
+    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
+    const secondaryTextClass = coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
+    const nestedItemStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-2 rounded-2xl border px-3 py-2`,
-            surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+            coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-2 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2`;
@@ -151,7 +151,7 @@ export function TodayScreen({
                       style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
                     <Text style={[tw`text-xs font-semibold`, {
                         fontFamily: fonts.body,
-                        color: surfSide ? "rgba(17,17,17,0.62)" : badgeColor
+                        color: coastOrRiver ? "rgba(17,17,17,0.62)" : badgeColor
                     }]}>Today • {today}</Text>
                     {profile?.birthday && isToday(profile.birthday) ? (
                         <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>
@@ -190,7 +190,7 @@ export function TodayScreen({
                     {showTutorial && onDismissTutorial ? (
                         <TutorialCard
                             title="Home is command center"
-                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Sonny/Coast to change the mode."
+                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Georgia/Coast to change the mode."
                             onDismiss={onDismissTutorial}
                         />
                     ) : null}
@@ -307,7 +307,7 @@ export function TodayScreen({
                                         ) : null}
                                         <View style={tw`mt-2 flex-row items-center justify-between`}>
                                             <Text
-                                                style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"}]}>
+                                                style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"}]}>
                                                 {statusLabel[task.status]}{task.dueTime ? ` • ${task.dueTime}` : ""}
                                             </Text>
                                             {task.priority ? (

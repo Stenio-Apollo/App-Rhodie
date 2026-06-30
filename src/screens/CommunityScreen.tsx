@@ -38,8 +38,8 @@ interface CommunityScreenProps {
 
 type ComposerMode = "prompt" | "gratitude" | "message";
 
-const RIVER_SURFACE_COLOR = "#708090";
-const SONNY_SURFACE_COLOR = "#2F4F4F";
+const COAST_SURFACE_COLOR = "#708090";
+const GEORGIA_SURFACE_COLOR = "#2F4F4F";
 
 const COMPOSER_MODES: Array<{
     key: ComposerMode;
@@ -146,9 +146,9 @@ function MetricButton({
     onPress: () => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const river = visualMode === "overcast";
-    const surfSide = visualMode === "surfSide" || river;
-    const inactiveColor = surfSide ? "#111111" : "#ffffff";
+    const coastMode = visualMode === "coast";
+    const coastOrRiver = visualMode === "river" || coastMode;
+    const inactiveColor = coastOrRiver ? "#111111" : "#ffffff";
     return (
         <Pressable
             onPress={onPress}
@@ -175,7 +175,7 @@ function AuthorMessageButton({
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
+    const coastOrRiver = visualMode === "river" || visualMode === "coast";
     if (!onOpenDirectMessage || author.id === currentUserId) return null;
 
     return (
@@ -188,14 +188,14 @@ function AuthorMessageButton({
                 pressed && tw`opacity-70`,
             ]}
         >
-            <Ionicons name="mail-outline" size={15} color={surfSide ? "#111111" : "#ffffff"}/>
+            <Ionicons name="mail-outline" size={15} color={coastOrRiver ? "#111111" : "#ffffff"}/>
         </Pressable>
     );
 }
 
 function OwnerMenuButton({onPress}: { onPress: () => void }) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
+    const coastOrRiver = visualMode === "river" || visualMode === "coast";
     return (
         <Pressable
             accessibilityRole="button"
@@ -209,7 +209,7 @@ function OwnerMenuButton({onPress}: { onPress: () => void }) {
                 pressed && tw`opacity-70`,
             ]}
         >
-            <Ionicons name="ellipsis-horizontal" size={18} color={surfSide ? "#111111" : "#ffffff"}/>
+            <Ionicons name="ellipsis-horizontal" size={18} color={coastOrRiver ? "#111111" : "#ffffff"}/>
         </Pressable>
     );
 }
@@ -226,8 +226,8 @@ function CommunityRouteEntry({
     badgeCount?: number;
 }) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
-    const color = surfSide ? "#111111" : "#E4E0D4";
+    const coastOrRiver = visualMode === "river" || visualMode === "coast";
+    const color = coastOrRiver ? "#111111" : "#E4E0D4";
     return (
         <Pressable
             accessibilityRole="button"
@@ -288,9 +288,9 @@ function CommentItem({
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
-    const primaryTextColor = surfSide ? "#111111" : "#ffffff";
-    const bodyTextColor = surfSide ? "rgba(17,17,17,0.82)" : "rgba(255,255,255,0.9)";
+    const coastOrRiver = visualMode === "river" || visualMode === "coast";
+    const primaryTextColor = coastOrRiver ? "#111111" : "#ffffff";
+    const bodyTextColor = coastOrRiver ? "rgba(17,17,17,0.82)" : "rgba(255,255,255,0.9)";
     const [editing, setEditing] = useState(false);
     const [editText, setEditText] = useState(comment.body);
     const [actionsOpen, setActionsOpen] = useState(false);
@@ -309,7 +309,7 @@ function CommentItem({
         <View style={[tw`gap-2`, depth > 0 ? {marginLeft: Math.min(depth, 2) * 18} : null]}>
             {showDate ? (
                 <View style={tw`my-1 items-center`}>
-                    <Text style={[tw`px-3 py-1 text-[10px]`, {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.65)"}]}>
+                    <Text style={[tw`px-3 py-1 text-[10px]`, {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.65)"}]}>
                         {formatTimestamp(comment.createdAt)}
                     </Text>
                 </View>
@@ -477,10 +477,10 @@ function PostCard({
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const surfSide = visualMode === "surfSide" || visualMode === "overcast";
-    const primaryTextColor = surfSide ? "#111111" : "#ffffff";
-    const bodyTextColor = surfSide ? "rgba(17,17,17,0.82)" : "#E4E0D4";
-    const mutedTextColor = surfSide ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.7)";
+    const coastOrRiver = visualMode === "river" || visualMode === "coast";
+    const primaryTextColor = coastOrRiver ? "#111111" : "#ffffff";
+    const bodyTextColor = coastOrRiver ? "rgba(17,17,17,0.82)" : "#E4E0D4";
+    const mutedTextColor = coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.7)";
     const [postEditing, setPostEditing] = useState(false);
     const [postEditText, setPostEditText] = useState(post.body);
     const [postActionsOpen, setPostActionsOpen] = useState(false);
@@ -689,7 +689,7 @@ function PostCard({
                                     pressed && tw`opacity-75`,
                                 ]}
                             >
-                                <Ionicons name="send" size={17} color={surfSide ? "#111111" : "#E4E0D4"}/>
+                                <Ionicons name="send" size={17} color={coastOrRiver ? "#111111" : "#E4E0D4"}/>
                             </Pressable>
                         </View>
                     </Animated.View>
@@ -721,19 +721,19 @@ export function CommunityScreen({
     const today = useMemo(() => toLocalISODate(), []);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(today), [today]);
     const selectedComposerMode = COMPOSER_MODES.find((mode) => mode.key === composerMode) ?? COMPOSER_MODES[0];
-    const river = visualMode === "overcast";
-    const sonny = visualMode === "sunset";
-    const solidSurfaceColor = sonny ? SONNY_SURFACE_COLOR : RIVER_SURFACE_COLOR;
-    const solidMode = river || sonny;
-    const surfSide = visualMode === "surfSide" || river;
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
+    const solidMode = coastMode || georgiaMode;
+    const coastOrRiver = visualMode === "river" || coastMode;
     const badgeColor = "#ba885a";
     const connectActionColor = "#FF3800";
-    const primaryTextColor = surfSide ? "#111111" : "#ffffff";
-    const bodyTextColor = surfSide ? "rgba(17,17,17,0.74)" : "rgba(228,224,212,0.7)";
-    const inputStyle = surfSide || sonny
+    const primaryTextColor = coastOrRiver ? "#111111" : "#ffffff";
+    const bodyTextColor = coastOrRiver ? "rgba(17,17,17,0.74)" : "rgba(228,224,212,0.7)";
+    const inputStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-4 min-h-[88px] rounded-2xl px-4 py-3`,
-            surfSide ? tw`border border-black/10 text-[#111111]` : tw`border border-slate-700/60 text-[#E4E0D4]`,
+            coastOrRiver ? tw`border border-black/10 text-[#111111]` : tw`border border-slate-700/60 text-[#E4E0D4]`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700/60 bg-black/22 px-4 py-3 text-[#E4E0D4]`;
@@ -857,15 +857,15 @@ export function CommunityScreen({
                     keyboardDismissMode="interactive"
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={[tw`overflow-hidden rounded-[28px] p-1`, {backgroundColor: solidMode ? solidSurfaceColor : surfSide ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
+                    <View style={[tw`overflow-hidden rounded-[28px] p-1`, {backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
                         <BlurView
                             intensity={30}
-                            tint={surfSide ? "light" : "dark"}
-                            style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: surfSide ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"}]}
+                            tint={coastOrRiver ? "light" : "dark"}
+                            style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"}]}
                         >
                             <View
                                 pointerEvents="none"
-                                style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : surfSide ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
+                                style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
                             />
                             <LinearGradient
                                 colors={["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
@@ -884,10 +884,10 @@ export function CommunityScreen({
                             Post a prompt response, gratitude, or a positive note with your peers.
                         </Text>
                         <View
-                            style={surfSide || sonny
+                            style={coastOrRiver || georgiaMode
                                 ? [
                                     tw`mt-4 flex-row rounded-2xl border p-1`,
-                                    surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+                                    coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
                                     {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
                                 ]
                                 : tw`mt-4 flex-row rounded-2xl border border-slate-700/60 bg-black/22 p-1`}
@@ -921,7 +921,7 @@ export function CommunityScreen({
                                                 tw`text-[11px]`,
                                                 {
                                                     fontFamily: fonts.button,
-                                                    color: active ? "#FFF6E8" : surfSide ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)"
+                                                    color: active ? "#FFF6E8" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)"
                                                 },
                                             ]}
                                         >
@@ -934,10 +934,10 @@ export function CommunityScreen({
                         {composerMode === "prompt" ? (
                             <View
                                 style={
-                                    surfSide || sonny
+                                    coastOrRiver || georgiaMode
                                         ? [
                                             tw`mt-3 rounded-2xl border px-3 py-2.5`,
-                                            surfSide ? tw`border-black/10` : tw`border-slate-700/60`,
+                                            coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
                                             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
                                         ]
                                         : tw`mt-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2.5`
@@ -946,7 +946,7 @@ export function CommunityScreen({
                                 <Text style={[tw`text-[11px]`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                     Today's prompt
                                 </Text>
-                                <Text style={[tw`mt-1 text-xs leading-4`, {fontFamily: fonts.body, color: surfSide ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)"}]}>
+                                <Text style={[tw`mt-1 text-xs leading-4`, {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)"}]}>
                                     {todaysPrompt}
                                 </Text>
                             </View>
@@ -955,8 +955,8 @@ export function CommunityScreen({
                             value={postText}
                             onChangeText={setPostText}
                             placeholder={selectedComposerMode.placeholder}
-                            placeholderTextColor={surfSide ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.45)"}
-                            keyboardAppearance={surfSide ? "light" : "dark"}
+                            placeholderTextColor={coastOrRiver ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.45)"}
+                            keyboardAppearance={coastOrRiver ? "light" : "dark"}
                             multiline
                             style={[inputStyle, {fontFamily: fonts.body}]}
                         />
@@ -985,12 +985,12 @@ export function CommunityScreen({
 
                     {!community.isLoaded ? (
                         <Text
-                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, surfSide || sonny ? [surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}] : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, coastOrRiver || georgiaMode ? [coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}] : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
                             Loading peers...
                         </Text>
                     ) : community.posts.length === 0 ? (
                         <Text
-                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, surfSide || sonny ? [surfSide ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}] : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, coastOrRiver || georgiaMode ? [coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}] : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
                             No posts yet.
                         </Text>
                     ) : (
