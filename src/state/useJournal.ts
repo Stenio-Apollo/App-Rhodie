@@ -8,7 +8,9 @@ import {decryptString, encryptString, encryptedPlaceholder, type EncryptionKey, 
 import type {EncryptionState} from "./useEncryption";
 
 const STORAGE_PREFIX = "rhnative.journal.v2";
+const PURPOSE_STORAGE_PREFIX = "rhnative.journal-purpose-images.v1";
 const LEGACY_STORAGE_KEY = "rhnative.journal.v1";
+const MAX_PURPOSE_IMAGES = 9;
 
 export interface JournalEntry {
     id: string;
@@ -18,8 +20,21 @@ export interface JournalEntry {
     category: "gratitude" | "prompt";
 }
 
+export interface PurposeImage {
+    id: string;
+    date: string;
+    dataUri: string;
+    mimeType: string;
+    createdAt: string;
+}
+
 type StoredJournalEntry = JournalEntry & {
     textEncrypted?: string | null;
+};
+
+type StoredPurposeImage = Omit<PurposeImage, "dataUri"> & {
+    dataUri: string;
+    dataUriEncrypted?: string | null;
 };
 
 function normalizeJournalCategory(category: string | undefined): JournalEntry["category"] {
@@ -29,6 +44,10 @@ function normalizeJournalCategory(category: string | undefined): JournalEntry["c
 
 function storageKey(userId: string | null | undefined): string {
     return `${STORAGE_PREFIX}.${userId ?? "local"}`;
+}
+
+function purposeStorageKey(userId: string | null | undefined): string {
+    return `${PURPOSE_STORAGE_PREFIX}.${userId ?? "local"}`;
 }
 
 function decryptText(key: EncryptionKey | null, encrypted: string | null | undefined, fallback: string): string {
@@ -81,9 +100,48 @@ function parseJournalEntries(raw: string | null, key: EncryptionKey | null = nul
     }
 }
 
+function serializePurposeImages(key: EncryptionKey | null, images: PurposeImage[]): StoredPurposeImage[] {
+    if (!key) return [];
+
+    return images.map((image) => {
+        const dataUriEncrypted = encryptString(key, image.dataUri);
+        return {
+            ...image,
+            dataUri: encryptedPlaceholder("encrypted purpose image"),
+            dataUriEncrypted,
+        };
+    });
+}
+
+function parsePurposeImages(raw: string | null, key: EncryptionKey | null = null): PurposeImage[] {
+    if (!raw || !key) return [];
+
+    try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed
+            .filter((image): image is Partial<StoredPurposeImage> => Boolean(image) && typeof image === "object")
+            .map((image) => {
+                const fallbackDataUri = typeof image.dataUri === "string" ? image.dataUri : "";
+                return {
+                    id: typeof image.id === "string" && image.id ? image.id : createId(),
+                    date: typeof image.date === "string" && image.date ? image.date : toLocalISODate(),
+                    dataUri: decryptText(key, image.dataUriEncrypted, fallbackDataUri),
+                    mimeType: typeof image.mimeType === "string" && image.mimeType ? image.mimeType : "image/jpeg",
+                    createdAt: typeof image.createdAt === "string" && image.createdAt ? image.createdAt : new Date().toISOString(),
+                };
+            })
+            .filter((image) => image.dataUri.startsWith("data:image/"));
+    } catch {
+        return [];
+    }
+}
+
 export async function clearJournalStorage(userId?: string | null): Promise<void> {
     await Promise.all([
         AsyncStorage.removeItem(storageKey(userId ?? null)),
+        AsyncStorage.removeItem(purposeStorageKey(userId ?? null)),
         AsyncStorage.removeItem(LEGACY_STORAGE_KEY),
     ]);
 }
@@ -92,7 +150,9 @@ export type JournalState = ReturnType<typeof useJournal>;
 
 export function useJournal(session: Session | null = null, encryption?: EncryptionState) {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
+    const [purposeImages, setPurposeImages] = useState<PurposeImage[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [purposeImagesLoaded, setPurposeImagesLoaded] = useState(false);
     const encryptionKey = encryption?.key ?? null;
 
     useEffect(() => {
@@ -223,6 +283,41 @@ export function useJournal(session: Session | null = null, encryption?: Encrypti
         });
     }, [encryptionKey, entries, isLoaded, session, session?.user.id]);
 
+    useEffect(() => {
+        let mounted = true;
+
+        async function hydratePurposeImages() {
+            try {
+                if (!encryptionKey) {
+                    setPurposeImages([]);
+                    return;
+                }
+
+                const raw = await AsyncStorage.getItem(purposeStorageKey(session?.user.id));
+                if (!mounted) return;
+                setPurposeImages(parsePurposeImages(raw, encryptionKey));
+            } finally {
+                if (mounted) setPurposeImagesLoaded(true);
+            }
+        }
+
+        setPurposeImagesLoaded(false);
+        void hydratePurposeImages();
+
+        return () => {
+            mounted = false;
+        };
+    }, [encryptionKey, session?.user.id]);
+
+    useEffect(() => {
+        if (!purposeImagesLoaded || !encryptionKey) return;
+        AsyncStorage.setItem(
+            purposeStorageKey(session?.user.id),
+            JSON.stringify(serializePurposeImages(encryptionKey, purposeImages)),
+        ).catch(() => {
+        });
+    }, [encryptionKey, purposeImages, purposeImagesLoaded, session?.user.id]);
+
     const addEntry = useCallback(
         async (text: string, date: string, category: JournalEntry["category"] = "gratitude") => {
             const trimmed = text.trim();
@@ -278,6 +373,35 @@ export function useJournal(session: Session | null = null, encryption?: Encrypti
         [encryptionKey, session],
     );
 
+    const addPurposeImage = useCallback(
+        async (dataUri: string, date: string, mimeType = "image/jpeg") => {
+            if (!encryptionKey) {
+                throw new Error("Unlock encrypted storage before adding purpose images.");
+            }
+            if (purposeImages.length >= MAX_PURPOSE_IMAGES) {
+                throw new Error("You can keep up to 9 Your Reason photos.");
+            }
+
+            const image: PurposeImage = {
+                id: createId(),
+                date,
+                dataUri,
+                mimeType,
+                createdAt: new Date().toISOString(),
+            };
+
+            setPurposeImages((previous) => [image, ...previous]);
+        },
+        [encryptionKey, purposeImages.length],
+    );
+
+    const deletePurposeImage = useCallback(
+        async (id: string) => {
+            setPurposeImages((previous) => previous.filter((image) => image.id !== id));
+        },
+        [],
+    );
+
     const byDate = useMemo(() => {
         return entries.reduce<Record<string, JournalEntry[]>>((accumulator, entry) => {
             const dateKey = entry.date || toLocalISODate();
@@ -286,5 +410,15 @@ export function useJournal(session: Session | null = null, encryption?: Encrypti
         }, {});
     }, [entries]);
 
-    return {entries, byDate, addEntry, deleteEntry, editEntry, isLoaded};
+    return {
+        entries,
+        byDate,
+        addEntry,
+        deleteEntry,
+        editEntry,
+        purposeImages,
+        addPurposeImage,
+        deletePurposeImage,
+        isLoaded,
+    };
 }

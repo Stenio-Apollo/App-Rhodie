@@ -9,6 +9,7 @@ import {Input} from "./ui/Input";
 import {Button} from "./ui/Button";
 import {PLANNER_COLORS, type PlannerEventColor} from "../lib/planner-colors";
 import type {CreatePlannerEventInput, PlannerEvent, UpdatePlannerEventInput} from "../state/usePlannerEvents";
+import type {VisualMode} from "../state/useVisualMode";
 
 const DAY_START_HOUR = 6;
 const DAY_END_HOUR = 23;
@@ -24,6 +25,7 @@ interface PlannerEventSheetProps {
     onCreate: (input: CreatePlannerEventInput) => Promise<void>;
     onUpdate: (id: string, patch: UpdatePlannerEventInput) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
+    visualMode: VisualMode;
 }
 
 type SlotOption = { minutes: number; label: string; iso: (date: string) => string };
@@ -118,6 +120,7 @@ export function PlannerEventSheet({
                                       onCreate,
                                       onUpdate,
                                       onDelete,
+                                      visualMode,
                                   }: PlannerEventSheetProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -160,6 +163,45 @@ export function PlannerEventSheet({
         () => EVENT_PRESETS.filter((preset) => isPresetVisibleForStart(preset, startMinutes)),
         [startMinutes],
     );
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const riverMode = visualMode === "river";
+    const sonnyMode = visualMode === "sonny";
+    const lightMode = riverMode;
+    const badgeColor = "#ba885a";
+    const themeSurfaceColor = georgiaMode
+        ? "#111111"
+        : coastMode
+            ? "#708090"
+            : riverMode
+                ? "#FFFFFF"
+                : "#000000";
+    const themeTextColor = lightMode ? "#111111" : "#FFFFFF";
+    const themeMutedTextColor = lightMode ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.68)";
+    const themeBorderColor = lightMode ? "rgba(17,17,17,0.16)" : "rgba(255,255,255,0.18)";
+    const themeInputBackgroundColor = lightMode ? "rgba(17,17,17,0.06)" : "rgba(255,255,255,0.08)";
+    const themePressedBackgroundColor = lightMode ? "rgba(17,17,17,0.08)" : "rgba(255,255,255,0.12)";
+    const sheetOverlayColor = lightMode
+        ? "rgba(255,255,255,0.86)"
+        : sonnyMode
+            ? "rgba(0,0,0,0.76)"
+            : `${themeSurfaceColor}D9`;
+    const sheetGradientTopColor = lightMode ? "rgba(17,17,17,0.06)" : "rgba(255,255,255,0.16)";
+    const sheetGradientMidColor = lightMode ? "rgba(17,17,17,0.02)" : "rgba(255,255,255,0.04)";
+    const sheetGradientBottomColor = lightMode ? "rgba(17,17,17,0.08)" : "rgba(0,0,0,0.28)";
+    const inputStyle = {
+        borderColor: themeBorderColor,
+        backgroundColor: themeInputBackgroundColor,
+        color: themeTextColor,
+    };
+    const inactiveChipStyle = {
+        borderColor: themeBorderColor,
+        backgroundColor: "transparent",
+    };
+    const activeChipStyle = {
+        borderColor: badgeColor,
+        backgroundColor: lightMode ? "rgba(186,136,90,0.18)" : "rgba(186,136,90,0.24)",
+    };
 
     const endMinutesAbs = startMinutes + durationMinutes;
     const endHour = DAY_START_HOUR + Math.floor(endMinutesAbs / 60);
@@ -228,36 +270,39 @@ export function PlannerEventSheet({
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
             <Pressable style={tw`flex-1 justify-center bg-black/72 px-5`} onPress={Keyboard.dismiss}>
-                <View style={tw`overflow-hidden rounded-[28px] border border-slate-200/11 bg-black/10 p-1`}>
+                <View style={[tw`overflow-hidden rounded-[28px] border p-1`, {
+                    borderColor: themeBorderColor,
+                    backgroundColor: themeSurfaceColor,
+                }]}>
                     <BlurView
                         intensity={72}
-                        tint="dark"
-                        style={tw`overflow-hidden rounded-[24px] border border-slate-200/39`}
+                        tint={lightMode ? "light" : "dark"}
+                        style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: themeBorderColor}]}
                     >
                         <View
                             pointerEvents="none"
-                            style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.47)"}]}
+                            style={[StyleSheet.absoluteFill, {backgroundColor: sheetOverlayColor}]}
                         />
                         <LinearGradient
-                            colors={["rgba(255,255,255,0.18)", "rgba(255,255,255,0.04)", "transparent"]}
+                            colors={[sheetGradientTopColor, sheetGradientMidColor, "transparent"]}
                             locations={[0, 0.5, 1]}
                             pointerEvents="none"
                             style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                         />
                         <LinearGradient
-                            colors={["transparent", "rgba(0,0,0,0.35)"]}
+                            colors={["transparent", sheetGradientBottomColor]}
                             pointerEvents="none"
                             style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                         />
 
                         <View style={tw`p-5`}>
-                            <Text style={[tw`text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                            <Text style={[tw`text-xl`, {fontFamily: fonts.heading, color: themeTextColor}]}>
                                 {mode === "edit" ? "Edit event" : "New event"}
                             </Text>
 
                             {mode === "create" ? (
                                 <>
-                                    <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
+                                    <Text style={[tw`mt-4 text-xs`, {fontFamily: fonts.body, color: themeMutedTextColor}]}>
                                         Presets
                                     </Text>
                                     <ScrollView
@@ -278,12 +323,7 @@ export function PlannerEventSheet({
                                                         }}
                                                         style={({pressed}) => [
                                                             tw`rounded-full border px-3 py-1.5`,
-                                                            active
-                                                                ? {
-                                                                    borderColor: "#E4E0D4",
-                                                                    backgroundColor: "rgba(228,224,212,0.14)",
-                                                                }
-                                                                : {borderColor: "rgba(226,232,240,0.39)"},
+                                                            active ? activeChipStyle : inactiveChipStyle,
                                                             pressed && tw`opacity-80`,
                                                         ]}
                                                     >
@@ -292,7 +332,7 @@ export function PlannerEventSheet({
                                                                 tw`text-xs`,
                                                                 {
                                                                     fontFamily: fonts.body,
-                                                                    color: active ? "#E4E0D4" : "#94a3b8",
+                                                                    color: active ? themeTextColor : themeMutedTextColor,
                                                                 },
                                                             ]}
                                                         >
@@ -310,17 +350,21 @@ export function PlannerEventSheet({
                                 placeholder="Title"
                                 value={title}
                                 onChangeText={setTitle}
-                                style={tw`mt-4 px-4 py-3`}
+                                placeholderTextColor={themeMutedTextColor}
+                                keyboardAppearance={lightMode ? "light" : "dark"}
+                                style={[tw`mt-4 px-4 py-3`, inputStyle]}
                             />
                             <Input
                                 placeholder="Description (optional)"
                                 value={description}
                                 onChangeText={setDescription}
                                 multiline
-                                style={tw`mt-3 px-4 py-3 min-h-[60px]`}
+                                placeholderTextColor={themeMutedTextColor}
+                                keyboardAppearance={lightMode ? "light" : "dark"}
+                                style={[tw`mt-3 px-4 py-3 min-h-[60px]`, inputStyle]}
                             />
 
-                            <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
+                            <Text style={[tw`mt-4 text-xs`, {fontFamily: fonts.body, color: themeMutedTextColor}]}>
                                 Start time
                             </Text>
                             <ScrollView
@@ -341,18 +385,15 @@ export function PlannerEventSheet({
                                                 style={({pressed}) => [
                                                     tw`rounded-full border px-3 py-1.5`,
                                                     active
-                                                        ? {
-                                                            borderColor: "#B55941",
-                                                            backgroundColor: "rgba(181,89,65,0.18)"
-                                                        }
-                                                        : {borderColor: "#2c2c2c"},
+                                                        ? activeChipStyle
+                                                        : inactiveChipStyle,
                                                     pressed && tw`opacity-80`,
                                                 ]}
                                             >
                                                 <Text
                                                     style={[
                                                         tw`text-xs`,
-                                                        {fontFamily: fonts.body, color: active ? "#E4E0D4" : "#94a3b8"},
+                                                        {fontFamily: fonts.body, color: active ? themeTextColor : themeMutedTextColor},
                                                     ]}
                                                 >
                                                     {slot.label}
@@ -363,7 +404,7 @@ export function PlannerEventSheet({
                                 </View>
                             </ScrollView>
 
-                            <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
+                            <Text style={[tw`mt-4 text-xs`, {fontFamily: fonts.body, color: themeMutedTextColor}]}>
                                 Duration ({endLabel})
                             </Text>
                             <View style={tw`mt-2 flex-row flex-wrap gap-2`}>
@@ -379,15 +420,15 @@ export function PlannerEventSheet({
                                             style={({pressed}) => [
                                                 tw`rounded-full border px-3 py-1.5`,
                                                 active
-                                                    ? {borderColor: "#B55941", backgroundColor: "rgba(181,89,65,0.18)"}
-                                                    : {borderColor: "#2c2c2c"},
+                                                    ? activeChipStyle
+                                                    : inactiveChipStyle,
                                                 pressed && tw`opacity-80`,
                                             ]}
                                         >
                                             <Text
                                                 style={[
                                                     tw`text-xs`,
-                                                    {fontFamily: fonts.body, color: active ? "#E4E0D4" : "#94a3b8"},
+                                                    {fontFamily: fonts.body, color: active ? themeTextColor : themeMutedTextColor},
                                                 ]}
                                             >
                                                 {opt.label}
@@ -397,7 +438,7 @@ export function PlannerEventSheet({
                                 })}
                             </View>
 
-                            <Text style={[tw`mt-4 text-xs text-slate-400`, {fontFamily: fonts.body}]}>
+                            <Text style={[tw`mt-4 text-xs`, {fontFamily: fonts.body, color: themeMutedTextColor}]}>
                                 Color
                             </Text>
                             <View style={tw`mt-2 flex-row flex-wrap gap-2`}>
@@ -415,7 +456,7 @@ export function PlannerEventSheet({
                                                 {
                                                     backgroundColor: c.hex,
                                                     borderWidth: active ? 2 : 0,
-                                                    borderColor: "#E4E0D4",
+                                                    borderColor: themeTextColor,
                                                 },
                                                 pressed && tw`opacity-80`,
                                             ]}
@@ -437,6 +478,11 @@ export function PlannerEventSheet({
                                 <Button
                                     label="Cancel"
                                     variant="secondary"
+                                    style={{
+                                        borderColor: themeBorderColor,
+                                        backgroundColor: themePressedBackgroundColor,
+                                    }}
+                                    textStyle={{color: themeTextColor}}
                                     onPress={() => {
                                         Keyboard.dismiss();
                                         onClose();
@@ -447,6 +493,7 @@ export function PlannerEventSheet({
                                         <Button
                                             label="Delete"
                                             variant="danger"
+                                            textStyle={{color: "#FFF6E8"}}
                                             onPress={() => {
                                                 void handleDelete();
                                             }}
@@ -456,6 +503,11 @@ export function PlannerEventSheet({
                                     <Button
                                         label={busy ? "Saving..." : "Save"}
                                         variant="outlineAccent"
+                                        style={{
+                                            borderColor: badgeColor,
+                                            backgroundColor: lightMode ? "rgba(186,136,90,0.14)" : "rgba(186,136,90,0.22)",
+                                        }}
+                                        textStyle={{color: themeTextColor}}
                                         onPress={() => {
                                             void handleSubmit();
                                         }}

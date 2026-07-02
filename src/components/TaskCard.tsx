@@ -3,12 +3,11 @@ import {LinearGradient} from "expo-linear-gradient";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import type {Task, TaskStatus} from "../types";
-import {Badge} from "./ui/Badge";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import {useScreenVisualMode} from "./ScreenBackground";
 
-const ACCENT = "#B55941";
+const COMPLETE_BUTTON_COLOR = "#DAC8AE";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
 const COAST_SURFACE_COLOR = "#708090";
@@ -43,9 +42,9 @@ function ButtonShine() {
 }
 
 function priorityDotColor(priority: Task["priority"]): string {
-    if (priority === "high") return "#B56941";
+    if (priority === "high") return "#FF3800";
     if (priority === "low") return "#6BAA75";
-    return CREAM;
+    return "#F3DB72";
 }
 
 function ActionPill({
@@ -67,10 +66,10 @@ function ActionPill({
     const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
     const lightCardMode = riverMode || coastMode;
     const whiteTextMode = coastMode || georgiaMode || sonnyMode;
-    const actionAccentColor = sonnyMode ? "#FF3800" : ACCENT;
-    const textColor = whiteTextMode ? "#FFFFFF" : accent ? "#FFF6E8" : lightCardMode ? "#111111" : CREAM;
-    const actionBorderColor = coastMode || riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(51,65,85,0.6)" : sonnyMode ? "rgba(247,247,247,0.18)" : "rgba(223,196,170,0.42)";
-    const actionBackgroundColor = coastMode || georgiaMode ? solidSurfaceColor : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.92)";
+    const actionAccentColor = COMPLETE_BUTTON_COLOR;
+    const textColor = accent ? "#0f0f0f" : whiteTextMode ? "#FFFFFF" : lightCardMode ? "#111111" : CREAM;
+    const actionBorderColor = coastMode || riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(255,255,255,0.14)" : sonnyMode ? "rgba(247,247,247,0.18)" : "rgba(223,196,170,0.42)";
+    const actionBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? "rgba(0,0,0,0.28)" : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.92)";
     return (
         <Pressable
             accessibilityRole="button"
@@ -120,8 +119,8 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
     const primaryTextColor = whiteTextMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY;
     const bodyTextColor = whiteTextMode ? "rgba(255,255,255,0.82)" : riverMode ? "rgba(17,17,17,0.82)" : "rgba(228,224,212,0.82)";
     const dueTextColor = whiteTextMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM;
-    const cardBorderColor = coastMode || riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(51,65,85,0.6)" : sonnyMode ? "rgba(247,247,247,0.18)" : "#2c2c2c";
-    const cardBackgroundColor = coastMode || georgiaMode ? solidSurfaceColor : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.94)";
+    const cardBorderColor = coastMode || riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(255,255,255,0.14)" : sonnyMode ? "rgba(247,247,247,0.18)" : "#2c2c2c";
+    const cardBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? "rgba(0,0,0,0.36)" : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.94)";
     return (
         <Pressable
             onPress={haptics.tapTask}
@@ -156,18 +155,14 @@ export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
                     </Text>
                 ) : null}
 
-                <View style={tw`mt-2.5 flex-row items-center justify-between`}>
-                    <Badge
-                        label={task.priority.toUpperCase()}
-                        tone={task.priority === "high" ? "accent" : "default"}
-                    />
-                    {task.dueDate ? (
+                {task.dueDate ? (
+                    <View style={tw`mt-2.5 flex-row items-center justify-end`}>
                         <Text
                             style={[tw`text-xs font-semibold`, {fontFamily: fonts.body, color: dueTextColor}]}>
                             Due {task.dueDate}{task.dueTime ? ` ${task.dueTime}` : ""}
                         </Text>
-                    ) : null}
-                </View>
+                    </View>
+                ) : null}
 
                 <View style={tw`mt-3 flex-row items-center justify-between gap-2`}>
                     <View style={tw`flex-row items-center gap-1.5`}>

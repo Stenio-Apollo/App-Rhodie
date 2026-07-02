@@ -275,13 +275,14 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
             style={[tw`absolute inset-0 z-20`, {paddingBottom: keyboardInset}]}
         >
             {visualMode === "georgia" ? (
-                <ImageBackground
-                    source={require("../../public/images/newspaper 1.jpg")}
-                    resizeMode="cover"
-                    style={[StyleSheet.absoluteFill, {backgroundColor: GEORGIA_SURFACE_COLOR}]}
-                    imageStyle={{opacity: 0.33}}
-                    pointerEvents="none"
-                />
+                <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                    <ImageBackground
+                        source={require("../../public/images/newspaper 1.jpg")}
+                        resizeMode="cover"
+                        style={[StyleSheet.absoluteFill, {backgroundColor: GEORGIA_SURFACE_COLOR}]}
+                        imageStyle={{opacity: 0.33}}
+                    />
+                </View>
             ) : null}
             <Animated.View style={[tw`flex-1`, {opacity: routeOpacity, transform: [{translateY: routeTranslateY}]}]}>
             <View style={tw`flex-row items-center justify-between border-b border-slate-700 px-4 py-3`}>

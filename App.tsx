@@ -41,12 +41,14 @@ import {OnboardingScreen} from "./src/screens/OnboardingScreen";
 import {useOnboarding} from "./src/state/useOnboarding";
 import {clearStickyNoteStorage, useStickyNote} from "./src/state/useStickyNote";
 import {clearVisualModeStorage, useVisualMode, type VisualMode} from "./src/state/useVisualMode";
+import {clearBackgroundMusicStorage, useBackgroundMusic} from "./src/state/useBackgroundMusic";
 import {useEncryption} from "./src/state/useEncryption";
 import {PrivacyPassphraseScreen} from "./src/screens/PrivacyPassphraseScreen";
 import {fonts} from "./src/theme/fonts";
 import {AppErrorBoundary} from "./src/components/AppErrorBoundary";
 import {useCommunity, type CommunityAuthor} from "./src/state/useCommunity";
 import {useDirectMessages} from "./src/state/useDirectMessages";
+import {BackgroundMusicPlayer} from "./src/components/BackgroundMusicPlayer";
 
 type HomeAction =
     | { key: number; target: "journalPrompt"; entryId: string | null }
@@ -113,6 +115,7 @@ function AppContent() {
     const onboarding = useOnboarding(session?.user.id);
     const stickyNoteState = useStickyNote(session?.user.id, encryption);
     const visualModeState = useVisualMode(session?.user.id);
+    const backgroundMusicState = useBackgroundMusic(session?.user.id);
     const [fontsLoaded] = useAppFonts();
     const birthdayActive = Boolean(profile?.birthday && isToday(profile.birthday));
     const appLoading = !fontsLoaded ||
@@ -377,6 +380,7 @@ function AppContent() {
             clearWeeklyGoalStorage(session?.user.id),
             clearStickyNoteStorage(session?.user.id),
             clearVisualModeStorage(session?.user.id),
+            clearBackgroundMusicStorage(session?.user.id),
         ]);
         setAccountOpen(false);
         setMessagesOpen(false);
@@ -431,10 +435,15 @@ function AppContent() {
         }
     }
 
+    const backgroundMusicPlayer = (
+        <BackgroundMusicPlayer trackId={session && backgroundMusicState.isLoaded ? backgroundMusicState.trackId : "silent"}/>
+    );
+
     if (appLoading) {
         if (session && encryption.status === "unlocked") {
             return (
                 <GradientBackground>
+                    {backgroundMusicPlayer}
                     <StatusBar style="light"/>
                     <View style={tw`flex-1 items-center justify-center bg-black px-6`}>
                         <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
@@ -450,6 +459,7 @@ function AppContent() {
 
         return (
             <GradientBackground>
+                {backgroundMusicPlayer}
                 <StatusBar style="light"/>
                 <LoadingVideoOverlay visible message="Starting Rhodie..."/>
             </GradientBackground>
@@ -459,6 +469,7 @@ function AppContent() {
     if (!session) {
         return (
             <GradientBackground>
+                {backgroundMusicPlayer}
                 <StatusBar style="light"/>
                 <AuthScreen
                     signInMagicLink={signInMagicLink}
@@ -473,6 +484,7 @@ function AppContent() {
     if (subscription.requiresPaywall || subscriptionOfferOpen) {
         return (
             <GradientBackground>
+                {backgroundMusicPlayer}
                 <StatusBar style="light"/>
                 <SubscriptionScreen
                     loading={subscription.loading}
@@ -504,6 +516,7 @@ function AppContent() {
     if (encryption.status !== "unlocked") {
         return (
             <GradientBackground>
+                {backgroundMusicPlayer}
                 <StatusBar style="light"/>
                 <PrivacyPassphraseScreen encryption={encryption} onSignOut={handleSignOut}/>
             </GradientBackground>
@@ -513,6 +526,7 @@ function AppContent() {
     if (!onboarding.hasCompletedOnboarding) {
         return (
             <GradientBackground>
+                {backgroundMusicPlayer}
                 <StatusBar style="light"/>
                 <OnboardingScreen
                     onComplete={handleCompleteOnboarding}
@@ -537,19 +551,21 @@ function AppContent() {
         >
             <SafeAreaProvider>
             <GradientBackground>
+                {backgroundMusicPlayer}
                 <SafeAreaView
                     edges={["top", "left", "right"]}
                     style={[tw`flex-1`, {backgroundColor: shellBackgroundColor}]}
                 >
                     <StatusBar style="light"/>
                     {visualModeState.mode === "georgia" ? (
-                        <ImageBackground
-                            source={require("./public/images/newspaper 1.jpg")}
-                            resizeMode="cover"
-                            style={StyleSheet.absoluteFill}
-                            imageStyle={{opacity: 0.33}}
-                            pointerEvents="none"
-                        />
+                        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                            <ImageBackground
+                                source={require("./public/images/newspaper 1.jpg")}
+                                resizeMode="cover"
+                                style={StyleSheet.absoluteFill}
+                                imageStyle={{opacity: 0.33}}
+                            />
+                        </View>
                     ) : null}
 
                 <AppHeader
@@ -601,6 +617,10 @@ function AppContent() {
                             onDeleteAccount={handleDeleteAccount}
                             onResetOnboarding={onboarding.resetOnboarding}
                             visualMode={visualModeState.mode}
+                            backgroundMusic={{
+                                trackId: backgroundMusicState.trackId,
+                                setTrackId: backgroundMusicState.setTrackId,
+                            }}
                         />
                     ) : null}
                     {!accountOpen && tab === "today" ? (
@@ -732,6 +752,7 @@ function AppContent() {
                 <GoalCheckModal
                     visible={goalCheckVisible}
                     goal={weeklyGoalState.goal}
+                    visualMode={visualModeState.mode}
                     onSelect={(achieved) => {
                         void handleGoalCheck(achieved);
                     }}
@@ -741,6 +762,7 @@ function AppContent() {
                     visible={goalFeedbackVisible}
                     message={goalFeedbackMessage}
                     goal={weeklyGoalState.goal}
+                    visualMode={visualModeState.mode}
                     onContinue={() => setGoalFeedbackVisible(false)}
                 />
                 </SafeAreaView>

@@ -12,6 +12,10 @@ import type {VisualMode} from "../state/useVisualMode";
 import {TranslucentCard} from "../components/TranslucentCard";
 import {haptics} from "../lib/haptics";
 import {ScreenBackground} from "../components/ScreenBackground";
+import {
+    BACKGROUND_MUSIC_OPTIONS,
+    type BackgroundMusicTrackId,
+} from "../state/useBackgroundMusic";
 
 type AccountRoute = "account" | "support" | "guide" | "subscription";
 
@@ -34,7 +38,7 @@ function AccountRouteEntry({
     whiteContent?: boolean;
 }) {
     const badgeColor = "#ba885a";
-    const color = whiteContent ? "#E4E0D4" : active ? badgeColor : coastOrRiver ? "#000000" : "#E4E0D4";
+    const color = active ? badgeColor : whiteContent ? "#E4E0D4" : coastOrRiver ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -98,6 +102,10 @@ interface AccountScreenProps {
     onDeleteAccount: () => Promise<string | null>;
     onResetOnboarding: () => Promise<void>;
     visualMode: VisualMode;
+    backgroundMusic: {
+        trackId: BackgroundMusicTrackId;
+        setTrackId: (trackId: BackgroundMusicTrackId) => void;
+    };
 }
 
 function formatDateLabel(value: string | null | undefined): string | null {
@@ -156,6 +164,7 @@ export function AccountScreen({
                                   onDeleteAccount,
                                   onResetOnboarding,
                                   visualMode,
+                                  backgroundMusic,
                               }: AccountScreenProps) {
     const mountedRef = useRef(true);
     const [name, setName] = useState(profile?.full_name ?? "");
@@ -166,6 +175,7 @@ export function AccountScreen({
     const [notice, setNotice] = useState<string | null>(null);
     const [noticeTone, setNoticeTone] = useState<"success" | "error">("success");
     const [route, setRoute] = useState<AccountRoute>("account");
+    const [musicDropdownOpen, setMusicDropdownOpen] = useState(false);
     const bg = visualMode === "georgia"
         ? require("../../public/images/news paper.jpg")
         : require("../../public/images/newspaper 1.jpg");
@@ -217,8 +227,8 @@ export function AccountScreen({
         : visualMode === "river"
             ? {color: badgeColor}
             : {color: "#DFC4AA", opacity: 0.7};
-    const accountBodyTextStyle = {color: georgiaMode ? "rgba(255,255,255,0.72)" : coastOrRiver ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
-    const accountMutedTextStyle = {color: georgiaMode ? "rgba(255,255,255,0.58)" : coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"};
+    const accountBodyTextStyle = {color: georgiaMode ? "#FFFFFF" : coastOrRiver ? "rgba(17,17,17,0.72)" : "#cbd5e1"};
+    const accountMutedTextStyle = {color: georgiaMode ? "#FFFFFF" : coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"};
     const profileInputStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-4 px-4 py-3 opacity-100`,
@@ -255,6 +265,10 @@ export function AccountScreen({
         );
         return `mailto:s3.gerlin@gmail.com?subject=${subject}&body=${body}`;
     }, [profile?.full_name, session.user.email, session.user.id]);
+    const selectedMusicOption = useMemo(
+        () => BACKGROUND_MUSIC_OPTIONS.find((option) => option.id === backgroundMusic.trackId) ?? BACKGROUND_MUSIC_OPTIONS[0],
+        [backgroundMusic.trackId],
+    );
 
     async function handleSaveProfile() {
         const birthday = formatBirthday(birthdayMonth, birthdayDay);
@@ -436,6 +450,92 @@ export function AccountScreen({
                 >
                     {route === "account" ? (
                         <>
+                            <TranslucentCard radius={24} style={tw`p-4`}>
+                                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Background
+                                    music</Text>
+                                <Pressable
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Select background music"
+                                    accessibilityState={{expanded: musicDropdownOpen}}
+                                    onPress={() => {
+                                        haptics.selection();
+                                        setMusicDropdownOpen((current) => !current);
+                                    }}
+                                    style={({pressed}) => [
+                                        tw`mt-3 flex-row items-center justify-between rounded-xl border px-4 py-3`,
+                                        {
+                                            borderColor: georgiaMode ? "rgba(255,255,255,0.16)" : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.24)",
+                                            backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)",
+                                        },
+                                        pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            tw`text-sm font-semibold`,
+                                            {
+                                                fontFamily: fonts.body,
+                                                color: georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4",
+                                            },
+                                        ]}
+                                    >
+                                        {selectedMusicOption.label}
+                                    </Text>
+                                    <Ionicons
+                                        name={musicDropdownOpen ? "chevron-up" : "chevron-down"}
+                                        size={18}
+                                        color={georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4"}
+                                    />
+                                </Pressable>
+                                {musicDropdownOpen ? (
+                                    <View
+                                        style={[
+                                            tw`mt-2 overflow-hidden rounded-xl border`,
+                                            {
+                                                borderColor: georgiaMode ? "rgba(255,255,255,0.16)" : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.24)",
+                                                backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.44)" : "rgba(0,0,0,0.32)",
+                                            },
+                                        ]}
+                                    >
+                                        {BACKGROUND_MUSIC_OPTIONS.map((option) => {
+                                            const active = backgroundMusic.trackId === option.id;
+                                            return (
+                                                <Pressable
+                                                    key={option.id}
+                                                    accessibilityRole="button"
+                                                    accessibilityState={{selected: active}}
+                                                    onPress={() => {
+                                                        haptics.selection();
+                                                        backgroundMusic.setTrackId(option.id);
+                                                        setMusicDropdownOpen(false);
+                                                    }}
+                                                    style={({pressed}) => [
+                                                        tw`flex-row items-center justify-between px-4 py-3`,
+                                                        active ? {backgroundColor: badgeColor} : null,
+                                                        pressed && {opacity: 0.78},
+                                                    ]}
+                                                >
+                                                    <Text
+                                                        style={[
+                                                            tw`text-sm font-semibold`,
+                                                            {
+                                                                fontFamily: fonts.body,
+                                                                color: active ? "#111111" : georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4",
+                                                            },
+                                                        ]}
+                                                    >
+                                                        {option.label}
+                                                    </Text>
+                                                    {active ? (
+                                                        <Ionicons name="checkmark" size={17} color="#111111"/>
+                                                    ) : null}
+                                                </Pressable>
+                                            );
+                                        })}
+                                    </View>
+                                ) : null}
+                            </TranslucentCard>
+
                             <TranslucentCard radius={24} style={tw`p-4`}>
                                 <View>
                                     <Text style={[tw`text-2xl`, {

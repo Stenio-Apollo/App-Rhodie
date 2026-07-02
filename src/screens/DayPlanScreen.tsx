@@ -195,9 +195,11 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const coastMode = visualMode === "coast";
     const coastOrRiver = visualMode === "river" || coastMode;
     const georgiaMode = visualMode === "georgia";
+    const sonnyMode = visualMode === "sonny";
+    const badgeColor = "#ba885a";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
     const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.58)" : coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
-    const planHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const planHeaderTextColor = georgiaMode || sonnyMode ? badgeColor : coastMode ? "#FFFFFF" : primaryTextColor;
 
     const dayEvents = useMemo(
         () =>
@@ -253,7 +255,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                     <Pressable
                         onPress={goPrev}
                         style={({pressed}) => [
-                            tw`h-9 w-9 items-center justify-center rounded-full border border-[#2c2c2c]`,
+                            tw`h-9 w-9 items-center justify-center`,
                             pressed && tw`opacity-70`,
                         ]}
                     >
@@ -284,7 +286,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                     <Pressable
                         onPress={goNext}
                         style={({pressed}) => [
-                            tw`h-9 w-9 items-center justify-center rounded-full border border-[#2c2c2c]`,
+                            tw`h-9 w-9 items-center justify-center`,
                             pressed && tw`opacity-70`,
                         ]}
                     >
@@ -457,6 +459,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                     date={date}
                     initialStartAt={sheetStartAt}
                     initialEvent={sheetEvent}
+                    visualMode={visualMode}
                     onClose={() => setSheetVisible(false)}
                     onCreate={async (input) => {
                         await planner.createEvent(input);

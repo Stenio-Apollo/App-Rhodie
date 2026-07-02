@@ -19,6 +19,9 @@ import {ScreenBackground} from "../components/ScreenBackground";
 
 const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#111111";
+const QUOTE_TOP_OFFSET = 57;
+const QUOTE_MIN_CONTENT_GAP = 11;
+const HOME_CONTENT_FALLBACK_TOP_PADDING = 168;
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -72,6 +75,7 @@ export function TodayScreen({
                                 onDismissTutorial,
                             }: TodayScreenProps) {
     const [stickyNoteOpen, setStickyNoteOpen] = useState(false);
+    const [quoteHeight, setQuoteHeight] = useState(0);
     const today = isoToday();
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(today), [today]);
@@ -102,12 +106,13 @@ export function TodayScreen({
     };
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
+    const sonnyMode = visualMode === "sonny";
     const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
     const solidMode = coastMode || georgiaMode;
     const coastOrRiver = visualMode === "river" || coastMode;
     const badgeColor = "#ba885a";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
-    const quoteHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const quoteHeaderTextColor = georgiaMode || sonnyMode ? badgeColor : coastMode ? "#FFFFFF" : primaryTextColor;
     const quoteBodyTextColor = primaryTextColor;
     const taskIconColor = visualMode === "river" || coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.74)" : coastOrRiver ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
@@ -119,6 +124,32 @@ export function TodayScreen({
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-2 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2`;
+    const homeTaskGlowStyle = {
+        shadowColor: badgeColor,
+        shadowOffset: {width: 0, height: 8},
+        shadowOpacity: 0.26,
+        shadowRadius: 16,
+        elevation: 9,
+    };
+    const calendarTaskShellStyle = {
+        borderRadius: 20,
+        shadowColor: badgeColor,
+        shadowOffset: {width: 0, height: 10},
+        shadowOpacity: 0.28,
+        shadowRadius: 18,
+        elevation: 10,
+    };
+    const calendarTaskCardStyle = sonnyMode
+        ? {
+            backgroundColor: "#000000",
+            borderColor: "rgba(186,136,90,0.52)",
+        }
+        : null;
+    const homeTaskItemStyle = [nestedItemStyle, homeTaskGlowStyle];
+    const homeContentTopPadding = Math.max(
+        HOME_CONTENT_FALLBACK_TOP_PADDING,
+        Math.ceil(QUOTE_TOP_OFFSET + quoteHeight + QUOTE_MIN_CONTENT_GAP),
+    );
 
     return (
         <ScreenBackground
@@ -165,6 +196,10 @@ export function TodayScreen({
                     accessibilityRole="button"
                     accessibilityLabel="Open today's journal prompt"
                     onPress={() => onOpenJournalPrompt(latestPrompt?.id ?? null)}
+                    onLayout={(event) => {
+                        const nextHeight = event.nativeEvent.layout.height;
+                        setQuoteHeight((current) => Math.abs(current - nextHeight) > 0.5 ? nextHeight : current);
+                    }}
                     style={({pressed}) => [
                         tw`absolute left-4 right-4 top-[57px] z-10 items-center`,
                         pressed && tw`opacity-85`,
@@ -185,8 +220,13 @@ export function TodayScreen({
                     </Text>
                 </Pressable>
                 <ScrollView
-                    style={tw`flex-1`}
-                    contentContainerStyle={tw`flex-grow justify-end px-4 pb-28 pt-32 gap-4`}
+                    style={[tw`flex-1`, {marginTop: homeContentTopPadding}]}
+                    contentContainerStyle={[
+                        tw`flex-grow justify-end px-4 pb-28 gap-4`,
+                    ]}
+                    bounces={false}
+                    alwaysBounceVertical={false}
+                    overScrollMode="never"
                     showsVerticalScrollIndicator={false}
                 >
                     {showTutorial && onDismissTutorial ? (
@@ -291,36 +331,51 @@ export function TodayScreen({
                                 <Text style={[tw`mt-2 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>Nothing due
                                     today.</Text>
                             ) : (
-                                dueToday.map((task) => (
-                                    <View
-                                        key={task.id}
-                                        style={nestedItemStyle}
-                                    >
-                                        <Text
-                                            style={[tw`text-base`, {
-                                                fontFamily: fonts.heading,
-                                                color: primaryTextColor
-                                            }]}>{task.title}</Text>
-                                        {task.description ? (
-                                            <Text style={[tw`mt-1 text-xs`, secondaryTextClass, {fontFamily: fonts.body}]}
-                                                  numberOfLines={2}>
-                                                {task.description}
-                                            </Text>
-                                        ) : null}
-                                        <View style={tw`mt-2 flex-row items-center justify-between`}>
+                                dueToday.map((task) => {
+                                    const taskContent = (
+                                        <>
                                             <Text
-                                                style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.78)" : coastOrRiver ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"}]}>
-                                                {statusLabel[task.status]}{task.dueTime ? ` • ${task.dueTime}` : ""}
-                                            </Text>
-                                            {task.priority ? (
-                                                <Text
-                                                    style={[tw`text-[11px] font-semibold text-orange-300`, {fontFamily: fonts.body}]}>
-                                                    {task.priority} priority
+                                                style={[tw`text-base`, {
+                                                    fontFamily: fonts.heading,
+                                                    color: primaryTextColor
+                                                }]}>{task.title}</Text>
+                                            {task.description ? (
+                                                <Text style={[tw`mt-1 text-xs`, secondaryTextClass, {fontFamily: fonts.body}]}
+                                                      numberOfLines={2}>
+                                                    {task.description}
                                                 </Text>
                                             ) : null}
+                                            <View style={tw`mt-2 flex-row items-center justify-between`}>
+                                                <Text
+                                                    style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.78)" : coastOrRiver ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"}]}>
+                                                    {statusLabel[task.status]}{task.dueTime ? ` • ${task.dueTime}` : ""}
+                                                </Text>
+                                                {task.priority ? (
+                                                    <Text
+                                                        style={[tw`text-[11px] font-semibold text-orange-300`, {fontFamily: fonts.body}]}>
+                                                        {task.priority} priority
+                                                    </Text>
+                                                ) : null}
+                                            </View>
+                                        </>
+                                    );
+
+                                    if (georgiaMode || sonnyMode || coastOrRiver) {
+                                        return (
+                                            <View key={task.id} style={[tw`mt-2`, calendarTaskShellStyle]}>
+                                                <TranslucentCard radius={16} style={[tw`p-3`, calendarTaskCardStyle]}>
+                                                    {taskContent}
+                                                </TranslucentCard>
+                                            </View>
+                                        );
+                                    }
+
+                                    return (
+                                        <View key={task.id} style={homeTaskItemStyle}>
+                                            {taskContent}
                                         </View>
-                                    </View>
-                                ))
+                                    );
+                                })
                             )}
                         </TranslucentCard>
                     </Pressable>

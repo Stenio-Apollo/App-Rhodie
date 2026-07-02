@@ -43,10 +43,10 @@ function CalendarRouteEntry({
     const badgeColor = "#ba885a";
     const color = disabled
         ? (whiteContent ? "rgba(228,224,212,0.35)" : coastOrRiver ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
-        : whiteContent
-            ? "#E4E0D4"
         : active
             ? badgeColor
+        : whiteContent
+            ? "#E4E0D4"
             : coastOrRiver ? "#000000" : "#E4E0D4";
 
     return (
@@ -138,15 +138,14 @@ export function CalendarScreen({
     const accentColor = "#FF3800";
     const sonnyBadgeColor = "#ba885a";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
-    const headerTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const headerTextColor = georgiaMode || sonnyMode ? sonnyBadgeColor : coastMode ? "#FFFFFF" : primaryTextColor;
     const selectedDateTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const bodyMutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.7)" : "#94a3b8";
     const calendarTaskTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const calendarTaskMutedTextColor = georgiaMode ? "rgba(255,255,255,0.78)" : coastMode ? "rgba(255,255,255,0.78)" : bodyMutedTextColor;
-    const calendarTaskCardShellStyle = sonnyMode
+    const calendarTaskCardShellStyle = sonnyMode || georgiaMode || coastOrRiver
         ? {
             borderRadius: 20,
-            backgroundColor: "#000000",
             shadowColor: sonnyBadgeColor,
             shadowOffset: {width: 0, height: 10},
             shadowOpacity: 0.28,
@@ -160,7 +159,7 @@ export function CalendarScreen({
             borderColor: "rgba(186,136,90,0.52)",
         }
         : null;
-    const headerSecondaryTextClass = coastMode || georgiaMode ? tw`text-white/70` : coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
+    const headerSecondaryTextColor = georgiaMode || sonnyMode ? "#FFFFFF" : coastMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.7)" : "#cbd5e1";
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -326,7 +325,7 @@ export function CalendarScreen({
                                 <Text
                                     style={[tw`self-center text-center text-2xl font-black`, {fontFamily: fonts.heading, color: headerTextColor}]}>Calendar</Text>
                                 <Text
-                                    style={[tw`self-center text-center mt-1 text-sm`, headerSecondaryTextClass, {fontFamily: fonts.body}]}>Tap
+                                    style={[tw`self-center text-center mt-1 text-sm`, {fontFamily: fonts.body, color: headerSecondaryTextColor}]}>Tap
                                     a day to filter due tasks.</Text>
 
                                 {showTutorial && onDismissTutorial ? (

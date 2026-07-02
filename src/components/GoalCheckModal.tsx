@@ -4,15 +4,26 @@ import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import type {WeeklyGoal} from "../state/useWeeklyGoal";
 import {Button} from "./ui/Button";
+import type {VisualMode} from "../state/useVisualMode";
 
 interface GoalCheckModalProps {
     visible: boolean;
     goal: WeeklyGoal | null;
     onSelect: (achieved: boolean) => void;
     onRequestClose: () => void;
+    visualMode: VisualMode;
 }
 
-export function GoalCheckModal({visible, goal, onSelect, onRequestClose}: GoalCheckModalProps) {
+export function GoalCheckModal({visible, goal, onSelect, onRequestClose, visualMode}: GoalCheckModalProps) {
+    const coastMode = visualMode === "coast";
+    const georgiaMode = visualMode === "georgia";
+    const riverMode = visualMode === "river";
+    const badgeColor = "#ba885a";
+    const surfaceColor = georgiaMode ? "#111111" : coastMode ? "#708090" : riverMode ? "#FFFFFF" : "#000000";
+    const primaryTextColor = riverMode ? "#111111" : "#FFFFFF";
+    const mutedTextColor = riverMode ? "rgba(17,17,17,0.66)" : "rgba(255,255,255,0.72)";
+    const borderColor = riverMode ? "rgba(17,17,17,0.16)" : "rgba(255,255,255,0.18)";
+    const nestedSurfaceColor = riverMode ? "rgba(17,17,17,0.06)" : "rgba(255,255,255,0.08)";
     const buttonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},
@@ -24,16 +35,22 @@ export function GoalCheckModal({visible, goal, onSelect, onRequestClose}: GoalCh
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onRequestClose}>
             <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
-                <View style={tw`w-full rounded-[28px] border border-[#B55941] bg-[#0f0f0f] p-5`}>
-                    <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                <View style={[
+                    tw`w-full rounded-[28px] border p-5`,
+                    {borderColor: badgeColor, backgroundColor: surfaceColor},
+                ]}>
+                    <Text style={[tw`text-center text-xl`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                         Weekly goal check-in
                     </Text>
-                    <Text style={[tw`mt-3 text-center text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
+                    <Text style={[tw`mt-3 text-center text-sm leading-5`, {fontFamily: fonts.body, color: mutedTextColor}]}>
                         Have you achieved this week's goal?
                     </Text>
                     {goal ? (
-                        <View style={tw`mt-4 rounded-2xl border border-[#2c2c2c] bg-black/42 px-3 py-3`}>
-                            <Text style={[tw`text-center text-base text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                        <View style={[
+                            tw`mt-4 rounded-2xl border px-3 py-3`,
+                            {borderColor, backgroundColor: nestedSurfaceColor},
+                        ]}>
+                            <Text style={[tw`text-center text-base`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                 {goal.text}
                             </Text>
                         </View>
@@ -48,18 +65,18 @@ export function GoalCheckModal({visible, goal, onSelect, onRequestClose}: GoalCh
                             shine
                             hapticAction={false}
                             style={[
-                                tw`flex-1 rounded-xl border border-[#2c2c2c] px-3 py-3`,
-                                {backgroundColor: "rgba(0,0,0,0.35)"},
+                                tw`flex-1 rounded-xl border px-3 py-3`,
+                                {borderColor, backgroundColor: nestedSurfaceColor},
                                 buttonDepthStyle,
                             ]}
-                            textStyle={tw`text-sm text-[#E4E0D4]`}
+                            textStyle={[tw`text-sm`, {color: primaryTextColor}]}
                         />
                         <Button
                             label="Yes"
                             onPress={() => onSelect(true)}
                             shine
-                            style={[tw`flex-1 rounded-xl px-3 py-3`, {backgroundColor: "#B55941"}, buttonDepthStyle]}
-                            textStyle={tw`text-sm text-[#E4E0D4]`}
+                            style={[tw`flex-1 rounded-xl px-3 py-3`, {backgroundColor: badgeColor}, buttonDepthStyle]}
+                            textStyle={tw`text-sm text-white`}
                         />
                     </View>
                 </View>

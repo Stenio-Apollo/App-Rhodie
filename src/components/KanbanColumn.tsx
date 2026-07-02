@@ -25,6 +25,7 @@ export function KanbanColumn({status, tasks, onDelete, onComplete, visualMode}: 
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const lightMode = riverMode || coastMode || georgiaMode;
+    const frostedLightMode = riverMode || coastMode;
     const solidSurfaceColor = georgiaMode ? "#111111" : "#708090";
     const headerColor = georgiaMode ? "#FFFFFF" : lightMode ? "#111111" : status === "completed" ? CREAM : TEXT_PRIMARY;
     return (
@@ -32,24 +33,24 @@ export function KanbanColumn({status, tasks, onDelete, onComplete, visualMode}: 
             <View
                 style={[
                     tw`overflow-hidden rounded-[24px] p-1`,
-                    {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
-                    {borderColor: visualMode === "georgia" ? "rgba(223,196,170,0.19)" : "rgba(181,89,65,0.19)"},
+                    {backgroundColor: georgiaMode ? "transparent" : coastMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                    {borderColor: georgiaMode ? "rgba(255,255,255,0.18)" : "rgba(181,89,65,0.19)"},
                 ]}
             >
                 <BlurView
                     intensity={30}
-                    tint={lightMode ? "light" : "dark"}
+                    tint={frostedLightMode ? "light" : "dark"}
                     style={[
                         tw`overflow-hidden rounded-[20px] border`,
-                        {borderColor: lightMode ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"},
+                        {borderColor: georgiaMode ? "rgba(255,255,255,0.18)" : lightMode ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"},
                     ]}
                 >
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : coastMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
                     />
                     <LinearGradient
-                        colors={coastMode || georgiaMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : ["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
+                        colors={coastMode || georgiaMode ? ["rgba(255,255,255,0.12)", "rgba(255,255,255,0.03)", "transparent"] : ["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}

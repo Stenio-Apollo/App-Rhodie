@@ -1,6 +1,7 @@
 import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
-import {Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {Alert, Animated, Easing, Image, Modal, Pressable, ScrollView, Text, TextInput, View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import tw from "../lib/tw";
 import {getDailyStoicQuote} from "../lib/quotes";
 import {getDailyJournalPrompt} from "../lib/prompts";
@@ -14,6 +15,7 @@ import {TranslucentCard} from "../components/TranslucentCard";
 import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {ScreenBackground} from "../components/ScreenBackground";
+import {PurposePhotoFrame} from "../components/PurposePhotoFrame";
 
 const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#111111";
@@ -22,7 +24,7 @@ function isoToday(): string {
     return toLocalISODate();
 }
 
-type JournalRoute = "write" | "promptEntry" | "gratitudeEntry" | "memory" | "audio";
+type JournalRoute = "write" | "promptEntry" | "gratitudeEntry" | "memory" | "audio" | "purpose";
 
 interface JournalScreenProps {
     journal: JournalState;
@@ -55,7 +57,7 @@ function JournalRouteEntry({
     whiteContent?: boolean;
 }) {
     const badgeColor = "#ba885a";
-    const color = whiteContent ? "#FFFFFF" : active ? badgeColor : coastOrRiver ? "#000000" : "#E4E0D4";
+    const color = active ? badgeColor : whiteContent ? "#FFFFFF" : coastOrRiver ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -101,6 +103,8 @@ export function JournalScreen({
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingText, setEditingText] = useState("");
     const [route, setRoute] = useState<JournalRoute>("write");
+    const [viewingPurposeImageId, setViewingPurposeImageId] = useState<string | null>(null);
+    const [deletingPurposeImageId, setDeletingPurposeImageId] = useState<string | null>(null);
     const scrollRef = useRef<ScrollView>(null);
     const promptInputRef = useRef<TextInput>(null);
     const gratitudeInputRef = useRef<TextInput>(null);
@@ -142,6 +146,24 @@ export function JournalScreen({
     const quoteHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const quoteBodyTextColor = georgiaMode ? "#FFFFFF" : coastMode ? primaryTextColor : quoteHeaderTextColor;
     const quoteHeaderDateColor = georgiaMode ? "rgba(255,255,255,0.82)" : coastOrRiver ? "rgba(0,0,0,0.79)" : badgeColor;
+    const purposeImages = journal.purposeImages.filter((image) => image.date === selectedDate);
+    const purposeImageRows = purposeImages.reduce<typeof purposeImages[]>((rows, image, index) => {
+        if (index % 3 === 0) rows.push([]);
+        rows[rows.length - 1].push(image);
+        return rows;
+    }, []);
+    const viewingPurposeImage = journal.purposeImages.find((image) => image.id === viewingPurposeImageId) ?? null;
+    const deletingPurposeImage = journal.purposeImages.find((image) => image.id === deletingPurposeImageId) ?? null;
+    const purposeDialogSurfaceColor = georgiaMode
+        ? GEORGIA_SURFACE_COLOR
+        : coastMode
+            ? COAST_SURFACE_COLOR
+            : visualMode === "river"
+                ? "#FFFFFF"
+                : "#0f0f0f";
+    const purposeDialogTextColor = georgiaMode || coastMode || visualMode === "sonny" ? "#FFFFFF" : "#111111";
+    const purposeDialogMutedColor = georgiaMode || coastMode || visualMode === "sonny" ? "rgba(255,255,255,0.68)" : "rgba(17,17,17,0.66)";
+    const purposeDialogBorderColor = georgiaMode || coastMode || visualMode === "sonny" ? "rgba(255,255,255,0.16)" : "rgba(17,17,17,0.14)";
 
     function openPromptEntry() {
         haptics.navigation();
@@ -179,6 +201,41 @@ export function JournalScreen({
         addEntry(bulletText, selectedDate, "gratitude");
         setText("");
         setRoute("write");
+    }
+
+    async function addPurposeImage() {
+        try {
+            if (journal.purposeImages.length >= 9) {
+                Alert.alert("Limit reached", "You can keep up to 9 Your Reason photos.");
+                return;
+            }
+
+            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permission.granted) {
+                Alert.alert("Photo access needed", "Allow photo access to add encrypted Your Reason images.");
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: "images",
+                allowsEditing: false,
+                quality: 0.72,
+                base64: true,
+            });
+
+            if (result.canceled || result.assets.length === 0) return;
+
+            const asset = result.assets[0];
+            if (!asset.base64) {
+                throw new Error("The selected image could not be prepared for encrypted storage.");
+            }
+
+            const mimeType = asset.mimeType ?? "image/jpeg";
+            await journal.addPurposeImage(`data:${mimeType};base64,${asset.base64}`, selectedDate, mimeType);
+            haptics.saveJournalEntry();
+        } catch (error) {
+            Alert.alert("Image not added", error instanceof Error ? error.message : "That image could not be encrypted.");
+        }
     }
 
     useEffect(() => {
@@ -297,11 +354,19 @@ export function JournalScreen({
                         coastOrRiver={coastOrRiver || georgiaMode}
                         whiteContent={coastMode || georgiaMode}
                     />
+                    <JournalRouteEntry
+                        label="Your Reason"
+                        icon="image-outline"
+                        active={route === "purpose"}
+                        onPress={() => setRoute("purpose")}
+                        coastOrRiver={coastOrRiver || georgiaMode}
+                        whiteContent={coastMode || georgiaMode}
+                    />
                 </View>
-                {route === "memory" || route === "audio" ? (
+                {route === "memory" || route === "audio" || route === "purpose" ? (
                     <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={route === "memory" ? "Close memory shelf" : "Close audio journal"}
+                        accessibilityLabel={route === "memory" ? "Close memory shelf" : route === "purpose" ? "Close your reason images" : "Close audio journal"}
                         onPress={() => {
                             haptics.navigation();
                             setRoute("write");
@@ -498,6 +563,107 @@ export function JournalScreen({
                             </TranslucentCard>
                         ) : null}
 
+                        {route === "purpose" ? (
+                            <TranslucentCard radius={28} style={tw`p-4`}>
+                                <View style={tw`flex-row items-start justify-between gap-3`}>
+                                    <View style={tw`flex-1`}>
+                                        <Text style={[tw`text-xl`, {
+                                            fontFamily: fonts.heading,
+                                            color: primaryTextColor
+                                        }]}>
+                                            Your Reason
+                                        </Text>
+                                        <Text
+                                            style={[tw`mt-1 text-xs leading-5`, {fontFamily: fonts.body, color: mutedTextColor}]}>
+                                            Keep visual reminders tied to this day.
+                                        </Text>
+                                    </View>
+                                    <Pressable
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Add your reason image"
+                                        onPress={() => {
+                                            void addPurposeImage();
+                                        }}
+                                        style={({pressed}) => [
+                                            tw`items-center justify-center px-1 py-0.5`,
+                                            pressed && {transform: [{scale: 0.94}], opacity: 0.85},
+                                        ]}
+                                    >
+                                        <Text
+                                            numberOfLines={1}
+                                            style={[
+                                                tw`mb-1 text-[10px] font-bold`,
+                                                {fontFamily: fonts.heading, color: primaryTextColor},
+                                            ]}
+                                        >
+                                            Add
+                                        </Text>
+                                        <Ionicons name="image-outline" size={24} color={primaryTextColor}/>
+                                    </Pressable>
+                                </View>
+
+                                <Text
+                                    style={[tw`mt-4 text-center text-[11px] font-semibold`, {
+                                        fontFamily: fonts.body,
+                                        color: mutedTextColor
+                                    }]}
+                                >
+                                    {selectedDate}
+                                </Text>
+
+                                {purposeImages.length === 0 ? (
+                                    <View style={tw`mt-4 gap-1.5`}>
+                                        {[0, 1, 2].map((row) => (
+                                            <View key={`purpose-template-row-${row}`} style={tw`flex-row gap-1.5`}>
+                                                {[0, 1, 2].map((column) => (
+                                                    <View key={`purpose-template-${row}-${column}`} style={tw`flex-1 opacity-60`}>
+                                                        <PurposePhotoFrame placeholder/>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        ))}
+                                    </View>
+                                ) : (
+                                    <View style={tw`mt-4 gap-1.5`}>
+                                        {purposeImageRows.map((row, rowIndex) => (
+                                            <View key={`purpose-row-${rowIndex}`} style={tw`flex-row gap-1.5`}>
+                                                {row.map((image) => (
+                                                    <Pressable
+                                                        key={image.id}
+                                                        accessibilityRole="button"
+                                                        accessibilityLabel="View your reason image"
+                                                        onPress={() => {
+                                                            haptics.selection();
+                                                            setViewingPurposeImageId(image.id);
+                                                        }}
+                                                        onLongPress={() => {
+                                                            haptics.longPressTask();
+                                                            setDeletingPurposeImageId(image.id);
+                                                        }}
+                                                        delayLongPress={220}
+                                                        style={[
+                                                            tw`flex-1`,
+                                                        ]}
+                                                    >
+                                                        <PurposePhotoFrame uri={image.dataUri}/>
+                                                    </Pressable>
+                                                ))}
+                                                {row.length < 3
+                                                    ? Array.from({length: 3 - row.length}).map((_, placeholderIndex) => (
+                                                        <View
+                                                            key={`purpose-placeholder-${rowIndex}-${placeholderIndex}`}
+                                                            pointerEvents="none"
+                                                            style={tw`flex-1 opacity-0`}
+                                                        />
+                                                    ))
+                                                    : null}
+                                            </View>
+                                        ))}
+                                    </View>
+                                )}
+                            </TranslucentCard>
+                        ) : null}
+
                     </Animated.View>
                 </ScrollView>
                 {(route === "promptEntry" || route === "gratitudeEntry") ? (
@@ -653,6 +819,146 @@ export function JournalScreen({
                         </Animated.View>
                     </ScreenBackground>
                 ) : null}
+                <Modal
+                    visible={Boolean(viewingPurposeImage)}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setViewingPurposeImageId(null)}
+                >
+                    <View style={tw`flex-1 justify-center px-4`}>
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="Close your reason image"
+                            onPress={() => setViewingPurposeImageId(null)}
+                            style={tw`absolute inset-0 bg-black/88`}
+                        />
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="Close your reason image"
+                            onPress={() => setViewingPurposeImageId(null)}
+                            hitSlop={12}
+                            style={({pressed}) => [
+                                tw`absolute right-5 top-12 z-20 h-8 w-8 items-center justify-center`,
+                                pressed && {opacity: 0.72, transform: [{translateY: 1}]},
+                            ]}
+                        >
+                            <Ionicons name="close" size={20} color="#FFFFFF"/>
+                        </Pressable>
+                        {viewingPurposeImage ? (
+                            <PurposePhotoFrame uri={viewingPurposeImage.dataUri} enlarged/>
+                        ) : null}
+                    </View>
+                </Modal>
+                <Modal
+                    visible={Boolean(deletingPurposeImage)}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setDeletingPurposeImageId(null)}
+                >
+                    <View style={tw`flex-1 justify-center px-5`}>
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="Cancel your reason image action"
+                            onPress={() => setDeletingPurposeImageId(null)}
+                            style={tw`absolute inset-0 bg-black/72`}
+                        />
+                        <View
+                            style={[
+                                tw`rounded-[28px] border p-5`,
+                                {
+                                    backgroundColor: purposeDialogSurfaceColor,
+                                    borderColor: purposeDialogBorderColor,
+                                    shadowColor: "#000000",
+                                    shadowOffset: {width: 0, height: 16},
+                                    shadowOpacity: 0.36,
+                                    shadowRadius: 24,
+                                    elevation: 12,
+                                },
+                            ]}
+                        >
+                            <Text
+                                style={[tw`text-xs uppercase tracking-[2px]`, {
+                                    fontFamily: fonts.body,
+                                    color: purposeDialogMutedColor
+                                }]}
+                            >
+                                Your Reason
+                            </Text>
+                            <Text
+                                style={[tw`mt-1 text-2xl`, {
+                                    fontFamily: fonts.heading,
+                                    color: purposeDialogTextColor
+                                }]}
+                            >
+                                Your Reason photo
+                            </Text>
+                            <Text
+                                style={[tw`mt-3 text-sm leading-5`, {
+                                    fontFamily: fonts.body,
+                                    color: purposeDialogMutedColor
+                                }]}
+                            >
+                                Delete this encrypted photo from Your Reason.
+                            </Text>
+                            <View style={tw`mt-5 gap-2`}>
+                                <View style={tw`flex-row gap-2`}>
+                                    <Pressable
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Cancel your reason image action"
+                                        onPress={() => setDeletingPurposeImageId(null)}
+                                        style={({pressed}) => [
+                                            tw`flex-1 rounded-xl border px-3 py-3`,
+                                            {
+                                                borderColor: purposeDialogBorderColor,
+                                                backgroundColor: "rgba(255,255,255,0.08)",
+                                            },
+                                            pressed && {opacity: 0.75, transform: [{translateY: 1}]},
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[tw`text-center text-xs`, {
+                                                fontFamily: fonts.button,
+                                                color: purposeDialogTextColor
+                                            }]}
+                                        >
+                                            Cancel
+                                        </Text>
+                                    </Pressable>
+                                    <Pressable
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Delete your reason image"
+                                        onPress={() => {
+                                            if (!deletingPurposeImage) return;
+                                            haptics.deleteTask();
+                                            void journal.deletePurposeImage(deletingPurposeImage.id);
+                                            setDeletingPurposeImageId(null);
+                                            if (viewingPurposeImageId === deletingPurposeImage.id) {
+                                                setViewingPurposeImageId(null);
+                                            }
+                                        }}
+                                        style={({pressed}) => [
+                                            tw`flex-1 rounded-xl border px-3 py-3`,
+                                            {
+                                                borderColor: "#C82D00",
+                                                backgroundColor: "#FF3800",
+                                            },
+                                            pressed && {opacity: 0.75, transform: [{translateY: 1}]},
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[tw`text-center text-xs`, {
+                                                fontFamily: fonts.button,
+                                                color: "#FFF6E8"
+                                            }]}
+                                        >
+                                            Delete
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </Animated.View>
         </ScreenBackground>
     );
