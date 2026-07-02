@@ -37,7 +37,7 @@ export function AppHeader({
     const avatarFallbackColor = lightMode ? "#111111" : "#FFF6E8";
     const avatarFallbackBackgroundColor = lightMode ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.4)";
     const modeButton = visualMode === "georgia"
-        ? {label: "Georgia", backgroundColor: "#2F4F4F", textColor: "#FFF6E8"}
+        ? {label: "Georgia", backgroundColor: "#111111", textColor: "#FFF6E8"}
         : visualMode === "river"
             ? {label: "River", backgroundColor: "#F0F8FF", textColor: "#111111"}
             : visualMode === "sonny"
@@ -132,7 +132,7 @@ export function AppHeader({
                         pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                     ]}
                 >
-                    <Ionicons name={accountOpen ? "close" : "menu"} size={20} color={avatarFallbackColor}/>
+                    <Ionicons name={accountOpen ? "close" : "menu"} size={20} color={georgiaMode ? "#FFFFFF" : avatarFallbackColor}/>
                 </Pressable>
             </View>
         </View>

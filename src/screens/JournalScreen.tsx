@@ -16,7 +16,7 @@ import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {ScreenBackground} from "../components/ScreenBackground";
 
 const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#2F4F4F";
+const GEORGIA_SURFACE_COLOR = "#111111";
 
 function isoToday(): string {
     return toLocalISODate();
@@ -125,7 +125,7 @@ export function JournalScreen({
     const entrySurfaceStyle = coastOrRiver || georgiaMode
         ? [
             tw`rounded-[24px] border p-4`,
-            coastOrRiver || georgiaMode ? tw`border-black/10` : tw`border-slate-700/60`,
+            georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`;
@@ -140,7 +140,7 @@ export function JournalScreen({
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(selectedDate), [selectedDate]);
     const quoteHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
-    const quoteBodyTextColor = georgiaMode ? "#111111" : coastMode ? primaryTextColor : quoteHeaderTextColor;
+    const quoteBodyTextColor = georgiaMode ? "#FFFFFF" : coastMode ? primaryTextColor : quoteHeaderTextColor;
     const quoteHeaderDateColor = georgiaMode ? "rgba(255,255,255,0.82)" : coastOrRiver ? "rgba(0,0,0,0.79)" : badgeColor;
 
     function openPromptEntry() {
@@ -599,7 +599,7 @@ export function JournalScreen({
                                                 style={coastOrRiver || georgiaMode
                                                     ? [
                                                         tw`mt-4 flex-1 rounded-[24px] border px-4 py-4`,
-                                                        coastOrRiver || georgiaMode ? tw`border-black/10` : tw`border-slate-700/60`,
+                                                        georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
                                                         {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
                                                     ]
                                                     : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`}

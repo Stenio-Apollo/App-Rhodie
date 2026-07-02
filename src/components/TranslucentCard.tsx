@@ -16,7 +16,7 @@ interface TranslucentCardProps {
 export function TranslucentCard({
                                     children,
                                     style,
-                                    blur = false,
+                                    blur = true,
                                     radius = 24,
                                 }: PropsWithChildren<TranslucentCardProps>) {
     const visualMode = useScreenVisualMode();
@@ -24,37 +24,48 @@ export function TranslucentCard({
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const lightMode = riverMode || coastMode || georgiaMode;
-    const solidSurfaceColor = georgiaMode ? "#2F4F4F" : "#708090";
-    const borderColor = lightMode ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)";
-    const surfaceColor = coastMode || georgiaMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)";
-    const topGradient: GradientColors = coastMode || georgiaMode
-        ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"]
-        : lightMode
-        ? ["rgba(255,255,255,0.32)", "rgba(240,248,255,0.14)", "transparent"]
-        : ["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"];
+    const solidSurfaceColor = georgiaMode ? "#111111" : "#708090";
+    const frostedLight = riverMode || coastMode;
+    const borderColor = georgiaMode
+        ? "rgba(255,255,255,0.22)"
+        : lightMode ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.18)";
+    const surfaceColor = coastMode
+        ? solidSurfaceColor
+        : georgiaMode
+            ? "rgba(0,0,0,0.28)"
+            : lightMode
+                ? "rgba(255,255,255,0.22)"
+                : "rgba(20,20,20,0.28)";
+    const topGradient: GradientColors = coastMode
+        ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"]
+        : georgiaMode
+            ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"]
+            : lightMode
+                ? ["rgba(255,255,255,0.42)", "rgba(240,248,255,0.16)", "transparent"]
+                : ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.03)", "transparent"];
     const bottomGradient: GradientColors = coastMode || georgiaMode
-        ? ["transparent", "rgba(0,0,0,0.1)"]
+        ? ["transparent", "rgba(0,0,0,0.24)"]
         : lightMode
-        ? ["transparent", "rgba(223,196,170,0.18)"]
-        : ["transparent", "rgba(0,0,0,0.18)"];
+            ? ["transparent", "rgba(0,0,0,0.16)"]
+            : ["transparent", "rgba(0,0,0,0.28)"];
+    const shadowStyle = {
+        shadowColor: "#000000",
+        shadowOffset: {width: 0, height: 8},
+        shadowOpacity: frostedLight ? 0.18 : 0.32,
+        shadowRadius: 16,
+        elevation: 8,
+    } as const;
 
     if (blur) {
         return (
-            <View
-                style={[
-                    tw`overflow-hidden p-1`,
-                    {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : lightMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
-                    {borderRadius: radius + 4},
-                    style,
-                ]}
-            >
+            <View style={[{borderRadius: radius}, shadowStyle]}>
                 <BlurView
-                    intensity={30}
-                    tint={lightMode ? "light" : "dark"}
+                    intensity={frostedLight ? 42 : georgiaMode ? 38 : 34}
+                    tint={frostedLight ? "light" : "dark"}
                     style={[
                         tw`overflow-hidden border`,
-                        {borderColor},
-                        {borderRadius: radius},
+                        {borderColor, borderRadius: radius},
+                        style,
                     ]}
                 >
                     <View
@@ -65,12 +76,24 @@ export function TranslucentCard({
                         colors={topGradient}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
-                        style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
+                        style={[tw`absolute left-0 right-0 top-0`, {height: "55%"}]}
                     />
                     <LinearGradient
                         colors={bottomGradient}
                         pointerEvents="none"
-                        style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
+                        style={[tw`absolute left-0 right-0 bottom-0`, {height: "35%"}]}
+                    />
+                    <View
+                        pointerEvents="none"
+                        style={[
+                            tw`absolute left-0 right-0 top-0 border-t`,
+                            {
+                                height: 1,
+                                borderTopColor: lightMode ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.28)",
+                                borderTopLeftRadius: radius,
+                                borderTopRightRadius: radius,
+                            },
+                        ]}
                     />
                     {children}
                 </BlurView>
@@ -79,25 +102,27 @@ export function TranslucentCard({
     }
 
     return (
-        <View
-            style={[
-                tw`overflow-hidden border`,
-                {backgroundColor: surfaceColor, borderColor, borderRadius: radius},
-                style,
-            ]}
-        >
-            <LinearGradient
-                colors={topGradient}
-                locations={[0, 0.5, 1]}
-                pointerEvents="none"
-                style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
-            />
-            <LinearGradient
-                colors={bottomGradient}
-                pointerEvents="none"
-                style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
-            />
-            {children}
+        <View style={[{borderRadius: radius}, shadowStyle]}>
+            <View
+                style={[
+                    tw`overflow-hidden border`,
+                    {backgroundColor: surfaceColor, borderColor, borderRadius: radius},
+                    style,
+                ]}
+            >
+                <LinearGradient
+                    colors={topGradient}
+                    locations={[0, 0.5, 1]}
+                    pointerEvents="none"
+                    style={[tw`absolute left-0 right-0 top-0`, {height: "55%"}]}
+                />
+                <LinearGradient
+                    colors={bottomGradient}
+                    pointerEvents="none"
+                    style={[tw`absolute left-0 right-0 bottom-0`, {height: "35%"}]}
+                />
+                {children}
+            </View>
         </View>
     );
 }

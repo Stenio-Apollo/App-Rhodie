@@ -108,10 +108,10 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const coastOrRiver = visualMode === "river" || coastMode;
-    const solidSurfaceColor = georgiaMode ? "#2F4F4F" : "#708090";
-    const primaryTextColor = coastOrRiver || georgiaMode ? "#111111" : "#E4E0D4";
-    const secondaryTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.68)" : "#cbd5e1";
-    const mutedTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const solidSurfaceColor = georgiaMode ? "#111111" : "#708090";
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
+    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.68)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "#cbd5e1";
+    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.55)" : coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
     const routeHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const cardHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const cardSectionLabelTextColor = coastMode || georgiaMode ? "#FFFFFF" : mutedTextColor;
@@ -217,7 +217,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                     <ProgressDots filled={filledForBadge} total={3}/>
                                     <Text style={[tw`mt-2 text-[10px]`, {
                                         fontFamily: fonts.body,
-                                        color: coastOrRiver || georgiaMode ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
+                                        color: georgiaMode ? "rgba(255,255,255,0.6)" : coastOrRiver ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
                                     }]}>
                                         {pointsToNextBadge} {pointsToNextBadge === 1 ? "point" : "points"} to next badge
                                     </Text>
@@ -256,7 +256,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         tw`mt-2 text-[11px] font-semibold`,
                                         {
                                             fontFamily: fonts.body,
-                                            color: weeklyGoal.achievedAt ? accentColor : coastOrRiver || georgiaMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
+                                            color: weeklyGoal.achievedAt ? accentColor : georgiaMode ? "rgba(255,255,255,0.68)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
                                         },
                                     ]}
                                 >
@@ -382,11 +382,11 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 returnKeyType="done"
                                 maxLength={120}
                                 editable={!isGoalLocked}
-                                placeholderTextColor={coastOrRiver || georgiaMode ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                placeholderTextColor={georgiaMode ? "rgba(255,255,255,0.45)" : coastOrRiver ? "rgba(17,17,17,0.45)" : "#6b7280"}
                                 keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                                 style={[
                                     tw`mt-2`,
-                                    coastOrRiver || georgiaMode ? [tw`border-black/10 text-[#111111]`, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
+                                    georgiaMode ? [tw`border-white/10 text-white`, {backgroundColor: solidSurfaceColor}] : coastOrRiver ? [tw`border-black/10 text-[#111111]`, {backgroundColor: coastMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
                                 ]}
                             />
                             <Pressable

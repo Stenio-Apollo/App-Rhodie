@@ -12,7 +12,7 @@ const ACCENT = "#B55941";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
 const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#2F4F4F";
+const GEORGIA_SURFACE_COLOR = "#111111";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",

@@ -20,7 +20,7 @@ const COAST_BADGE_COLOR = DARK_BADGE_COLOR;
 const CREAM = "#F0F8FF";
 const TEXT_PRIMARY = "#E4E0D4";
 const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#2F4F4F";
+const GEORGIA_SURFACE_COLOR = "#111111";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -260,7 +260,7 @@ function EntryCard({
                     keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                     multiline
                     style={[
-                        coastOrRiver || georgiaMode ? [tw`mt-3 rounded-xl border border-black/10 px-3 py-2`, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
+                        georgiaMode ? [tw`mt-3 rounded-xl border border-white/10 px-3 py-2`, {backgroundColor: solidSurfaceColor}] : coastOrRiver ? [tw`mt-3 rounded-xl border border-black/10 px-3 py-2`, {backgroundColor: coastMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
                         {fontFamily: fonts.body, color: primaryTextColor},
                     ]}
                 />

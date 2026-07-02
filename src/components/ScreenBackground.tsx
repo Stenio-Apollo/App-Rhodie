@@ -18,7 +18,7 @@ const riverGradientColors = [
 
 const sonnyBackgroundColor = "#000000";
 const coastBackgroundColor = "#708090";
-const georgiaBackgroundColor = "#2F4F4F";
+const georgiaBackgroundColor = "#111111";
 
 const ScreenVisualModeContext = createContext<VisualMode>("coast");
 
@@ -59,7 +59,7 @@ export function ScreenBackground({
     if (visualMode === "georgia") {
         return (
             <ScreenVisualModeContext.Provider value={visualMode}>
-                <View style={[tw`flex-1`, {backgroundColor: georgiaBackgroundColor}, style]}>{children}</View>
+                <View style={[tw`flex-1`, style]}>{children}</View>
             </ScreenVisualModeContext.Provider>
         );
     }

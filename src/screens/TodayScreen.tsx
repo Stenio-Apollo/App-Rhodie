@@ -18,7 +18,7 @@ import {TranslucentCard} from "../components/TranslucentCard";
 import {ScreenBackground} from "../components/ScreenBackground";
 
 const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#2F4F4F";
+const GEORGIA_SURFACE_COLOR = "#111111";
 
 interface TodayScreenProps {
     tasks: Task[];
@@ -109,13 +109,13 @@ export function TodayScreen({
     const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
     const quoteHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const quoteBodyTextColor = primaryTextColor;
-    const taskIconColor = visualMode === "river" || coastMode || georgiaMode ? "#DAC8AE" : primaryTextColor;
+    const taskIconColor = visualMode === "river" || coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.74)" : coastOrRiver ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
     const secondaryTextClass = georgiaMode ? tw`text-white/70` : coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
     const nestedItemStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-2 rounded-2xl border px-3 py-2`,
-            coastOrRiver || georgiaMode ? tw`border-black/10` : tw`border-slate-700/60`,
+            georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-2 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2`;

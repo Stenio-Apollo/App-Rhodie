@@ -20,62 +20,131 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
     const lightMode = riverMode || coastMode || georgiaMode;
-    const solidMode = coastMode || georgiaMode || sonnyMode;
-    const solidSurfaceColor = sonnyMode ? "#000000" : georgiaMode ? "#2F4F4F" : "#708090";
-    const todayTextColor = sonnyMode ? "#FF3800" : lightMode ? "#111111" : "#FF3800";
-    const calendarHeaderTextColor = lightMode ? "#111111" : "#E4E0D4";
+    const frostedLight = riverMode || coastMode;
+    const solidMode = coastMode || sonnyMode;
+    const solidSurfaceColor = sonnyMode ? "#000000" : georgiaMode ? "#111111" : "#708090";
+    const calendarTextColor = georgiaMode ? "#FFFFFF" : lightMode ? "#000000" : "#E4E0D4";
+    const calendarMutedTextColor = georgiaMode ? "rgba(255,255,255,0.72)" : lightMode ? "rgba(0,0,0,0.72)" : "rgba(228,224,212,0.75)";
+    const calendarDisabledTextColor = georgiaMode ? "rgba(255,255,255,0.35)" : lightMode ? "rgba(0,0,0,0.25)" : "rgba(228,224,212,0.25)";
+    const todayTextColor = sonnyMode ? "#FF3800" : georgiaMode ? "#FF3800" : lightMode ? "#000000" : "#FF3800";
+    const calendarHeaderTextColor = calendarTextColor;
     const calendarTheme = {
         calendarBackground: "transparent",
         monthTextColor: calendarHeaderTextColor,
         textMonthFontFamily: fonts.heading,
         textDayFontFamily: fonts.body,
         textDayHeaderFontFamily: fonts.heading,
-        dayTextColor: lightMode ? "#111111" : "#E4E0D4",
-        textDisabledColor: lightMode ? "rgba(17,17,17,0.25)" : "rgba(228,224,212,0.25)",
+        dayTextColor: calendarTextColor,
+        textDisabledColor: calendarDisabledTextColor,
         selectedDayTextColor: "#FBF7F3",
         todayTextColor,
         arrowColor: calendarHeaderTextColor,
-        dotColor: lightMode ? "#111111" : "#E4E0D4",
+        dotColor: calendarTextColor,
         selectedDotColor: "#FBF7F3",
-        textSectionTitleColor: lightMode ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)",
+        textSectionTitleColor: calendarMutedTextColor,
+        textDayStyle: {
+            color: calendarTextColor,
+        },
+        "stylesheet.calendar.header": {
+            monthText: {
+                color: calendarHeaderTextColor,
+                fontFamily: fonts.heading,
+            },
+            dayHeader: {
+                color: calendarMutedTextColor,
+                fontFamily: fonts.heading,
+            },
+        },
+        "stylesheet.day.basic": {
+            text: {
+                color: calendarTextColor,
+                fontFamily: fonts.body,
+            },
+            todayText: {
+                color: todayTextColor,
+            },
+            selectedText: {
+                color: "#FBF7F3",
+            },
+            disabledText: {
+                color: calendarDisabledTextColor,
+            },
+            inactiveText: {
+                color: calendarDisabledTextColor,
+            },
+        },
     };
 
     if (lightMode || georgiaMode || sonnyMode) {
+        const cardRadius = 24;
+        const borderColor = georgiaMode
+            ? "rgba(255,255,255,0.22)"
+            : frostedLight
+                ? "rgba(17,17,17,0.14)"
+                : sonnyMode
+                    ? "rgba(247,247,247,0.18)"
+                    : "rgba(51,65,85,0.6)";
+        const innerSurface = georgiaMode
+            ? "rgba(0,0,0,0.28)"
+            : solidMode
+                ? solidSurfaceColor
+                : "rgba(255,255,255,0.42)";
+        const topGradient = georgiaMode
+            ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] as const
+            : solidMode
+                ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] as const
+                : ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] as const;
+        const bottomGradient = georgiaMode || solidMode
+            ? ["transparent", "rgba(0,0,0,0.24)"] as const
+            : ["transparent", "rgba(223,196,170,0.16)"] as const;
         return (
             <View
                 style={[
                     tw`mt-3 overflow-hidden rounded-[28px] p-1`,
                     {
-                        backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.2)",
+                        backgroundColor: georgiaMode ? "transparent" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.2)",
                         shadowColor: "#000000",
                         shadowOffset: {width: 0, height: 8},
-                        shadowOpacity: 0.16,
+                        shadowOpacity: georgiaMode ? 0.32 : 0.16,
                         shadowRadius: 16,
                         elevation: 8,
                     },
                 ]}
             >
                 <BlurView
-                    intensity={72}
-                    tint={lightMode ? "light" : "dark"}
-                    style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: lightMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(247,247,247,0.18)" : "rgba(51,65,85,0.6)"}]}
+                    intensity={georgiaMode ? 38 : 72}
+                    tint={frostedLight ? "light" : "dark"}
+                    style={[tw`overflow-hidden rounded-[24px] border`, {borderColor}]}
                 >
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.42)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: innerSurface}]}
                     />
                     <LinearGradient
-                        colors={solidMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"]}
+                        colors={topGradient}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 top-0`, {height: "55%"}]}
                     />
                     <LinearGradient
-                        colors={solidMode ? ["transparent", "rgba(0,0,0,0.1)"] : ["transparent", "rgba(223,196,170,0.16)"]}
+                        colors={bottomGradient}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 bottom-0`, {height: "30%"}]}
                     />
+                    <View
+                        pointerEvents="none"
+                        style={[
+                            tw`absolute left-0 right-0 top-0 border-t`,
+                            {
+                                height: 1,
+                                borderTopColor: lightMode ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.28)",
+                                borderTopLeftRadius: cardRadius,
+                                borderTopRightRadius: cardRadius,
+                            },
+                        ]}
+                    />
                     <Calendar
+                        key={`calendar-${visualMode}`}
                         markedDates={markedDates}
                         onDayPress={onDayPress}
                         hideExtraDays
@@ -90,6 +159,7 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
     return (
         <View style={tw`mt-3 overflow-hidden rounded-[28px] border border-orange-50/17 bg-black/69 p-2`}>
             <Calendar
+                key={`calendar-${visualMode}`}
                 markedDates={markedDates}
                 onDayPress={onDayPress}
                 hideExtraDays

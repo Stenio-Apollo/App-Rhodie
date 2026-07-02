@@ -1,5 +1,5 @@
 import {Fragment, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {Alert, Animated, Easing, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
@@ -24,7 +24,7 @@ interface DirectMessagesScreenProps {
 }
 
 const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#2F4F4F";
+const GEORGIA_SURFACE_COLOR = "#111111";
 
 function displayName(author: CommunityAuthor): string {
     return author.fullName?.trim() || "Rhodie member";
@@ -123,8 +123,8 @@ function ConversationButton({
             onPress={onPress}
             style={({pressed}) => [
                 tw`rounded-3xl border px-4 py-3`,
-                coastOrRiver || georgiaMode ? tw`border-black/10` : tw`border-slate-700`,
-                selected ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/24`) : coastOrRiver || georgiaMode ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/18`) : tw`bg-black/70`,
+                georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700`,
+                selected ? (georgiaMode ? {backgroundColor: "rgba(255,255,255,0.12)"} : solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/24`) : georgiaMode ? {backgroundColor: "rgba(0,0,0,0.28)"} : coastOrRiver ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/18`) : tw`bg-black/70`,
                 pressed && tw`opacity-80`,
             ]}
         >
@@ -174,7 +174,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
         ? [
             tw`rounded-2xl px-4 py-3 text-center text-sm`,
             georgiaMode ? tw`text-white` : coastOrRiver ? tw`text-[#111111]` : tw`text-[#E4E0D4]`,
-            {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+            {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`;
 
@@ -274,6 +274,15 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
             visualMode={visualMode}
             style={[tw`absolute inset-0 z-20`, {paddingBottom: keyboardInset}]}
         >
+            {visualMode === "georgia" ? (
+                <ImageBackground
+                    source={require("../../public/images/newspaper 1.jpg")}
+                    resizeMode="cover"
+                    style={[StyleSheet.absoluteFill, {backgroundColor: GEORGIA_SURFACE_COLOR}]}
+                    imageStyle={{opacity: 0.33}}
+                    pointerEvents="none"
+                />
+            ) : null}
             <Animated.View style={[tw`flex-1`, {opacity: routeOpacity, transform: [{translateY: routeTranslateY}]}]}>
             <View style={tw`flex-row items-center justify-between border-b border-slate-700 px-4 py-3`}>
                 <View style={tw`flex-row items-center gap-2`}>
@@ -354,7 +363,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                                                 delayLongPress={320}
 	                                                style={({pressed}) => [
 	                                                    tw`rounded-3xl border border-slate-700 px-4 py-3`,
-	                                                    mine ? {backgroundColor: accentColor} : coastOrRiver || georgiaMode ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/24`) : tw`bg-black/70`,
+	                                                    mine ? {backgroundColor: accentColor} : georgiaMode ? {backgroundColor: "rgba(0,0,0,0.28)"} : coastOrRiver ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/24`) : tw`bg-black/70`,
 	                                                    actionSelected ? {
 	                                                        borderColor: accentColor,
 	                                                        shadowColor: accentColor,
@@ -442,7 +451,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                                 coastOrRiver
                                     ? [tw`max-h-24 flex-1 rounded-2xl border border-black/10 px-3 py-2 text-sm text-[#111111]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}]
                                     : georgiaMode
-                                        ? [tw`max-h-24 flex-1 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-white`, {backgroundColor: solidSurfaceColor}]
+                                        ? [tw`max-h-24 flex-1 rounded-2xl border border-white/10 px-3 py-2 text-sm text-white`, {backgroundColor: "rgba(0,0,0,0.28)"}]
                                     : tw`max-h-24 flex-1 rounded-2xl border border-slate-700 bg-black/45 px-3 py-2 text-sm text-[#E4E0D4]`,
                                 {fontFamily: fonts.body},
                             ]}

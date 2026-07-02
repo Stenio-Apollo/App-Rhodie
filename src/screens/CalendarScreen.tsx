@@ -134,9 +134,33 @@ export function CalendarScreen({
     const coastMode = visualMode === "coast";
     const coastOrRiver = visualMode === "river" || coastMode;
     const georgiaMode = visualMode === "georgia";
+    const sonnyMode = visualMode === "sonny";
     const accentColor = "#FF3800";
-    const primaryTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
-    const secondaryTextClass = coastMode || georgiaMode ? tw`text-white/70` : coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
+    const sonnyBadgeColor = "#ba885a";
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
+    const headerTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const selectedDateTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const bodyMutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.7)" : "#94a3b8";
+    const calendarTaskTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const calendarTaskMutedTextColor = georgiaMode ? "rgba(255,255,255,0.78)" : coastMode ? "rgba(255,255,255,0.78)" : bodyMutedTextColor;
+    const calendarTaskCardShellStyle = sonnyMode
+        ? {
+            borderRadius: 20,
+            backgroundColor: "#000000",
+            shadowColor: sonnyBadgeColor,
+            shadowOffset: {width: 0, height: 10},
+            shadowOpacity: 0.28,
+            shadowRadius: 18,
+            elevation: 10,
+        }
+        : null;
+    const calendarTaskCardStyle = sonnyMode
+        ? {
+            backgroundColor: "#000000",
+            borderColor: "rgba(186,136,90,0.52)",
+        }
+        : null;
+    const headerSecondaryTextClass = coastMode || georgiaMode ? tw`text-white/70` : coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -286,7 +310,7 @@ export function CalendarScreen({
                             pressed && {opacity: 0.6, transform: [{translateY: 1}]},
                         ]}
                     >
-                        <Ionicons name="close" size={18} color={primaryTextColor}/>
+                        <Ionicons name="close" size={18} color={headerTextColor}/>
                     </Pressable>
                 ) : null}
                 <ScrollView
@@ -300,9 +324,9 @@ export function CalendarScreen({
                         {route === "calendar" ? (
                             <View style={tw`mt-[49px]`}>
                                 <Text
-                                    style={[tw`self-center text-center text-2xl font-black`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Calendar</Text>
+                                    style={[tw`self-center text-center text-2xl font-black`, {fontFamily: fonts.heading, color: headerTextColor}]}>Calendar</Text>
                                 <Text
-                                    style={[tw`self-center text-center mt-1 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>Tap
+                                    style={[tw`self-center text-center mt-1 text-sm`, headerSecondaryTextClass, {fontFamily: fonts.body}]}>Tap
                                     a day to filter due tasks.</Text>
 
                                 {showTutorial && onDismissTutorial ? (
@@ -331,31 +355,33 @@ export function CalendarScreen({
                                 />
 
                                 <Text
-                                    style={[tw`mt-3 text-center text-lg font-extrabold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>{selectedDate}</Text>
+                                    style={[tw`mt-3 text-center text-lg font-extrabold`, {fontFamily: fonts.heading, color: selectedDateTextColor}]}>{selectedDate}</Text>
                                 {selectedTasks.length === 0 ? (
-                                    <TranslucentCard radius={16} style={tw`mt-2 p-3`}>
-                                        <Text style={[secondaryTextClass, {fontFamily: fonts.body}]}>No tasks due this day.</Text>
-                                    </TranslucentCard>
+                                    <View style={[tw`mt-2`, calendarTaskCardShellStyle]}>
+                                        <TranslucentCard radius={16} style={[tw`p-3`, calendarTaskCardStyle]}>
+                                            <Text style={[{fontFamily: fonts.body, color: calendarTaskMutedTextColor}]}>No tasks due this day.</Text>
+                                        </TranslucentCard>
+                                    </View>
                                 ) : (
                                     selectedTasks.map((task) => (
-                                        <View key={task.id}>
-                                        <TranslucentCard radius={16} style={tw`mt-2 p-3`}>
-                                            <Text
-                                                style={[tw`self-center text-center text-base font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>{task.title}</Text>
-                                            {!!task.description &&
+                                        <View key={task.id} style={[tw`mt-2`, calendarTaskCardShellStyle]}>
+                                            <TranslucentCard radius={16} style={[tw`p-3`, calendarTaskCardStyle]}>
                                                 <Text
-                                                    style={[tw`self-center text-center mt-1 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>{task.description}</Text>}
-                                            <Text
-                                                style={[tw`self-center text-center mt-2 text-xs font-bold uppercase text-slate-400`, {fontFamily: fonts.body}]}>
-                                                {task.status.replace("_", " ")} • {task.priority}
-                                            </Text>
-                                            {task.source === "google_calendar" ? (
+                                                    style={[tw`self-center text-center text-base font-bold`, {fontFamily: fonts.heading, color: calendarTaskTextColor}]}>{task.title}</Text>
+                                                {!!task.description &&
+                                                    <Text
+                                                        style={[tw`self-center text-center mt-1 text-sm`, {fontFamily: fonts.body, color: calendarTaskMutedTextColor}]}>{task.description}</Text>}
                                                 <Text
-                                                    style={[tw`self-center text-center mt-1 text-[10px] font-bold uppercase text-blue-300`, {fontFamily: fonts.body}]}>
-                                                    Google Calendar
+                                                    style={[tw`self-center text-center mt-2 text-xs font-bold uppercase`, {fontFamily: fonts.body, color: calendarTaskMutedTextColor}]}>
+                                                    {task.status.replace("_", " ")} • {task.priority}
                                                 </Text>
-                                            ) : null}
-                                        </TranslucentCard>
+                                                {task.source === "google_calendar" ? (
+                                                    <Text
+                                                        style={[tw`self-center text-center mt-1 text-[10px] font-bold uppercase`, {fontFamily: fonts.body, color: calendarTaskMutedTextColor}]}>
+                                                        Google Calendar
+                                                    </Text>
+                                                ) : null}
+                                            </TranslucentCard>
                                         </View>
                                     ))
                                 )}

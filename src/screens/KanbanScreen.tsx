@@ -20,7 +20,7 @@ const SONNY_ACCENT = "#FF3800";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
 const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#2F4F4F";
+const GEORGIA_SURFACE_COLOR = "#111111";
 const SOLID_THEME_PLACEHOLDER_COLOR = "rgba(247,247,247,0.77)";
 
 const buttonDepthStyle = {

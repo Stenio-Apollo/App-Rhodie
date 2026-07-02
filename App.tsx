@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Animated, AppState, Easing, PanResponder, Platform, Text, View} from "react-native";
+import {Alert, Animated, AppState, Easing, ImageBackground, PanResponder, Platform, StyleSheet, Text, View} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -65,7 +65,7 @@ const SWIPE_DISTANCE_THRESHOLD = 70;
 const SWIPE_VERTICAL_LIMIT = 55;
 
 function getVisualModeShellColor(visualMode: VisualMode): string {
-    if (visualMode === "georgia") return "#2F4F4F";
+    if (visualMode === "georgia") return "#111111";
     if (visualMode === "river") return "#DDEAF2";
     if (visualMode === "sonny") return "#000000";
     return "#708090";
@@ -542,6 +542,15 @@ function AppContent() {
                     style={[tw`flex-1`, {backgroundColor: shellBackgroundColor}]}
                 >
                     <StatusBar style="light"/>
+                    {visualModeState.mode === "georgia" ? (
+                        <ImageBackground
+                            source={require("./public/images/newspaper 1.jpg")}
+                            resizeMode="cover"
+                            style={StyleSheet.absoluteFill}
+                            imageStyle={{opacity: 0.33}}
+                            pointerEvents="none"
+                        />
+                    ) : null}
 
                 <AppHeader
                     fullName={profile?.full_name}

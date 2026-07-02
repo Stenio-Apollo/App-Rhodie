@@ -39,7 +39,7 @@ interface CommunityScreenProps {
 type ComposerMode = "prompt" | "gratitude" | "message";
 
 const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#2F4F4F";
+const GEORGIA_SURFACE_COLOR = "#111111";
 
 const COMPOSER_MODES: Array<{
     key: ComposerMode;
@@ -149,7 +149,7 @@ function MetricButton({
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const coastOrRiver = visualMode === "river" || coastMode;
-    const inactiveColor = coastOrRiver || georgiaMode ? "#111111" : "#ffffff";
+    const inactiveColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#ffffff";
     return (
         <Pressable
             onPress={onPress}
@@ -297,7 +297,7 @@ function CommentItem({
     const georgiaMode = visualMode === "georgia";
     const coastOrRiver = visualMode === "river" || coastMode;
     const primaryTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#ffffff";
-    const bodyTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.82)" : "rgba(255,255,255,0.9)";
+    const bodyTextColor = georgiaMode ? "rgba(255,255,255,0.82)" : coastOrRiver ? "rgba(17,17,17,0.82)" : "rgba(255,255,255,0.9)";
     const [editing, setEditing] = useState(false);
     const [editText, setEditText] = useState(comment.body);
     const [actionsOpen, setActionsOpen] = useState(false);
@@ -316,7 +316,7 @@ function CommentItem({
         <View style={[tw`gap-2`, depth > 0 ? {marginLeft: Math.min(depth, 2) * 18} : null]}>
             {showDate ? (
                 <View style={tw`my-1 items-center`}>
-                    <Text style={[tw`px-3 py-1 text-[10px]`, {fontFamily: fonts.body, color: coastOrRiver || georgiaMode ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.65)"}]}>
+                    <Text style={[tw`px-3 py-1 text-[10px]`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.58)" : coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.65)"}]}>
                         {formatTimestamp(comment.createdAt)}
                     </Text>
                 </View>
@@ -488,8 +488,8 @@ function PostCard({
     const georgiaMode = visualMode === "georgia";
     const coastOrRiver = visualMode === "river" || coastMode;
     const primaryTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#ffffff";
-    const bodyTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.82)" : "#E4E0D4";
-    const mutedTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.7)";
+    const bodyTextColor = georgiaMode ? "rgba(255,255,255,0.82)" : coastOrRiver ? "rgba(17,17,17,0.82)" : "#E4E0D4";
+    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.58)" : coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.7)";
     const [postEditing, setPostEditing] = useState(false);
     const [postEditText, setPostEditText] = useState(post.body);
     const [postActionsOpen, setPostActionsOpen] = useState(false);
@@ -698,7 +698,7 @@ function PostCard({
                                     pressed && tw`opacity-75`,
                                 ]}
                             >
-                                <Ionicons name="send" size={17} color={coastOrRiver || georgiaMode ? "#111111" : "#E4E0D4"}/>
+                                <Ionicons name="send" size={17} color={georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4"}/>
                             </Pressable>
                         </View>
                     </Animated.View>
@@ -738,12 +738,12 @@ export function CommunityScreen({
     const badgeColor = "#ba885a";
     const connectActionColor = "#FF3800";
     const primaryTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#ffffff";
-    const bodyTextColor = coastOrRiver || georgiaMode ? "rgba(17,17,17,0.74)" : "rgba(228,224,212,0.7)";
+    const bodyTextColor = georgiaMode ? "rgba(255,255,255,0.74)" : coastOrRiver ? "rgba(17,17,17,0.74)" : "rgba(228,224,212,0.7)";
     const inputStyle = coastOrRiver || georgiaMode
         ? [
             tw`mt-4 min-h-[88px] rounded-2xl px-4 py-3`,
-            coastOrRiver || georgiaMode ? tw`border border-black/10 text-[#111111]` : tw`border border-slate-700/60 text-[#E4E0D4]`,
-            {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+            georgiaMode ? tw`border border-white/10 text-white` : coastOrRiver ? tw`border border-black/10 text-[#111111]` : tw`border border-slate-700/60 text-[#E4E0D4]`,
+            {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-4 min-h-[88px] rounded-2xl border border-slate-700/60 bg-black/22 px-4 py-3 text-[#E4E0D4]`;
 
@@ -866,27 +866,41 @@ export function CommunityScreen({
                     keyboardDismissMode="interactive"
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={[tw`overflow-hidden rounded-[28px] p-1`, {backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
+                    <View style={[tw`overflow-hidden rounded-[28px] p-1`, {backgroundColor: georgiaMode ? "transparent" : solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
                         <BlurView
-                            intensity={30}
+                            intensity={georgiaMode ? 38 : 30}
                             tint={coastOrRiver ? "light" : "dark"}
-                            style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"}]}
+                            style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: georgiaMode ? "rgba(255,255,255,0.22)" : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"}]}
                         >
                             <View
                                 pointerEvents="none"
-                                style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
+                                style={[StyleSheet.absoluteFill, {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
                             />
                             <LinearGradient
-                                colors={["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
+                                colors={georgiaMode ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
                                 locations={[0, 0.5, 1]}
                                 pointerEvents="none"
-                                style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
+                                style={[tw`absolute left-0 right-0 top-0`, {height: georgiaMode ? "55%" : "45%"}]}
                             />
                             <LinearGradient
-                                colors={["transparent", "rgba(0,0,0,0.18)"]}
+                                colors={georgiaMode ? ["transparent", "rgba(0,0,0,0.24)"] : ["transparent", "rgba(0,0,0,0.18)"]}
                                 pointerEvents="none"
-                                style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
+                                style={[tw`absolute left-0 right-0 bottom-0`, {height: georgiaMode ? "35%" : "28%"}]}
                             />
+                            {georgiaMode ? (
+                                <View
+                                    pointerEvents="none"
+                                    style={[
+                                        tw`absolute left-0 right-0 top-0 border-t`,
+                                        {
+                                            height: 1,
+                                            borderTopColor: "rgba(255,255,255,0.55)",
+                                            borderTopLeftRadius: 24,
+                                            borderTopRightRadius: 24,
+                                        },
+                                    ]}
+                                />
+                            ) : null}
                             <View style={tw`p-4`}>
                         <Text style={[tw`text-2xl`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Connect</Text>
                         <Text style={[tw`mt-1 text-sm leading-5`, {fontFamily: fonts.body, color: bodyTextColor}]}>
@@ -896,8 +910,8 @@ export function CommunityScreen({
                             style={coastOrRiver || georgiaMode
                                 ? [
                                     tw`mt-4 flex-row rounded-2xl border p-1`,
-                                    coastOrRiver || georgiaMode ? tw`border-black/10` : tw`border-slate-700/60`,
-                                    {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+                                    georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+                                    {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
                                 ]
                                 : tw`mt-4 flex-row rounded-2xl border border-slate-700/60 bg-black/22 p-1`}
                         >
@@ -930,7 +944,7 @@ export function CommunityScreen({
                                                 tw`text-[11px]`,
                                                 {
                                                     fontFamily: fonts.button,
-                                                    color: active ? "#FFF6E8" : coastOrRiver || georgiaMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)"
+                                                    color: active ? "#FFF6E8" : georgiaMode ? "rgba(255,255,255,0.68)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)"
                                                 },
                                             ]}
                                         >
@@ -946,8 +960,8 @@ export function CommunityScreen({
                                     coastOrRiver || georgiaMode
                                         ? [
                                             tw`mt-3 rounded-2xl border px-3 py-2.5`,
-                                            coastOrRiver || georgiaMode ? tw`border-black/10` : tw`border-slate-700/60`,
-                                            {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+                                            georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+                                            {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
                                         ]
                                         : tw`mt-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2.5`
                                 }
@@ -955,7 +969,7 @@ export function CommunityScreen({
                                 <Text style={[tw`text-[11px]`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
                                     Today's prompt
                                 </Text>
-                                <Text style={[tw`mt-1 text-xs leading-4`, {fontFamily: fonts.body, color: coastOrRiver || georgiaMode ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)"}]}>
+                                <Text style={[tw`mt-1 text-xs leading-4`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.72)" : coastOrRiver ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.75)"}]}>
                                     {todaysPrompt}
                                 </Text>
                             </View>
@@ -964,7 +978,7 @@ export function CommunityScreen({
                             value={postText}
                             onChangeText={setPostText}
                             placeholder={selectedComposerMode.placeholder}
-                            placeholderTextColor={coastOrRiver || georgiaMode ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.45)"}
+                            placeholderTextColor={georgiaMode ? "rgba(255,255,255,0.45)" : coastOrRiver ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.45)"}
                             keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                             multiline
                             style={[inputStyle, {fontFamily: fonts.body}]}
@@ -994,12 +1008,12 @@ export function CommunityScreen({
 
                     {!community.isLoaded ? (
                         <Text
-                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, coastOrRiver || georgiaMode ? [tw`border-black/10 text-[#111111]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}] : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, georgiaMode ? [tw`border-white/10 text-white`, {backgroundColor: solidSurfaceColor}] : coastOrRiver ? [tw`border-black/10 text-[#111111]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}] : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
                             Loading peers...
                         </Text>
                     ) : community.posts.length === 0 ? (
                         <Text
-                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, coastOrRiver || georgiaMode ? [tw`border-black/10 text-[#111111]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}] : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
+                            style={[tw`rounded-2xl border px-4 py-3 text-center text-sm`, georgiaMode ? [tw`border-white/10 text-white`, {backgroundColor: solidSurfaceColor}] : coastOrRiver ? [tw`border-black/10 text-[#111111]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}] : tw`border-slate-700/60 bg-black/22 text-[#E4E0D4]`, {fontFamily: fonts.body}]}>
                             No posts yet.
                         </Text>
                     ) : (
