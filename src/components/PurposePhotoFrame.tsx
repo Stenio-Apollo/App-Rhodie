@@ -59,7 +59,7 @@ export function PurposePhotoFrame({
                     minimumFontScale={0.72}
                     style={[tw`mt-3 text-center text-[12px] uppercase text-[#111111]/58`, {fontFamily: fonts.body}]}
                 >
-                    your reason to keep going
+                    my reason to keep going
                 </Text>
             </View>
         );
@@ -96,7 +96,7 @@ export function PurposePhotoFrame({
                 minimumFontScale={0.62}
                 style={[tw`mt-1 text-center text-[6px] uppercase text-[#111111]/58`, {fontFamily: fonts.body}]}
             >
-                your reason to keep going
+                my reason to keep going
             </Text>
         </View>
     );

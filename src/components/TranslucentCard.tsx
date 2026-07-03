@@ -9,6 +9,7 @@ type GradientColors = readonly [string, string, ...string[]];
 
 interface TranslucentCardProps {
     style?: StyleProp<ViewStyle>;
+    containerStyle?: StyleProp<ViewStyle>;
     blur?: boolean;
     radius?: number;
 }
@@ -16,6 +17,7 @@ interface TranslucentCardProps {
 export function TranslucentCard({
                                     children,
                                     style,
+                                    containerStyle,
                                     blur = true,
                                     radius = 24,
                                 }: PropsWithChildren<TranslucentCardProps>) {
@@ -58,7 +60,7 @@ export function TranslucentCard({
 
     if (blur) {
         return (
-            <View style={[{borderRadius: radius}, shadowStyle]}>
+            <View style={[{borderRadius: radius}, shadowStyle, containerStyle]}>
                 <BlurView
                     intensity={frostedLight ? 42 : georgiaMode ? 38 : 34}
                     tint={frostedLight ? "light" : "dark"}
@@ -102,7 +104,7 @@ export function TranslucentCard({
     }
 
     return (
-        <View style={[{borderRadius: radius}, shadowStyle]}>
+        <View style={[{borderRadius: radius}, shadowStyle, containerStyle]}>
             <View
                 style={[
                     tw`overflow-hidden border`,

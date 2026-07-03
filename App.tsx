@@ -49,6 +49,7 @@ import {AppErrorBoundary} from "./src/components/AppErrorBoundary";
 import {useCommunity, type CommunityAuthor} from "./src/state/useCommunity";
 import {useDirectMessages} from "./src/state/useDirectMessages";
 import {BackgroundMusicPlayer} from "./src/components/BackgroundMusicPlayer";
+import {pickAndUploadProfileAvatar} from "./src/lib/profile-avatar-upload";
 
 type HomeAction =
     | { key: number; target: "journalPrompt"; entryId: string | null }
@@ -88,6 +89,7 @@ function AppContent() {
     const [goalFeedbackMessage, setGoalFeedbackMessage] = useState("");
     const [goalCheckRunKey, setGoalCheckRunKey] = useState(0);
     const [birthdayBurstKey, setBirthdayBurstKey] = useState("initial");
+    const [avatarBusy, setAvatarBusy] = useState(false);
     const birthdayBurstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const appStateRef = useRef(AppState.currentState);
     const lastHandledGoalCheckRunKeyRef = useRef(0);
@@ -366,6 +368,32 @@ function AppContent() {
         return error?.message ?? null;
     }
 
+    async function handleChangeAvatar() {
+        if (!session || avatarBusy) return;
+        setAvatarBusy(true);
+        try {
+            const avatarUrl = await pickAndUploadProfileAvatar(session.user.id);
+            if (!avatarUrl) return;
+
+            const errorMessage = await handleSaveProfile({
+                full_name: profile?.full_name ?? "",
+                birthday: profile?.birthday ?? null,
+                avatar_url: avatarUrl,
+            });
+
+            if (errorMessage) {
+                Alert.alert("Photo not saved", errorMessage);
+            }
+        } catch (error) {
+            Alert.alert(
+                "Photo not uploaded",
+                error instanceof Error ? error.message : "Your profile photo could not be uploaded.",
+            );
+        } finally {
+            setAvatarBusy(false);
+        }
+    }
+
     async function handleDeleteAccount() {
         const errorMessage = await deleteAccount();
         if (errorMessage) {
@@ -560,7 +588,7 @@ function AppContent() {
                     {visualModeState.mode === "georgia" ? (
                         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                             <ImageBackground
-                                source={require("./public/images/newspaper 1.jpg")}
+                                source={require("./public/images/rh11.jpg")}
                                 resizeMode="cover"
                                 style={StyleSheet.absoluteFill}
                                 imageStyle={{opacity: 0.33}}
@@ -571,8 +599,12 @@ function AppContent() {
                 <AppHeader
                     fullName={profile?.full_name}
                     avatarUrl={profile?.avatar_url}
+                    avatarBusy={avatarBusy}
                     accountOpen={accountOpen}
                     visualMode={visualModeState.mode}
+                    onChangeAvatar={() => {
+                        void handleChangeAvatar();
+                    }}
                     onToggleVisualMode={() => {
                         visualModeState.setMode(
                             visualModeState.mode === "coast"
@@ -675,6 +707,7 @@ function AppContent() {
                             }}
                             onPromptEntryOpenChange={setJournalPromptEntryOpen}
                             onMemoryRouteChange={setJournalMemoryOpen}
+                            onClearHomeAction={() => setHomeAction(null)}
                         />
                     ) : null}
                     {!accountOpen && tab === "board" ? (

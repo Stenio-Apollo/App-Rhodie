@@ -39,6 +39,7 @@ interface JournalScreenProps {
     onDismissTutorial?: () => void;
     onPromptEntryOpenChange?: (open: boolean) => void;
     onMemoryRouteChange?: (open: boolean) => void;
+    onClearHomeAction?: () => void;
 }
 
 function JournalRouteEntry({
@@ -95,6 +96,7 @@ export function JournalScreen({
                                   onDismissTutorial,
                                   onPromptEntryOpenChange,
                                   onMemoryRouteChange,
+                                  onClearHomeAction,
                               }: JournalScreenProps) {
     const {byDate, addEntry} = journal;
     const [selectedDate, setSelectedDate] = useState<string>(isoToday());
@@ -126,20 +128,54 @@ export function JournalScreen({
     const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     const journalContentTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const journalMutedTextColor = coastMode || georgiaMode ? "rgba(255,255,255,0.7)" : mutedTextColor;
-    const entrySurfaceStyle = coastOrRiver || georgiaMode
+    const entryHeaderStyle = georgiaMode
+        ? [
+            tw`relative flex-row items-center justify-center border-b px-4 py-3`,
+            {borderColor: "rgba(255,255,255,0.14)", backgroundColor: "rgba(0,0,0,0.22)"},
+        ]
+        : tw`relative flex-row items-center justify-center border-b border-slate-700 px-4 py-3`;
+    const entrySurfaceStyle = georgiaMode
+        ? tw`p-4`
+        : coastOrRiver
         ? [
             tw`rounded-[24px] border p-4`,
-            georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+            coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`;
-    const entryInputStyle = coastOrRiver || georgiaMode
+    const entryInputStyle = georgiaMode
+        ? tw`flex-1 px-4 py-4 text-base leading-6 text-white`
+        : coastOrRiver
         ? [
             tw`mt-4 flex-1 rounded-[24px] border px-4 py-4 text-base leading-6`,
-            coastMode || georgiaMode ? tw`border-black/10 text-white` : coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            coastMode ? tw`border-black/10 text-white` : coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4 text-base leading-6 text-[#E4E0D4]`;
+    const gratitudeInputShellStyle = georgiaMode
+        ? tw`mt-4 flex-1 px-4 py-4`
+        : coastOrRiver
+            ? [
+                tw`mt-4 flex-1 rounded-[24px] border px-4 py-4`,
+                coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+                {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+            ]
+            : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`;
+    const gratitudeInputStyle = georgiaMode
+        ? [
+            tw`mb-3 rounded-2xl border border-white/10 px-3 py-3 text-base text-white`,
+            {backgroundColor: "rgba(255,255,255,0.08)"},
+        ]
+        : coastOrRiver
+            ? [
+                tw`mb-3 rounded-2xl border px-3 py-3 text-base`,
+                coastMode ? tw`border-black/10 text-white` : coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+                {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
+            ]
+            : tw`mb-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-3 text-base text-[#E4E0D4]`;
+    const entryPlaceholderTextColor = georgiaMode ? "rgba(255,255,255,0.55)" : coastMode ? "rgba(255,255,255,0.55)" : "#6b7280";
+    const entryActionColor = georgiaMode ? badgeColor : journalContentTextColor;
+    const entryHeaderTextColor = georgiaMode ? badgeColor : journalContentTextColor;
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(selectedDate), [selectedDate]);
@@ -179,6 +215,7 @@ export function JournalScreen({
         haptics.saveJournalEntry();
         addEntry(body, selectedDate, "prompt");
         setPromptText("");
+        onClearHomeAction?.();
         setRoute("write");
     }
 
@@ -200,26 +237,33 @@ export function JournalScreen({
         const bulletText = items.slice(0, 3).map((item) => `• ${item}`).join("\n");
         addEntry(bulletText, selectedDate, "gratitude");
         setText("");
+        onClearHomeAction?.();
+        setRoute("write");
+    }
+
+    function closeEntryRoute() {
+        haptics.navigation();
+        onClearHomeAction?.();
         setRoute("write");
     }
 
     async function addPurposeImage() {
         try {
             if (journal.purposeImages.length >= 9) {
-                Alert.alert("Limit reached", "You can keep up to 9 Your Reason photos.");
+                Alert.alert("Limit reached", "You can keep up to 9 My Reason photos.");
                 return;
             }
 
             const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (!permission.granted) {
-                Alert.alert("Photo access needed", "Allow photo access to add encrypted Your Reason images.");
+                Alert.alert("Photo access needed", "Allow photo access to add encrypted My Reason images.");
                 return;
             }
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: "images",
                 allowsEditing: false,
-                quality: 0.72,
+                quality: 0.45,
                 base64: true,
             });
 
@@ -316,7 +360,7 @@ export function JournalScreen({
         setTimeout(() => {
             gratitudeInputRef.current?.focus();
         }, 280);
-    }, [byDate, homeAction]);
+    }, [byDate, homeAction?.entryId, homeAction?.key, homeAction?.target]);
 
     return (
         <ScreenBackground visualMode={visualMode} source={bg}>
@@ -329,44 +373,46 @@ export function JournalScreen({
                     },
                 ]}
             >
-                <View style={tw`absolute right-3 top-16 z-20 items-center gap-5`}>
-                    <JournalRouteEntry
-                        label="Write"
-                        icon="create-outline"
-                        active={route === "write" || route === "promptEntry" || route === "gratitudeEntry"}
-                        onPress={() => setRoute("write")}
-                        coastOrRiver={coastOrRiver || georgiaMode}
-                        whiteContent={coastMode || georgiaMode}
-                    />
-                    <JournalRouteEntry
-                        label="Memory"
-                        icon="albums-outline"
-                        active={route === "memory"}
-                        onPress={() => setRoute("memory")}
-                        coastOrRiver={coastOrRiver || georgiaMode}
-                        whiteContent={coastMode || georgiaMode}
-                    />
-                    <JournalRouteEntry
-                        label="Audio"
-                        icon="mic-outline"
-                        active={route === "audio"}
-                        onPress={() => setRoute("audio")}
-                        coastOrRiver={coastOrRiver || georgiaMode}
-                        whiteContent={coastMode || georgiaMode}
-                    />
-                    <JournalRouteEntry
-                        label="Your Reason"
-                        icon="image-outline"
-                        active={route === "purpose"}
-                        onPress={() => setRoute("purpose")}
-                        coastOrRiver={coastOrRiver || georgiaMode}
-                        whiteContent={coastMode || georgiaMode}
-                    />
-                </View>
+                {route !== "promptEntry" && route !== "gratitudeEntry" ? (
+                    <View style={tw`absolute right-3 top-16 z-20 items-center gap-5`}>
+                        <JournalRouteEntry
+                            label="Write"
+                            icon="create-outline"
+                            active={route === "write"}
+                            onPress={() => setRoute("write")}
+                            coastOrRiver={coastOrRiver || georgiaMode}
+                            whiteContent={coastMode || georgiaMode}
+                        />
+                        <JournalRouteEntry
+                            label="Memory"
+                            icon="albums-outline"
+                            active={route === "memory"}
+                            onPress={() => setRoute("memory")}
+                            coastOrRiver={coastOrRiver || georgiaMode}
+                            whiteContent={coastMode || georgiaMode}
+                        />
+                        <JournalRouteEntry
+                            label="Audio"
+                            icon="mic-outline"
+                            active={route === "audio"}
+                            onPress={() => setRoute("audio")}
+                            coastOrRiver={coastOrRiver || georgiaMode}
+                            whiteContent={coastMode || georgiaMode}
+                        />
+                        <JournalRouteEntry
+                            label="My Reason"
+                            icon="image-outline"
+                            active={route === "purpose"}
+                            onPress={() => setRoute("purpose")}
+                            coastOrRiver={coastOrRiver || georgiaMode}
+                            whiteContent={coastMode || georgiaMode}
+                        />
+                    </View>
+                ) : null}
                 {route === "memory" || route === "audio" || route === "purpose" ? (
                     <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={route === "memory" ? "Close memory shelf" : route === "purpose" ? "Close your reason images" : "Close audio journal"}
+                        accessibilityLabel={route === "memory" ? "Close memory shelf" : route === "purpose" ? "Close my reason images" : "Close audio journal"}
                         onPress={() => {
                             haptics.navigation();
                             setRoute("write");
@@ -437,8 +483,8 @@ export function JournalScreen({
                                 {showTutorial && onDismissTutorial ? (
                                     <View style={tw`mb-3`}>
                                         <TutorialCard
-                                            title="Let's talk about it"
-                                            body="I'll give you a prompt you give me your thoughts. Let's get started!"
+                                            title="Journal"
+                                            body="Answer the prompt or list three good things."
                                             onDismiss={onDismissTutorial}
                                         />
                                     </View>
@@ -571,7 +617,7 @@ export function JournalScreen({
                                             fontFamily: fonts.heading,
                                             color: primaryTextColor
                                         }]}>
-                                            Your Reason
+                                            My Reason
                                         </Text>
                                         <Text
                                             style={[tw`mt-1 text-xs leading-5`, {fontFamily: fonts.body, color: mutedTextColor}]}>
@@ -580,7 +626,7 @@ export function JournalScreen({
                                     </View>
                                     <Pressable
                                         accessibilityRole="button"
-                                        accessibilityLabel="Add your reason image"
+                                        accessibilityLabel="Add my reason image"
                                         onPress={() => {
                                             void addPurposeImage();
                                         }}
@@ -631,7 +677,7 @@ export function JournalScreen({
                                                     <Pressable
                                                         key={image.id}
                                                         accessibilityRole="button"
-                                                        accessibilityLabel="View your reason image"
+                                                        accessibilityLabel="View my reason image"
                                                         onPress={() => {
                                                             haptics.selection();
                                                             setViewingPurposeImageId(image.id);
@@ -670,7 +716,10 @@ export function JournalScreen({
                     <ScreenBackground
                         visualMode={visualMode}
                         source={promptEntryBg}
-                        style={tw`absolute inset-0 z-30`}
+                        style={[
+                            tw`absolute inset-0 z-30`,
+                            georgiaMode ? {backgroundColor: "rgba(17,17,17,0.18)"} : null,
+                        ]}
                     >
                         <Animated.View
                             style={[
@@ -684,118 +733,218 @@ export function JournalScreen({
                                     {opacity: routeOpacity, transform: [{translateY: routeTranslateY}]},
                                 ]}
                             >
-                                <View
-                                    style={tw`relative flex-row items-center justify-center border-b border-slate-700 px-4 py-3`}>
-                                    <Text style={[tw`text-xl`, {fontFamily: fonts.heading, color: journalContentTextColor}]}>
-                                        {route === "promptEntry" ? "Prompt Entry" : "Gratitude Entry"}
-                                    </Text>
-                                    <Pressable
-                                        accessibilityRole="button"
-                                        accessibilityLabel="Close journal entry"
-                                        onPress={() => {
-                                            haptics.navigation();
-                                            setRoute("write");
-                                        }}
-                                        style={({pressed}) => [
-                                            tw`absolute right-4 h-8 w-8 items-center justify-center rounded-full`,
-                                            pressed && tw`opacity-70`,
-                                        ]}
-                                    >
-                                        <Ionicons name="close" size={20} color={journalContentTextColor}/>
-                                    </Pressable>
-                                </View>
+                                {georgiaMode ? (
+                                    <View style={tw`px-4 pt-3`}>
+                                        <TranslucentCard radius={24} style={tw`relative flex-row items-center justify-center px-4 py-3`}>
+                                            <Text style={[tw`text-xl`, {fontFamily: fonts.heading, color: entryHeaderTextColor}]}>
+                                                {route === "promptEntry" ? "Prompt Entry" : "Gratitude Entry"}
+                                            </Text>
+                                            <Pressable
+                                                accessibilityRole="button"
+                                                accessibilityLabel="Close journal entry"
+                                                onPress={closeEntryRoute}
+                                                style={({pressed}) => [
+                                                    tw`absolute right-4 h-8 w-8 items-center justify-center rounded-full`,
+                                                    pressed && tw`opacity-70`,
+                                                ]}
+                                            >
+                                                <Ionicons name="close" size={20} color={journalContentTextColor}/>
+                                            </Pressable>
+                                        </TranslucentCard>
+                                    </View>
+                                ) : (
+                                    <View style={entryHeaderStyle}>
+                                        <Text style={[tw`text-xl`, {fontFamily: fonts.heading, color: entryHeaderTextColor}]}>
+                                            {route === "promptEntry" ? "Prompt Entry" : "Gratitude Entry"}
+                                        </Text>
+                                        <Pressable
+                                            accessibilityRole="button"
+                                            accessibilityLabel="Close journal entry"
+                                            onPress={closeEntryRoute}
+                                            style={({pressed}) => [
+                                                tw`absolute right-4 h-8 w-8 items-center justify-center rounded-full`,
+                                                pressed && tw`opacity-70`,
+                                            ]}
+                                        >
+                                            <Ionicons name="close" size={20} color={journalContentTextColor}/>
+                                        </Pressable>
+                                    </View>
+                                )}
 
                                 <View style={tw`flex-1 px-4 pb-4 pt-4`}>
                                     {route === "promptEntry" ? (
                                         <>
-                                            <View style={entrySurfaceStyle}>
-                                                <View style={tw`flex-row items-start justify-between gap-3`}>
-                                                    <Text style={[tw`flex-1 text-sm`, {
-                                                        fontFamily: fonts.heading,
+                                            {georgiaMode ? (
+                                                <TranslucentCard radius={24} style={entrySurfaceStyle}>
+                                                    <View style={tw`flex-row items-start justify-between gap-3`}>
+                                                        <Text style={[tw`flex-1 text-sm`, {
+                                                            fontFamily: fonts.heading,
+                                                            color: journalContentTextColor
+                                                        }]}>
+                                                            Journal prompt
+                                                        </Text>
+                                                        <Text style={[tw`text-[11px] font-semibold`, {
+                                                            fontFamily: fonts.body,
+                                                            color: journalMutedTextColor
+                                                        }]}>
+                                                            {selectedDate}
+                                                        </Text>
+                                                    </View>
+                                                    <Text style={[tw`mt-3 text-base leading-6`, {
+                                                        fontFamily: fonts.body,
                                                         color: journalContentTextColor
                                                     }]}>
-                                                        Journal prompt
+                                                        {todaysPrompt}
                                                     </Text>
-                                                    <Text style={[tw`text-[11px] font-semibold`, {
+                                                </TranslucentCard>
+                                            ) : (
+                                                <View style={entrySurfaceStyle}>
+                                                    <View style={tw`flex-row items-start justify-between gap-3`}>
+                                                        <Text style={[tw`flex-1 text-sm`, {
+                                                            fontFamily: fonts.heading,
+                                                            color: journalContentTextColor
+                                                        }]}>
+                                                            Journal prompt
+                                                        </Text>
+                                                        <Text style={[tw`text-[11px] font-semibold`, {
+                                                            fontFamily: fonts.body,
+                                                            color: journalMutedTextColor
+                                                        }]}>
+                                                            {selectedDate}
+                                                        </Text>
+                                                    </View>
+                                                    <Text style={[tw`mt-3 text-base leading-6`, {
                                                         fontFamily: fonts.body,
-                                                        color: journalMutedTextColor
+                                                        color: journalContentTextColor
                                                     }]}>
-                                                        {selectedDate}
+                                                        {todaysPrompt}
                                                     </Text>
                                                 </View>
-                                                <Text style={[tw`mt-3 text-base leading-6`, {
-                                                    fontFamily: fonts.body,
-                                                    color: journalContentTextColor
-                                                }]}>
-                                                    {todaysPrompt}
-                                                </Text>
-                                            </View>
+                                            )}
 
-                                            <TextInput
-                                                ref={promptInputRef}
-                                                value={promptText}
-                                                onChangeText={setPromptText}
-                                                keyboardAppearance="dark"
-                                                multiline
-                                                autoFocus
-                                                textAlignVertical="top"
-                                                style={[entryInputStyle, {fontFamily: fonts.body}]}
-                                            />
+                                            {georgiaMode ? (
+                                                <TranslucentCard
+                                                    radius={24}
+                                                    containerStyle={tw`mt-4 flex-1`}
+                                                    style={tw`flex-1`}
+                                                >
+                                                    <TextInput
+                                                        ref={promptInputRef}
+                                                        value={promptText}
+                                                        onChangeText={setPromptText}
+                                                        keyboardAppearance="dark"
+                                                        multiline
+                                                        autoFocus
+                                                        placeholder="Write what is on your mind..."
+                                                        placeholderTextColor={entryPlaceholderTextColor}
+                                                        textAlignVertical="top"
+                                                        style={[entryInputStyle, {fontFamily: fonts.body}]}
+                                                    />
+                                                </TranslucentCard>
+                                            ) : (
+                                                <TextInput
+                                                    ref={promptInputRef}
+                                                    value={promptText}
+                                                    onChangeText={setPromptText}
+                                                    keyboardAppearance="dark"
+                                                    multiline
+                                                    autoFocus
+                                                    placeholder="Write what is on your mind..."
+                                                    placeholderTextColor={entryPlaceholderTextColor}
+                                                    textAlignVertical="top"
+                                                    style={[entryInputStyle, {fontFamily: fonts.body}]}
+                                                />
+                                            )}
                                         </>
                                     ) : (
                                         <>
-                                            <View style={entrySurfaceStyle}>
-                                                <View style={tw`flex-row items-start justify-between gap-3`}>
-                                                    <Text style={[tw`flex-1 text-sm`, {
-                                                        fontFamily: fonts.heading,
-                                                        color: journalContentTextColor
-                                                    }]}>
-                                                        List 3 good things about today.
-                                                    </Text>
-                                                    <Text style={[tw`text-[11px] font-semibold`, {
-                                                        fontFamily: fonts.body,
-                                                        color: journalMutedTextColor
-                                                    }]}>
-                                                        {selectedDate}
-                                                    </Text>
+                                            {georgiaMode ? (
+                                                <TranslucentCard radius={24} style={entrySurfaceStyle}>
+                                                    <View style={tw`flex-row items-start justify-between gap-3`}>
+                                                        <Text style={[tw`flex-1 text-sm`, {
+                                                            fontFamily: fonts.heading,
+                                                            color: journalContentTextColor
+                                                        }]}>
+                                                            List 3 good things about today.
+                                                        </Text>
+                                                        <Text style={[tw`text-[11px] font-semibold`, {
+                                                            fontFamily: fonts.body,
+                                                            color: journalMutedTextColor
+                                                        }]}>
+                                                            {selectedDate}
+                                                        </Text>
+                                                    </View>
+                                                </TranslucentCard>
+                                            ) : (
+                                                <View style={entrySurfaceStyle}>
+                                                    <View style={tw`flex-row items-start justify-between gap-3`}>
+                                                        <Text style={[tw`flex-1 text-sm`, {
+                                                            fontFamily: fonts.heading,
+                                                            color: journalContentTextColor
+                                                        }]}>
+                                                            List 3 good things about today.
+                                                        </Text>
+                                                        <Text style={[tw`text-[11px] font-semibold`, {
+                                                            fontFamily: fonts.body,
+                                                            color: journalMutedTextColor
+                                                        }]}>
+                                                            {selectedDate}
+                                                        </Text>
+                                                    </View>
                                                 </View>
-                                            </View>
+                                            )}
 
-                                            <View
-                                                style={coastOrRiver || georgiaMode
-                                                    ? [
-                                                        tw`mt-4 flex-1 rounded-[24px] border px-4 py-4`,
-                                                        georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
-                                                        {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
-                                                    ]
-                                                    : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`}
-                                            >
-                                                {[0, 1, 2].map((idx) => (
-                                                    <TextInput
-                                                        ref={idx === 0 ? gratitudeInputRef : undefined}
-                                                        key={idx}
-                                                        value={text.split("\n")[idx] ?? ""}
-                                                        onChangeText={(val) => {
-                                                            const parts = text.split("\n");
-                                                            parts[idx] = val;
-                                                            setText(parts.slice(0, 3).join("\n"));
-                                                        }}
-                                                        keyboardAppearance="dark"
-                                                        placeholder="•"
-                                                        placeholderTextColor={coastMode || georgiaMode ? "rgba(255,255,255,0.55)" : "#6b7280"}
-                                                        style={[
-                                                            coastOrRiver || georgiaMode
-                                                                ? [
-                                                                    tw`mb-3 rounded-2xl border px-3 py-3 text-base`,
-                                                                    coastMode || georgiaMode ? tw`border-black/10 text-white` : coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
-                                                                    {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
-                                                                ]
-                                                                : tw`mb-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-3 text-base text-[#E4E0D4]`,
-                                                            {fontFamily: fonts.body},
-                                                        ]}
-                                                    />
-                                                ))}
-                                            </View>
+                                            {georgiaMode ? (
+                                                <TranslucentCard
+                                                    radius={24}
+                                                    containerStyle={tw`mt-4 flex-1`}
+                                                    style={tw`flex-1 px-4 py-4`}
+                                                >
+                                                    {[0, 1, 2].map((idx) => (
+                                                        <TextInput
+                                                            ref={idx === 0 ? gratitudeInputRef : undefined}
+                                                            key={idx}
+                                                            value={text.split("\n")[idx] ?? ""}
+                                                            onChangeText={(val) => {
+                                                                const parts = text.split("\n");
+                                                                parts[idx] = val;
+                                                                setText(parts.slice(0, 3).join("\n"));
+                                                            }}
+                                                            keyboardAppearance="dark"
+                                                            placeholder="•"
+                                                            placeholderTextColor={entryPlaceholderTextColor}
+                                                            style={[
+                                                                gratitudeInputStyle,
+                                                                {fontFamily: fonts.body},
+                                                            ]}
+                                                        />
+                                                    ))}
+                                                </TranslucentCard>
+                                            ) : (
+                                                <View
+                                                    style={gratitudeInputShellStyle}
+                                                >
+                                                    {[0, 1, 2].map((idx) => (
+                                                        <TextInput
+                                                            ref={idx === 0 ? gratitudeInputRef : undefined}
+                                                            key={idx}
+                                                            value={text.split("\n")[idx] ?? ""}
+                                                            onChangeText={(val) => {
+                                                                const parts = text.split("\n");
+                                                                parts[idx] = val;
+                                                                setText(parts.slice(0, 3).join("\n"));
+                                                            }}
+                                                            keyboardAppearance="dark"
+                                                            placeholder="•"
+                                                            placeholderTextColor={entryPlaceholderTextColor}
+                                                            style={[
+                                                                gratitudeInputStyle,
+                                                                {fontFamily: fonts.body},
+                                                            ]}
+                                                        />
+                                                    ))}
+                                                </View>
+                                            )}
                                         </>
                                     )}
 
@@ -811,7 +960,7 @@ export function JournalScreen({
                                                 pressed && (route === "promptEntry" ? promptText.trim().length > 0 : text.trim().length > 0) && tw`opacity-75`,
                                             ]}
                                         >
-                                            <Ionicons name="send" size={17} color={journalContentTextColor}/>
+                                            <Ionicons name="send" size={17} color={entryActionColor}/>
                                         </Pressable>
                                     </View>
                                 </View>
@@ -828,13 +977,13 @@ export function JournalScreen({
                     <View style={tw`flex-1 justify-center px-4`}>
                         <Pressable
                             accessibilityRole="button"
-                            accessibilityLabel="Close your reason image"
+                            accessibilityLabel="Close my reason image"
                             onPress={() => setViewingPurposeImageId(null)}
                             style={tw`absolute inset-0 bg-black/88`}
                         />
                         <Pressable
                             accessibilityRole="button"
-                            accessibilityLabel="Close your reason image"
+                            accessibilityLabel="Close my reason image"
                             onPress={() => setViewingPurposeImageId(null)}
                             hitSlop={12}
                             style={({pressed}) => [
@@ -858,7 +1007,7 @@ export function JournalScreen({
                     <View style={tw`flex-1 justify-center px-5`}>
                         <Pressable
                             accessibilityRole="button"
-                            accessibilityLabel="Cancel your reason image action"
+                            accessibilityLabel="Cancel my reason image action"
                             onPress={() => setDeletingPurposeImageId(null)}
                             style={tw`absolute inset-0 bg-black/72`}
                         />
@@ -882,7 +1031,7 @@ export function JournalScreen({
                                     color: purposeDialogMutedColor
                                 }]}
                             >
-                                Your Reason
+                                My Reason
                             </Text>
                             <Text
                                 style={[tw`mt-1 text-2xl`, {
@@ -890,7 +1039,7 @@ export function JournalScreen({
                                     color: purposeDialogTextColor
                                 }]}
                             >
-                                Your Reason photo
+                                My Reason photo
                             </Text>
                             <Text
                                 style={[tw`mt-3 text-sm leading-5`, {
@@ -898,13 +1047,13 @@ export function JournalScreen({
                                     color: purposeDialogMutedColor
                                 }]}
                             >
-                                Delete this encrypted photo from Your Reason.
+                                Delete this encrypted photo from My Reason.
                             </Text>
                             <View style={tw`mt-5 gap-2`}>
                                 <View style={tw`flex-row gap-2`}>
                                     <Pressable
                                         accessibilityRole="button"
-                                        accessibilityLabel="Cancel your reason image action"
+                                        accessibilityLabel="Cancel my reason image action"
                                         onPress={() => setDeletingPurposeImageId(null)}
                                         style={({pressed}) => [
                                             tw`flex-1 rounded-xl border px-3 py-3`,
@@ -926,7 +1075,7 @@ export function JournalScreen({
                                     </Pressable>
                                     <Pressable
                                         accessibilityRole="button"
-                                        accessibilityLabel="Delete your reason image"
+                                        accessibilityLabel="Delete my reason image"
                                         onPress={() => {
                                             if (!deletingPurposeImage) return;
                                             haptics.deleteTask();

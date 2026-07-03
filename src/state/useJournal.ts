@@ -379,7 +379,7 @@ export function useJournal(session: Session | null = null, encryption?: Encrypti
                 throw new Error("Unlock encrypted storage before adding purpose images.");
             }
             if (purposeImages.length >= MAX_PURPOSE_IMAGES) {
-                throw new Error("You can keep up to 9 Your Reason photos.");
+                throw new Error("You can keep up to 9 My Reason photos.");
             }
 
             const image: PurposeImage = {

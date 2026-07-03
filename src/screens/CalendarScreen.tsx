@@ -332,7 +332,7 @@ export function CalendarScreen({
                                     <View style={tw`mt-3`}>
                                         <TutorialCard
                                             title="Calendar"
-                                            body="Set your weekly goal here and I'll hold you accountable. Completed goals earns you 1pt. Every 3pts earns you a badge"
+                                            body="Set a weekly goal. Every three completed goals earns a badge."
                                             onDismiss={onDismissTutorial}
                                         />
                                     </View>

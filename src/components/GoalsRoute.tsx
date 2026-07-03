@@ -22,6 +22,9 @@ const buttonDepthStyle = {
     shadowRadius: 8,
     elevation: 6,
 };
+const GEORGIA_FROST_SURFACE_COLOR = "rgba(0,0,0,0.28)";
+const GEORGIA_FROST_PANEL_COLOR = "rgba(0,0,0,0.32)";
+const GEORGIA_FROST_BORDER_COLOR = "rgba(255,255,255,0.22)";
 
 function ButtonShine() {
     return (
@@ -115,8 +118,11 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     const routeHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const cardHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
     const cardSectionLabelTextColor = coastMode || georgiaMode ? "#FFFFFF" : mutedTextColor;
-    const panelBorderColor = coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c";
-    const panelBackgroundColor = coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
+    const panelBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c";
+    const panelBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
+    const shellBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? "rgba(0,0,0,0.12)" : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
+    const blurSurfaceColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_SURFACE_COLOR : coastOrRiver ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)";
+    const blurBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "#334155";
     const accentColor = "#FF3800";
     const accentSoftColor = visualMode === "sonny" ? "rgba(255,56,0,0.18)" : "rgba(181,89,65,0.18)";
     const accentSelectedColor = "rgba(255,56,0,0.22)";
@@ -151,7 +157,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
             <View
                 style={[
                     tw`mt-4 overflow-hidden rounded-[28px] p-1`,
-                    {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                    {backgroundColor: shellBackgroundColor},
                 ]}
             >
                 <BlurView
@@ -159,15 +165,15 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                     tint={coastOrRiver ? "light" : "dark"}
                     style={[
                         tw`overflow-hidden rounded-[24px] border`,
-                        {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#334155"},
+                        {borderColor: blurBorderColor},
                     ]}
                 >
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: blurSurfaceColor}]}
                     />
                     <LinearGradient
-                        colors={coastMode || georgiaMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : coastOrRiver ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
+                        colors={coastMode || georgiaMode ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"] : coastOrRiver ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
@@ -182,7 +188,10 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                         <View
                             style={[
                                 tw`rounded-2xl border p-3`,
-                                {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)", backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)"},
+                                {
+                                    borderColor: georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)",
+                                    backgroundColor: coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                                },
                             ]}
                         >
                             <View style={tw`flex-row items-center justify-between`}>
@@ -328,7 +337,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <ButtonShine/>
                                         <View style={[
                                             tw`h-10 w-10 items-center justify-center rounded-full`,
-                                            {backgroundColor: selected ? accentSelectedColor : coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
+                                            {backgroundColor: selected ? accentSelectedColor : coastMode ? solidSurfaceColor : georgiaMode ? "rgba(255,255,255,0.08)" : coastOrRiver ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
                                         ]}>
                                             <Ionicons
                                                 name={(preset.icon ?? "flag-outline") as React.ComponentProps<typeof Ionicons>["name"]}
@@ -386,7 +395,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                                 style={[
                                     tw`mt-2`,
-                                    georgiaMode ? [tw`border-white/10 text-white`, {backgroundColor: solidSurfaceColor}] : coastOrRiver ? [tw`border-black/10 text-[#111111]`, {backgroundColor: coastMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
+                                    georgiaMode ? [tw`border-white/10 text-white`, {backgroundColor: "rgba(255,255,255,0.08)"}] : coastOrRiver ? [tw`border-black/10 text-[#111111]`, {backgroundColor: coastMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : null,
                                 ]}
                             />
                             <Pressable

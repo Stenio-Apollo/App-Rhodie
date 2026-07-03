@@ -277,7 +277,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
             {visualMode === "georgia" ? (
                 <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                     <ImageBackground
-                        source={require("../../public/images/newspaper 1.jpg")}
+                        source={require("../../public/images/rh11.jpg")}
                         resizeMode="cover"
                         style={[StyleSheet.absoluteFill, {backgroundColor: GEORGIA_SURFACE_COLOR}]}
                         imageStyle={{opacity: 0.33}}

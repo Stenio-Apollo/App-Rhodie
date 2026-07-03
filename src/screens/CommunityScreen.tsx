@@ -833,7 +833,9 @@ export function CommunityScreen({
         }
     }
 
-    const backgroundImage = require("../../public/images/newspaper 1.jpg");
+    const backgroundImage = visualMode === "georgia"
+        ? require("../../public/images/rh11.jpg")
+        : require("../../public/images/newspaper 1.jpg");
     const {keyboardInset} = useKeyboardInset();
 
     return (

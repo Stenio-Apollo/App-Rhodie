@@ -21,12 +21,12 @@ const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; act
 ];
 
 const ACTIVE_NAV_COLOR = "#B55941";
-const GEORGIA_NAV_COLOR = "#FF3800";
+const GEORGIA_NAV_COLOR = "#ba885a";
 const RIVER_NAV_COLOR = "#FF3800";
 const SONNY_NAV_COLOR = "#FF3800";
 const COAST_NAV_COLOR = "#FF3800";
 const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#111111";
+const GEORGIA_FROST_SURFACE_COLOR = "rgba(0,0,0,0.28)";
 const INACTIVE_COLOR = "#E4E0D4";
 const ROW_HORIZONTAL_PADDING = 3;
 const PILL_HORIZONTAL_INSET = 3;
@@ -40,14 +40,6 @@ interface BottomTabBarProps {
     onTabPress: (tab: Tab) => void;
 }
 
-function hexToRgba(hex: string, opacity: number): string {
-    const normalized = hex.replace("#", "");
-    const red = Number.parseInt(normalized.slice(0, 2), 16);
-    const green = Number.parseInt(normalized.slice(2, 4), 16);
-    const blue = Number.parseInt(normalized.slice(4, 6), 16);
-    return `rgba(${red},${green},${blue},${opacity})`;
-}
-
 export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
     const [rowWidth, setRowWidth] = useState(0);
@@ -58,7 +50,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
     const coastOrRiver = riverMode || coastMode;
-    const lightMode = coastOrRiver || georgiaMode;
+    const lightMode = coastOrRiver;
     const activeNavColor = sonnyMode
         ? SONNY_NAV_COLOR
         : coastMode
@@ -68,12 +60,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                 : georgiaMode
                     ? GEORGIA_NAV_COLOR
                     : ACTIVE_NAV_COLOR;
-    const navFrameColor = coastMode ? COAST_SURFACE_COLOR : georgiaMode ? GEORGIA_SURFACE_COLOR : lightMode ? "#FFFFFF" : "#000000";
     const inactiveColor = georgiaMode ? "#FFFFFF" : lightMode ? "#111111" : INACTIVE_COLOR;
-    const navBorderSoft = hexToRgba(navFrameColor, 0.23);
-    const navBorderStrong = hexToRgba(navFrameColor, 0.39);
-    const pillBorderColor = hexToRgba(navFrameColor, 0.43);
-    const rippleBorderColor = hexToRgba(navFrameColor, 0.33);
 
     const tabWidth = rowWidth > 0 ? (rowWidth - ROW_HORIZONTAL_PADDING * 2) / tabCount : 0;
     const pillWidth = Math.max(0, tabWidth - PILL_HORIZONTAL_INSET * 2);
@@ -225,9 +212,8 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
         >
             <Animated.View
                 style={[
-                    tw`overflow-hidden rounded-full  p-1`,
+                    tw`overflow-hidden rounded-full p-1`,
                     {
-                        borderColor: navBorderSoft,
                         transform: [
                             {translateY: barTranslateY},
                             {scaleX: barScaleX},
@@ -239,12 +225,12 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                 <BlurView
                     intensity={72}
                     tint={lightMode ? "light" : "dark"}
-                    style={[tw`overflow-hidden rounded-full border`, {borderColor: navBorderStrong}]}
+                    style={tw`overflow-hidden rounded-full`}
                 >
                     {/* Base tint behind everything */}
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: coastMode ? COAST_SURFACE_COLOR : georgiaMode ? GEORGIA_SURFACE_COLOR : lightMode ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.49)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: coastMode ? COAST_SURFACE_COLOR : georgiaMode ? GEORGIA_FROST_SURFACE_COLOR : lightMode ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.49)"}]}
                     />
 
                     {/* Top rim highlight — the "shine" */}
@@ -269,13 +255,12 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                             <Animated.View
                                 pointerEvents="none"
                                 style={[
-                                    tw`absolute rounded-full border`,
+                                    tw`absolute rounded-full`,
                                     {
                                         width: pillWidth,
                                         top: PILL_VERTICAL_INSET,
                                         bottom: PILL_VERTICAL_INSET,
                                         left: ROW_HORIZONTAL_PADDING + PILL_HORIZONTAL_INSET,
-                                        borderColor: pillBorderColor,
                                         backgroundColor: "rgb(255 255 255 / 0.22)",
                                         transform: [
                                             {translateX: pillTranslateX},
@@ -296,9 +281,8 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                                     pointerEvents="none"
                                     style={[
                                         StyleSheet.absoluteFill,
-                                        tw`rounded-full border`,
+                                        tw`rounded-full`,
                                         {
-                                            borderColor: rippleBorderColor,
                                             opacity: rippleOpacity,
                                             transform: [{scale: rippleScale}],
                                         },

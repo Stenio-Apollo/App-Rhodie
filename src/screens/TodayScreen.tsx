@@ -231,8 +231,8 @@ export function TodayScreen({
                 >
                     {showTutorial && onDismissTutorial ? (
                         <TutorialCard
-                            title="Home is command center"
-                            body="Tap cards to jump into Rhodie. use sticky notes for quick thoughts, tap Georgia/Coast to change the mode."
+                            title="Home"
+                            body="Tap cards to jump in. Use sticky notes for quick thoughts."
                             onDismiss={onDismissTutorial}
                         />
                     ) : null}

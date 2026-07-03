@@ -2,7 +2,6 @@ import {useEffect, useMemo, useRef, useState} from "react";
 import {
     Animated,
     ImageBackground,
-    type ImageRequireSource,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -23,43 +22,43 @@ interface OnboardingStep {
     eyebrow: string;
     title: string;
     body: string;
-    video?: ImageRequireSource;
 }
 
 const STEPS: OnboardingStep[] = [
     {
         eyebrow: "Start here",
-        title: "Run the day from Home",
-        body: "Home keeps the essentials close: tap the sticky note to add quick notes, add it to Tasks when it becomes action, and use Georgia/Coast in the header to switch the app's background mood.",
+        title: "Home",
+        body: "Check today, capture quick notes, and switch visual themes from the header.",
     },
     {
         eyebrow: "Plan",
-        title: "Beat the Burn-out",
-        body: "Plan your day here! Create a block and we'll remind you 15 mins before it starts.",
-        video: require("../../public/videos/plan.mov"),
+        title: "Plan your day",
+        body: "Add time blocks and Rhodie reminds you before they start.",
     },
     {
         eyebrow: "Journal",
-        title: "Let's Talk about it, robot to man!",
-        body: "I'll give you the prompts and you give me your thoughts! Deal? Oh and don't forget your '3 good things' ",
-        video: require("../../public/videos/journal.mov"),
+        title: "Reflect",
+        body: "Answer the prompt, save gratitude, and keep private memories.",
     },
     {
         eyebrow: "Tasks",
-        title: "get things done here",
-        body: "Create... Complete... Delete... Repeat",
-        video: require("../../public/videos/tasks.mov"),
+        title: "Tasks",
+        body: "Create tasks, set priority, complete what matters.",
     },
     {
         eyebrow: "Calendar",
-        title: "Set the weekly target",
-        body: "Rhodie keeps you accountable here, set a goal and we'll check in daily. Every completed goal is 1pt, every 3pts is a badge for your home screen.",
-        video: require("../../public/videos/calendar.mov"),
+        title: "Goals",
+        body: "Set a weekly goal. Daily check-ins turn progress into badges.",
+    },
+    {
+        eyebrow: "Connect",
+        title: "Connect",
+        body: "Share progress, message people, and see how others are showing up.",
     },
     {
         eyebrow: "Ready",
-        title: "You are set.",
-        body: "You can replay this guide from Account any time. Start on Home, use the sticky note for quick capture, and tap the Georgia/Coast pill in the header whenever you want a different visual feel.",
+        title: "You are set",
+        body: "Replay this guide from Account any time.",
     },
 ];
 
@@ -149,57 +148,13 @@ function IntroVideo({onDone}: { onDone: () => void }) {
     );
 }
 
-function OnboardingVideo({source}: { source: ImageRequireSource }) {
-    const [hasError, setHasError] = useState(false);
-    const player = useVideoPlayer(source, (instance) => {
-        instance.loop = true;
-        instance.muted = true;
-        instance.play();
-    });
-
-    useEffect(() => {
-        const subscription = player.addListener("statusChange", ({status}) => {
-            if (status === "error") {
-                setHasError(true);
-            }
-        });
-        player.play();
-        return () => {
-            subscription.remove();
-        };
-    }, [player]);
-
-    if (hasError) {
-        return (
-            <View style={tw`mt-4 rounded-[24px] border border-[#E4E0D4]/15 bg-black/35 p-4`}>
-                <Text style={[tw`text-sm text-slate-300`, {fontFamily: fonts.body}]}>
-                    Tutorial video could not load on this device. You can keep going.
-                </Text>
-            </View>
-        );
-    }
-
-    return (
-        <View style={tw`mt-4 overflow-hidden rounded-[24px] border border-[#E4E0D4]/15 bg-black/35`}>
-            <VideoView
-                player={player}
-                style={styles.video}
-                contentFit="contain"
-                nativeControls={false}
-                allowsFullscreen={false}
-                allowsPictureInPicture={false}
-            />
-        </View>
-    );
-}
-
 export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
     const [showIntro, setShowIntro] = useState(true);
     const [index, setIndex] = useState(0);
     const [isCompleting, setIsCompleting] = useState(false);
     const step = STEPS[index];
     const isLast = index === STEPS.length - 1;
-    const bg = require("../../public/images/rh19.jpg");
+    const bg = require("../../public/images/newspaper 1.jpg");
 
     const progress = useMemo(
         () => STEPS.map((_, itemIndex) => itemIndex <= index),
@@ -269,8 +224,6 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
                             {step.body}
                         </Text>
 
-                        {step.video && !isCompleting ? <OnboardingVideo key={index} source={step.video}/> : null}
-
                         <View style={tw`mt-6 flex-row gap-2`}>
                             {progress.map((active, itemIndex) => (
                                 <View
@@ -322,9 +275,5 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         width: "100%",
         height: "100%",
-    },
-    video: {
-        width: "100%",
-        height: 320,
     },
 });

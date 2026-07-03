@@ -21,6 +21,9 @@ const CREAM = "#F0F8FF";
 const TEXT_PRIMARY = "#E4E0D4";
 const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#111111";
+const GEORGIA_FROST_SURFACE_COLOR = "rgba(0,0,0,0.28)";
+const GEORGIA_FROST_PANEL_COLOR = "rgba(0,0,0,0.32)";
+const GEORGIA_FROST_BORDER_COLOR = "rgba(255,255,255,0.22)";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -97,13 +100,15 @@ function StatPill({label, value}: {label: string; value: string | number}) {
     const georgiaMode = visualMode === "georgia";
     const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
     const coastOrRiver = visualMode === "river" || coastMode;
+    const borderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)";
+    const backgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
     return (
         <View
             style={[
                 tw`flex-1 overflow-hidden rounded-2xl border px-3 py-2.5`,
                 {
-                    borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)",
-                    backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                    borderColor,
+                    backgroundColor,
                     ...buttonDepthStyle,
                 },
             ]}
@@ -138,6 +143,8 @@ function FilterChip({
     const coastOrRiver = visualMode === "river" || coastMode;
     const accentColor = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
     const accentBorderColor = visualMode === "sonny" ? "#CB0000" : "#C82D00";
+    const inactiveBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
+    const inactiveBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)";
     return (
         <Pressable
             accessibilityRole="button"
@@ -151,8 +158,8 @@ function FilterChip({
                 active
                     ? {borderColor: coastOrRiver ? "#C82D00" : visualMode === "sonny" ? accentBorderColor : CREAM, backgroundColor: coastOrRiver ? "#FF3800" : visualMode === "sonny" ? accentColor : CREAM, ...buttonDepthStyle}
                     : {
-                        borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)",
-                        backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)",
+                        borderColor: inactiveBorderColor,
+                        backgroundColor: inactiveBackgroundColor,
                         ...buttonDepthStyle,
                     },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
@@ -196,7 +203,8 @@ function EntryCard({
     const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
     const coastOrRiver = visualMode === "river" || coastMode;
     const badgeColor = georgiaMode ? "#DAC8AE" : coastOrRiver ? COAST_BADGE_COLOR : DARK_BADGE_COLOR;
-    const cardBorderColor = coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
+    const cardBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
+    const cardBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : TEXT_PRIMARY;
     const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.58)";
     return (
@@ -205,7 +213,7 @@ function EntryCard({
                 tw`overflow-hidden rounded-2xl border p-4`,
                 {
                     borderColor: cardBorderColor,
-                    backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)",
+                    backgroundColor: cardBackgroundColor,
                     ...buttonDepthStyle,
                 },
             ]}
@@ -260,7 +268,7 @@ function EntryCard({
                     keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                     multiline
                     style={[
-                        georgiaMode ? [tw`mt-3 rounded-xl border border-white/10 px-3 py-2`, {backgroundColor: solidSurfaceColor}] : coastOrRiver ? [tw`mt-3 rounded-xl border border-black/10 px-3 py-2`, {backgroundColor: coastMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
+                        georgiaMode ? [tw`mt-3 rounded-xl border px-3 py-2`, {borderColor: GEORGIA_FROST_BORDER_COLOR, backgroundColor: "rgba(255,255,255,0.08)"}] : coastOrRiver ? [tw`mt-3 rounded-xl border border-black/10 px-3 py-2`, {backgroundColor: coastMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
                         {fontFamily: fonts.body, color: primaryTextColor},
                     ]}
                 />
@@ -316,6 +324,8 @@ function ActionPill({
     const coastOrRiver = visualMode === "river" || coastMode;
     const accentColor = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
     const accentBorderColor = visualMode === "sonny" ? "#CB0000" : ACCENT;
+    const inactiveBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.42)";
+    const inactiveBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
     return (
         <Pressable
             accessibilityRole="button"
@@ -329,8 +339,8 @@ function ActionPill({
                 accent
                     ? {borderColor: coastOrRiver ? "#C82D00" : accentBorderColor, backgroundColor: coastOrRiver ? "#FF3800" : accentColor, ...buttonDepthStyle}
                     : {
-                        borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.42)",
-                        backgroundColor: coastMode || georgiaMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                        borderColor: inactiveBorderColor,
+                        backgroundColor: inactiveBackgroundColor,
                         ...buttonDepthStyle,
                     },
                 pressed && {opacity: 0.78, transform: [{translateY: 1}]},
@@ -451,14 +461,17 @@ export function MemoryShelf({
     const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : TEXT_PRIMARY;
     const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.65)" : coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
-    const panelBorderColor = coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c";
-    const panelBackgroundColor = solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
+    const panelBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c";
+    const panelBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
+    const shellBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? "rgba(0,0,0,0.12)" : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
+    const blurSurfaceColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_SURFACE_COLOR : coastOrRiver ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)";
+    const blurBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "#334155";
 
     return (
         <View
             style={[
                 tw`overflow-hidden rounded-[28px] p-1`,
-                {backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"},
+                {backgroundColor: shellBackgroundColor},
             ]}
         >
             <BlurView
@@ -466,15 +479,15 @@ export function MemoryShelf({
                 tint={coastOrRiver ? "light" : "dark"}
                 style={[
                     tw`overflow-hidden rounded-[24px] border`,
-                    {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#334155"},
+                    {borderColor: blurBorderColor},
                 ]}
             >
                 <View
                     pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, {backgroundColor: solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)"}]}
+                    style={[StyleSheet.absoluteFill, {backgroundColor: blurSurfaceColor}]}
                 />
                 <LinearGradient
-                    colors={solidMode ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] : coastOrRiver ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
+                    colors={coastMode || georgiaMode ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"] : coastOrRiver ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
                     locations={[0, 0.5, 1]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}

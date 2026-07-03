@@ -177,7 +177,7 @@ export function AccountScreen({
     const [route, setRoute] = useState<AccountRoute>("account");
     const [musicDropdownOpen, setMusicDropdownOpen] = useState(false);
     const bg = visualMode === "georgia"
-        ? require("../../public/images/news paper.jpg")
+        ? require("../../public/images/rh11.jpg")
         : require("../../public/images/newspaper 1.jpg");
     const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";

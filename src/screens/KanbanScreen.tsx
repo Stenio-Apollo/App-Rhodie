@@ -298,8 +298,8 @@ export function KanbanScreen({
                         {showTutorial && onDismissTutorial ? (
                             <View style={tw`mb-3`}>
                                 <TutorialCard
-                                    title="get things done here!"
-                                    body="Create.. Complete... Delete.. Repeat."
+                                    title="Tasks"
+                                    body="Create tasks, set priority, and complete them."
                                     onDismiss={onDismissTutorial}
                                 />
                             </View>

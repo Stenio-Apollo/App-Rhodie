@@ -1,20 +1,13 @@
 import {useState} from "react";
-import {
-    Animated,
-    ImageBackground,
-    Pressable,
-    SafeAreaView,
-    Text,
-    TextInput,
-    View,
-} from "react-native";
+import {Animated, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View,} from "react-native";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import type {EncryptionState} from "../state/useEncryption";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 
-const passphraseBackground = require("../../public/images/newspaper 1.jpg");
+const passphraseIcon = require("../../assets/iconNew.png");
+const PASSPHRASE_ICON_SIZE = 190;
 
 interface PrivacyPassphraseScreenProps {
     encryption: EncryptionState;
@@ -61,6 +54,10 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
             return err.message;
         }
         return fallback;
+    }
+
+    function displayErrorMessage(message: string): string {
+        return message.includes("unlock your encrypted data") ? "try again" : message;
     }
 
     function currentPinValue(): string {
@@ -359,13 +356,30 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
     const pinValue = currentPinValue();
     const pinLength = resetCodeSent && recoveryStage === "code" ? 8 : 4;
     const shouldShowForgotPin = !needsSetup && !isLegacyProfile && !resetCodeSent;
+    const visibleError = error ?? encryption.error;
     const {keyboardInset} = useKeyboardInset();
 
     return (
-        <ImageBackground source={passphraseBackground} resizeMode="cover" style={tw`flex-1`}
-                         imageStyle={{opacity: 0.53}}>
+        <View style={tw`flex-1 bg-black`}>
+            <View
+                pointerEvents="none"
+                style={[
+                    StyleSheet.absoluteFill,
+                    tw`items-center justify-center`,
+                    {transform: [{translateY: -44}]},
+                ]}
+            >
+                <Image
+                    source={passphraseIcon}
+                    resizeMode="contain"
+                    style={{
+                        width: PASSPHRASE_ICON_SIZE,
+                        height: PASSPHRASE_ICON_SIZE,
+                    }}
+                />
+            </View>
             <Animated.View style={[tw`flex-1`, {paddingBottom: keyboardInset}]}>
-                <SafeAreaView style={tw`flex-1 bg-black/35 px-7`}>
+                <SafeAreaView style={tw`flex-1 px-7`}>
                     <View style={tw`pt-4`}>
                         <View style={tw`min-h-[44px] flex-row items-center justify-center`}>
                             <Text style={[tw`text-center text-2xl text-[#F6F0E7]`, {fontFamily: fonts.heading}]}>
@@ -448,10 +462,10 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
                             ))}
                         </View>
 
-                        {error || encryption.error ? (
+                        {visibleError ? (
                             <Text
-                                style={[tw`mt-8 text-center text-sm leading-5 text-rose-200`, {fontFamily: fonts.body}]}>
-                                {error ?? encryption.error}
+                                style={[tw`mt-8 text-center text-sm leading-5 text-[#FF3800]`, {fontFamily: fonts.body}]}>
+                                {displayErrorMessage(visibleError)}
                             </Text>
                         ) : null}
 
@@ -462,7 +476,8 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
                                 }}
                                 disabled={busy}
                                 style={({pressed}) => [
-                                    tw`mt-8 rounded-xl px-4 py-2`,
+                                    tw`rounded-xl px-4 py-2`,
+                                    visibleError ? tw`mt-2` : tw`mt-8`,
                                     pressed && tw`opacity-70`,
                                     busy && tw`opacity-50`,
                                 ]}
@@ -496,18 +511,21 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
                                             disabled={busy}
                                             style={({pressed}) => [
                                                 tw`h-20 w-20 items-center justify-center rounded-full`,
-                                                pressed && tw`bg-[#F6F0E7]/12`,
+                                                pressed && tw`rounded-2xl bg-[#FF3800]/49`,
                                                 busy && tw`opacity-50`,
                                             ]}
                                         >
-                                            <Text
-                                                style={[
-                                                    tw`text-center text-3xl text-[#F6F0E7]`,
-                                                    {fontFamily: isDelete ? fonts.heading : fonts.body},
-                                                ]}
-                                            >
-                                                {isDelete ? "x" : item}
-                                            </Text>
+                                            {({pressed}) => (
+                                                <Text
+                                                    style={[
+                                                        tw`text-center text-3xl text-[#F6F0E7]`,
+                                                        pressed && tw`text-black`,
+                                                        {fontFamily: isDelete ? fonts.heading : fonts.body},
+                                                    ]}
+                                                >
+                                                    {isDelete ? "x" : item}
+                                                </Text>
+                                            )}
                                         </Pressable>
                                     );
                                 })}
@@ -516,6 +534,6 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
                     </View>
                 </SafeAreaView>
             </Animated.View>
-        </ImageBackground>
+        </View>
     );
 }
