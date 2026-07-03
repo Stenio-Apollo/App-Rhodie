@@ -1,5 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import {supabase} from "./supabase";
+import {base64ToUint8Array} from "./base64";
 
 function extensionFromAsset(asset: ImagePicker.ImagePickerAsset): string {
     const mimeType = asset.mimeType?.toLowerCase();
@@ -31,15 +32,19 @@ export async function pickAndUploadProfileAvatar(userId: string): Promise<string
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.82,
+        base64: true,
     });
 
     if (result.canceled || result.assets.length === 0) return null;
 
     const asset = result.assets[0];
+    if (!asset.base64) {
+        throw new Error("The selected profile picture could not be prepared for upload.");
+    }
+
     const extension = extensionFromAsset(asset);
     const path = `${userId}/avatar-${Date.now()}.${extension}`;
-    const response = await fetch(asset.uri);
-    const fileBody = await response.arrayBuffer();
+    const fileBody = base64ToUint8Array(asset.base64);
     const {error} = await supabase.storage
         .from("profile-avatars")
         .upload(path, fileBody, {

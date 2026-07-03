@@ -93,7 +93,6 @@ interface AccountScreenProps {
         restore: () => void;
         openManageSubscriptions: () => Promise<boolean>;
     };
-    onClose: () => void;
     onSignOut: () => void;
     onSaveProfile: (payload: {
         full_name: string;
@@ -159,7 +158,6 @@ export function AccountScreen({
                                   termsOfUseUrl,
                                   onOpenSubscriptionOffers,
                                   subscription,
-                                  onClose,
                                   onSignOut,
                                   onSaveProfile,
                                   onDeleteAccount,

@@ -1,6 +1,5 @@
 import {createContext, type PropsWithChildren, useContext} from "react";
 import {ImageBackground, type ImageSourcePropType, type ImageStyle, type StyleProp, View, type ViewStyle} from "react-native";
-import {LinearGradient} from "expo-linear-gradient";
 import type {VisualMode} from "../state/useVisualMode";
 import tw from "../lib/tw";
 
@@ -10,11 +9,6 @@ interface ScreenBackgroundProps {
     style?: StyleProp<ViewStyle>;
     imageStyle?: StyleProp<ImageStyle>;
 }
-
-const riverGradientColors = [
-    "#DDEAF2",
-    "#EFE8DF",
-] as const;
 
 const ScreenVisualModeContext = createContext<VisualMode>("river");
 
@@ -32,14 +26,7 @@ export function ScreenBackground({
     if (visualMode === "river") {
         return (
             <ScreenVisualModeContext.Provider value={visualMode}>
-                <LinearGradient
-                    colors={riverGradientColors}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 1}}
-                    style={[tw`flex-1`, style]}
-                >
-                    {children}
-                </LinearGradient>
+                <View style={[tw`flex-1`, {backgroundColor: "transparent"}, style]}>{children}</View>
             </ScreenVisualModeContext.Provider>
         );
     }

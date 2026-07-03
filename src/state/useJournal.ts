@@ -390,9 +390,14 @@ export function useJournal(session: Session | null = null, encryption?: Encrypti
                 createdAt: new Date().toISOString(),
             };
 
-            setPurposeImages((previous) => [image, ...previous]);
+            const nextImages = [image, ...purposeImages];
+            await AsyncStorage.setItem(
+                purposeStorageKey(session?.user.id),
+                JSON.stringify(serializePurposeImages(encryptionKey, nextImages)),
+            );
+            setPurposeImages(nextImages);
         },
-        [encryptionKey, purposeImages.length],
+        [encryptionKey, purposeImages, session?.user.id],
     );
 
     const deletePurposeImage = useCallback(

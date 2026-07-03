@@ -1,5 +1,16 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Animated, AppState, Easing, ImageBackground, PanResponder, Platform, StyleSheet, Text, View} from "react-native";
+import {
+    Alert,
+    Animated,
+    AppState,
+    Easing,
+    ImageBackground,
+    PanResponder,
+    Platform,
+    StyleSheet,
+    Text,
+    View
+} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -16,7 +27,7 @@ import {AccountScreen} from "./src/screens/AccountScreen";
 import tw from "./src/lib/tw";
 import {useTasks} from "./src/state/useTasks";
 import {GradientBackground} from "./src/components/GradientBackground";
-import {useAppFonts} from "./src/theme/fonts";
+import {fonts, useAppFonts} from "./src/theme/fonts";
 import {useSupabaseAuth} from "./src/state/useSupabaseAuth";
 import {useProfile} from "./src/state/useProfile";
 import {isToday, toLocalISODate} from "./src/lib/date-utils";
@@ -44,9 +55,8 @@ import {clearVisualModeStorage, useVisualMode, type VisualMode} from "./src/stat
 import {clearBackgroundMusicStorage, useBackgroundMusic} from "./src/state/useBackgroundMusic";
 import {useEncryption} from "./src/state/useEncryption";
 import {PrivacyPassphraseScreen} from "./src/screens/PrivacyPassphraseScreen";
-import {fonts} from "./src/theme/fonts";
 import {AppErrorBoundary} from "./src/components/AppErrorBoundary";
-import {useCommunity, type CommunityAuthor} from "./src/state/useCommunity";
+import {type CommunityAuthor, useCommunity} from "./src/state/useCommunity";
 import {useDirectMessages} from "./src/state/useDirectMessages";
 import {BackgroundMusicPlayer} from "./src/components/BackgroundMusicPlayer";
 import {pickAndUploadProfileAvatar} from "./src/lib/profile-avatar-upload";
@@ -363,7 +373,11 @@ function AppContent() {
         await signOut();
     }
 
-    async function handleSaveProfile(payload: { full_name: string; birthday: string | null; avatar_url?: string | null }) {
+    async function handleSaveProfile(payload: {
+        full_name: string;
+        birthday: string | null;
+        avatar_url?: string | null
+    }) {
         const error = await upsertProfile(payload);
         return error?.message ?? null;
     }
@@ -464,7 +478,8 @@ function AppContent() {
     }
 
     const backgroundMusicPlayer = (
-        <BackgroundMusicPlayer trackId={session && backgroundMusicState.isLoaded ? backgroundMusicState.trackId : "silent"}/>
+        <BackgroundMusicPlayer
+            trackId={session && backgroundMusicState.isLoaded ? backgroundMusicState.trackId : "silent"}/>
     );
 
     if (appLoading) {
@@ -515,7 +530,6 @@ function AppContent() {
                 {backgroundMusicPlayer}
                 <StatusBar style="light"/>
                 <SubscriptionScreen
-                    loading={subscription.loading}
                     trialActive={subscription.trialActive}
                     purchaseEnabled={subscription.billingConfigured && !subscription.setupIssue}
                     purchaseBusy={subscription.purchaseBusy}
@@ -533,7 +547,6 @@ function AppContent() {
                     }))}
                     onPurchasePlan={subscription.purchasePlan}
                     onRestore={subscription.restore}
-                    onSignOut={handleSignOut}
                     allowDismiss={!subscription.requiresPaywall}
                     onDismiss={() => setSubscriptionOfferOpen(false)}
                 />
@@ -578,228 +591,236 @@ function AppContent() {
             }}
         >
             <SafeAreaProvider>
-            <GradientBackground>
-                {backgroundMusicPlayer}
-                <SafeAreaView
-                    edges={["top", "left", "right"]}
-                    style={[tw`flex-1`, {backgroundColor: shellBackgroundColor}]}
-                >
-                    <StatusBar style="light"/>
-                    {visualModeState.mode === "georgia" || visualModeState.mode === "sonny" ? (
-                        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-                            <ImageBackground
-                                source={visualModeState.mode === "sonny"
-                                    ? require("./public/images/rh6.jpg")
-                                    : require("./public/images/ambient.jpg")}
-                                resizeMode="cover"
-                                style={StyleSheet.absoluteFill}
-                                imageStyle={{opacity: 0.33}}
-                            />
-                        </View>
-                    ) : null}
-
-                <AppHeader
-                    fullName={profile?.full_name}
-                    avatarUrl={profile?.avatar_url}
-                    avatarBusy={avatarBusy}
-                    accountOpen={accountOpen}
-                    visualMode={visualModeState.mode}
-                    onChangeAvatar={() => {
-                        void handleChangeAvatar();
-                    }}
-                    onToggleVisualMode={() => {
-                        visualModeState.setMode(
-                            visualModeState.mode === "georgia"
-                                ? "river"
-                                : visualModeState.mode === "river"
-                                    ? "sonny"
-                                    : "georgia",
-                        );
-                    }}
-                    onToggleAccount={() => {
-                        setMessagesOpen(false);
-                        setMessageStartTarget(null);
-                        setAccountOpen((current) => !current);
-                    }}
-                />
-
-                <UpdateAvailableBanner/>
-
-                <View
-                    style={tw`relative flex-1 rounded-t-3xl overflow-hidden`}
-                    {...screenSwipeResponder.panHandlers}
-                >
-                    <Animated.View
-                        style={[
-                            tw`flex-1`,
-                            {opacity: screenRouteOpacity, transform: [{translateY: screenRouteTranslateY}]},
-                        ]}
+                <GradientBackground>
+                    {backgroundMusicPlayer}
+                    <SafeAreaView
+                        edges={["top", "left", "right"]}
+                        style={[tw`flex-1`, {backgroundColor: shellBackgroundColor}]}
                     >
-                    {accountOpen ? (
-                        <AccountScreen
-                            session={session}
-                            profile={profile}
-                            privacyPolicyUrl={getPrivacyPolicyUrl()}
-                            termsOfUseUrl={getTermsOfUseUrl()}
-                            onOpenSubscriptionOffers={() => setSubscriptionOfferOpen(true)}
-                            subscription={subscription}
-                            onClose={() => setAccountOpen(false)}
-                            onSignOut={handleSignOut}
-                            onSaveProfile={handleSaveProfile}
-                            onDeleteAccount={handleDeleteAccount}
-                            onResetOnboarding={onboarding.resetOnboarding}
-                            visualMode={visualModeState.mode}
-                            backgroundMusic={{
-                                trackId: backgroundMusicState.trackId,
-                                setTrackId: backgroundMusicState.setTrackId,
-                            }}
-                        />
-                    ) : null}
-                    {!accountOpen && tab === "today" ? (
-                        <TodayScreen
-                            tasks={tasksState.tasks}
-                            profile={profile}
-                            journalByDate={journalState.byDate}
-                            weeklyGoal={weeklyGoalState.goal}
-                            weeklyGoalProgress={weeklyGoalState.progress}
-                            onOpenJournalPrompt={(entryId) => openHomeAction({target: "journalPrompt", entryId})}
-                            onOpenWeeklyGoal={() => openHomeAction({target: "weeklyGoal"})}
-                            onOpenGratitude={(entryId) => openHomeAction({target: "gratitude", entryId})}
-                            onOpenTasks={() => openHomeAction({target: "tasks"})}
-                            stickyNote={stickyNoteState.note}
-                            onChangeStickyNote={stickyNoteState.setText}
-                            onAddStickyNoteToTask={() => {
-                                void handleAddStickyNoteToTask();
-                            }}
-                            onClearStickyNote={stickyNoteState.clear}
-                            visualMode={visualModeState.mode}
-                            showTutorial={onboarding.visibleTutorials.home}
-                            onDismissTutorial={() => {
-                                void onboarding.dismissTutorial("home");
-                            }}
-                        />
-                    ) : null}
-                    {!accountOpen && tab === "plan" ? (
-                        <DayPlanScreen
-                            planner={plannerState}
-                            visualMode={visualModeState.mode}
-                            showTutorial={onboarding.visibleTutorials.plan}
-                            onDismissTutorial={() => {
-                                void onboarding.dismissTutorial("plan");
-                            }}
-                        />
-                    ) : null}
-                    {!accountOpen && tab === "journal" ? (
-                        <JournalScreen
-                            journal={journalState}
-                            homeAction={
-                                homeAction?.target === "journalPrompt"
-                                    ? {key: homeAction.key, target: "prompt", entryId: homeAction.entryId}
-                                    : homeAction?.target === "gratitude"
-                                        ? {key: homeAction.key, target: "gratitude", entryId: homeAction.entryId}
-                                        : null
-                            }
-                            visualMode={visualModeState.mode}
-                            badgeCount={weeklyGoalState.progress.badges}
-                            showTutorial={onboarding.visibleTutorials.journal}
-                            onDismissTutorial={() => {
-                                void onboarding.dismissTutorial("journal");
-                            }}
-                            onPromptEntryOpenChange={setJournalPromptEntryOpen}
-                            onMemoryRouteChange={setJournalMemoryOpen}
-                            onClearHomeAction={() => setHomeAction(null)}
-                        />
-                    ) : null}
-                    {!accountOpen && tab === "board" ? (
-                        <KanbanScreen
-                            tasksState={tasksState}
-                            focusTaskFormKey={homeAction?.target === "tasks" ? homeAction.key : undefined}
-                            visualMode={visualModeState.mode}
-                            showTutorial={onboarding.visibleTutorials.tasks}
-                            onDismissTutorial={() => {
-                                void onboarding.dismissTutorial("tasks");
-                            }}
-                            onBack={() => {
-                                setHomeAction(null);
-                                setTab("calendar");
-                            }}
-                        />
-                    ) : null}
-                    {!accountOpen && tab === "calendar" ? (
-                        <CalendarScreen
-                            tasks={tasksState.tasks}
-                            googleCalendar={tasksState.googleCalendar}
-                            weeklyGoal={weeklyGoalState.goal}
-                            weeklyGoalPresets={weeklyGoalState.presets}
-                            weeklyGoalProgress={weeklyGoalState.progress}
-                            onSaveWeeklyGoal={weeklyGoalState.saveGoal}
-                            onMarkGoalAchieved={() => {
-                                void handleGoalCheck(true);
-                            }}
-                            loadRecentAchievedGoals={weeklyGoalState.loadRecentAchievedGoals}
-                            onOpenTasks={openTasksRoute}
-                            focusWeeklyGoalKey={homeAction?.target === "weeklyGoal" ? homeAction.key : undefined}
-                            visualMode={visualModeState.mode}
-                            showTutorial={onboarding.visibleTutorials.calendar}
-                            onDismissTutorial={() => {
-                                void onboarding.dismissTutorial("calendar");
-                            }}
-                            onGoalsRouteChange={setCalendarGoalsOpen}
-                        />
-                    ) : null}
-                    {!accountOpen && tab === "community" ? (
-                        <CommunityScreen
-                            community={communityState}
-                            unreadMessageCount={directMessagesState.unreadCount}
-                            onOpenMessages={() => handleOpenMessages()}
-                            onOpenDirectMessage={(author) => handleOpenMessages(author)}
-                            onOpenInsights={openInsightsRoute}
-                            visualMode={visualModeState.mode}
-                        />
-                    ) : null}
-                    {!accountOpen && tab === "insights" ? (
-                        <InsightsScreen onBackToPeers={openPeersRoute} visualMode={visualModeState.mode}/>
-                    ) : null}
-                    </Animated.View>
-                    {showBottomTabBar ? (
-                        <BottomTabBar
-                            activeTab={tab}
+                        <StatusBar style="light"/>
+                        {visualModeState.mode === "georgia" || visualModeState.mode === "sonny" || visualModeState.mode === "river" ? (
+                            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                                <ImageBackground
+                                    source={visualModeState.mode === "sonny"
+                                        ? require("./public/images/rh6.jpg")
+                                        : visualModeState.mode === "river"
+                                            ? require("./public/images/white.jpg")
+                                            : require("./public/images/ambient.jpg")}
+                                    resizeMode="cover"
+                                    style={StyleSheet.absoluteFill}
+                                    imageStyle={{opacity: 0.79}}
+                                />
+                            </View>
+                        ) : null}
+
+                        <AppHeader
+                            fullName={profile?.full_name}
+                            avatarUrl={profile?.avatar_url}
+                            avatarBusy={avatarBusy}
                             accountOpen={accountOpen}
                             visualMode={visualModeState.mode}
-                            onTabPress={handleTabChange}
-                        />
-                    ) : null}
-                    {messagesOpen ? (
-                        <DirectMessagesScreen
-                            dm={directMessagesState}
-                            startTarget={messageStartTarget}
-                            onClose={() => {
+                            onChangeAvatar={() => {
+                                void handleChangeAvatar();
+                            }}
+                            onToggleVisualMode={() => {
+                                visualModeState.setMode(
+                                    visualModeState.mode === "georgia"
+                                        ? "river"
+                                        : visualModeState.mode === "river"
+                                            ? "sonny"
+                                            : "georgia",
+                                );
+                            }}
+                            onToggleAccount={() => {
                                 setMessagesOpen(false);
                                 setMessageStartTarget(null);
+                                setAccountOpen((current) => !current);
                             }}
-                            visualMode={visualModeState.mode}
                         />
-                    ) : null}
-                </View>
-                <BirthdayConfetti visible={birthdayActive} triggerKey={birthdayBurstKey}/>
-                <GoalCheckModal
-                    visible={goalCheckVisible}
-                    goal={weeklyGoalState.goal}
-                    visualMode={visualModeState.mode}
-                    onSelect={(achieved) => {
-                        void handleGoalCheck(achieved);
-                    }}
-                    onRequestClose={() => setGoalCheckVisible(false)}
-                />
-                <GoalFeedbackModal
-                    visible={goalFeedbackVisible}
-                    message={goalFeedbackMessage}
-                    goal={weeklyGoalState.goal}
-                    visualMode={visualModeState.mode}
-                    onContinue={() => setGoalFeedbackVisible(false)}
-                />
-                </SafeAreaView>
-            </GradientBackground>
+
+                        <UpdateAvailableBanner/>
+
+                        <View
+                            style={tw`relative flex-1 rounded-t-3xl overflow-hidden`}
+                            {...screenSwipeResponder.panHandlers}
+                        >
+                            <Animated.View
+                                style={[
+                                    tw`flex-1`,
+                                    {opacity: screenRouteOpacity, transform: [{translateY: screenRouteTranslateY}]},
+                                ]}
+                            >
+                                {accountOpen ? (
+                                    <AccountScreen
+                                        session={session}
+                                        profile={profile}
+                                        privacyPolicyUrl={getPrivacyPolicyUrl()}
+                                        termsOfUseUrl={getTermsOfUseUrl()}
+                                        onOpenSubscriptionOffers={() => setSubscriptionOfferOpen(true)}
+                                        subscription={subscription}
+                                        onSignOut={handleSignOut}
+                                        onSaveProfile={handleSaveProfile}
+                                        onDeleteAccount={handleDeleteAccount}
+                                        onResetOnboarding={onboarding.resetOnboarding}
+                                        visualMode={visualModeState.mode}
+                                        backgroundMusic={{
+                                            trackId: backgroundMusicState.trackId,
+                                            setTrackId: backgroundMusicState.setTrackId,
+                                        }}
+                                    />
+                                ) : null}
+                                {!accountOpen && tab === "today" ? (
+                                    <TodayScreen
+                                        tasks={tasksState.tasks}
+                                        profile={profile}
+                                        journalByDate={journalState.byDate}
+                                        weeklyGoal={weeklyGoalState.goal}
+                                        weeklyGoalProgress={weeklyGoalState.progress}
+                                        onOpenJournalPrompt={(entryId) => openHomeAction({
+                                            target: "journalPrompt",
+                                            entryId
+                                        })}
+                                        onOpenWeeklyGoal={() => openHomeAction({target: "weeklyGoal"})}
+                                        onOpenGratitude={(entryId) => openHomeAction({target: "gratitude", entryId})}
+                                        onOpenTasks={() => openHomeAction({target: "tasks"})}
+                                        stickyNote={stickyNoteState.note}
+                                        onChangeStickyNote={stickyNoteState.setText}
+                                        onAddStickyNoteToTask={() => {
+                                            void handleAddStickyNoteToTask();
+                                        }}
+                                        onClearStickyNote={stickyNoteState.clear}
+                                        visualMode={visualModeState.mode}
+                                        showTutorial={onboarding.visibleTutorials.home}
+                                        onDismissTutorial={() => {
+                                            void onboarding.dismissTutorial("home");
+                                        }}
+                                    />
+                                ) : null}
+                                {!accountOpen && tab === "plan" ? (
+                                    <DayPlanScreen
+                                        planner={plannerState}
+                                        visualMode={visualModeState.mode}
+                                        showTutorial={onboarding.visibleTutorials.plan}
+                                        onDismissTutorial={() => {
+                                            void onboarding.dismissTutorial("plan");
+                                        }}
+                                    />
+                                ) : null}
+                                {!accountOpen && tab === "journal" ? (
+                                    <JournalScreen
+                                        journal={journalState}
+                                        homeAction={
+                                            homeAction?.target === "journalPrompt"
+                                                ? {key: homeAction.key, target: "prompt", entryId: homeAction.entryId}
+                                                : homeAction?.target === "gratitude"
+                                                    ? {
+                                                        key: homeAction.key,
+                                                        target: "gratitude",
+                                                        entryId: homeAction.entryId
+                                                    }
+                                                    : null
+                                        }
+                                        visualMode={visualModeState.mode}
+                                        badgeCount={weeklyGoalState.progress.badges}
+                                        showTutorial={onboarding.visibleTutorials.journal}
+                                        onDismissTutorial={() => {
+                                            void onboarding.dismissTutorial("journal");
+                                        }}
+                                        onPromptEntryOpenChange={setJournalPromptEntryOpen}
+                                        onMemoryRouteChange={setJournalMemoryOpen}
+                                        onClearHomeAction={() => setHomeAction(null)}
+                                    />
+                                ) : null}
+                                {!accountOpen && tab === "board" ? (
+                                    <KanbanScreen
+                                        tasksState={tasksState}
+                                        focusTaskFormKey={homeAction?.target === "tasks" ? homeAction.key : undefined}
+                                        visualMode={visualModeState.mode}
+                                        showTutorial={onboarding.visibleTutorials.tasks}
+                                        onDismissTutorial={() => {
+                                            void onboarding.dismissTutorial("tasks");
+                                        }}
+                                        onBack={() => {
+                                            setHomeAction(null);
+                                            setTab("calendar");
+                                        }}
+                                    />
+                                ) : null}
+                                {!accountOpen && tab === "calendar" ? (
+                                    <CalendarScreen
+                                        tasks={tasksState.tasks}
+                                        googleCalendar={tasksState.googleCalendar}
+                                        weeklyGoal={weeklyGoalState.goal}
+                                        weeklyGoalPresets={weeklyGoalState.presets}
+                                        weeklyGoalProgress={weeklyGoalState.progress}
+                                        onSaveWeeklyGoal={weeklyGoalState.saveGoal}
+                                        onMarkGoalAchieved={() => {
+                                            void handleGoalCheck(true);
+                                        }}
+                                        loadRecentAchievedGoals={weeklyGoalState.loadRecentAchievedGoals}
+                                        onOpenTasks={openTasksRoute}
+                                        focusWeeklyGoalKey={homeAction?.target === "weeklyGoal" ? homeAction.key : undefined}
+                                        visualMode={visualModeState.mode}
+                                        showTutorial={onboarding.visibleTutorials.calendar}
+                                        onDismissTutorial={() => {
+                                            void onboarding.dismissTutorial("calendar");
+                                        }}
+                                        onGoalsRouteChange={setCalendarGoalsOpen}
+                                    />
+                                ) : null}
+                                {!accountOpen && tab === "community" ? (
+                                    <CommunityScreen
+                                        community={communityState}
+                                        unreadMessageCount={directMessagesState.unreadCount}
+                                        onOpenMessages={() => handleOpenMessages()}
+                                        onOpenDirectMessage={(author) => handleOpenMessages(author)}
+                                        onOpenInsights={openInsightsRoute}
+                                        visualMode={visualModeState.mode}
+                                    />
+                                ) : null}
+                                {!accountOpen && tab === "insights" ? (
+                                    <InsightsScreen onBackToPeers={openPeersRoute} visualMode={visualModeState.mode}/>
+                                ) : null}
+                            </Animated.View>
+                            {showBottomTabBar ? (
+                                <BottomTabBar
+                                    activeTab={tab}
+                                    accountOpen={accountOpen}
+                                    visualMode={visualModeState.mode}
+                                    onTabPress={handleTabChange}
+                                />
+                            ) : null}
+                            {messagesOpen ? (
+                                <DirectMessagesScreen
+                                    dm={directMessagesState}
+                                    startTarget={messageStartTarget}
+                                    onClose={() => {
+                                        setMessagesOpen(false);
+                                        setMessageStartTarget(null);
+                                    }}
+                                    visualMode={visualModeState.mode}
+                                />
+                            ) : null}
+                        </View>
+                        <BirthdayConfetti visible={birthdayActive} triggerKey={birthdayBurstKey}/>
+                        <GoalCheckModal
+                            visible={goalCheckVisible}
+                            goal={weeklyGoalState.goal}
+                            visualMode={visualModeState.mode}
+                            onSelect={(achieved) => {
+                                void handleGoalCheck(achieved);
+                            }}
+                            onRequestClose={() => setGoalCheckVisible(false)}
+                        />
+                        <GoalFeedbackModal
+                            visible={goalFeedbackVisible}
+                            message={goalFeedbackMessage}
+                            goal={weeklyGoalState.goal}
+                            visualMode={visualModeState.mode}
+                            onContinue={() => setGoalFeedbackVisible(false)}
+                        />
+                    </SafeAreaView>
+                </GradientBackground>
             </SafeAreaProvider>
         </AppErrorBoundary>
     );

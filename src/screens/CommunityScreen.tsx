@@ -107,7 +107,6 @@ function Avatar({
 }) {
     const initial = displayName(author)[0]?.toUpperCase() ?? "R";
     const isCurrentUser = author.id === currentUserId;
-    const visualMode = useScreenVisualMode();
     const currentUserDefaultColor = "#FF3800";
     if (author.avatarUrl) {
         return (

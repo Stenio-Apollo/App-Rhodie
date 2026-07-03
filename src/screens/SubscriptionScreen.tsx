@@ -16,7 +16,6 @@ type SubscriptionPlanViewModel = {
 };
 
 interface SubscriptionScreenProps {
-    loading: boolean;
     trialActive: boolean;
     trialEndsAt: string | null;
     purchaseEnabled: boolean;
@@ -28,7 +27,6 @@ interface SubscriptionScreenProps {
     plans: SubscriptionPlanViewModel[];
     onPurchasePlan: (planId: SubscriptionPlanViewModel["id"]) => void;
     onRestore: () => void;
-    onSignOut: () => void;
     allowDismiss?: boolean;
     onDismiss?: () => void;
 }
@@ -72,7 +70,6 @@ function FrostedPanel({children, compact = false}: PropsWithChildren<{ compact?:
 }
 
 export function SubscriptionScreen({
-                                       loading,
                                        trialActive,
                                        trialEndsAt,
                                        purchaseEnabled,
@@ -84,7 +81,6 @@ export function SubscriptionScreen({
                                        plans,
                                        onPurchasePlan,
                                        onRestore,
-                                       onSignOut,
                                        allowDismiss = false,
                                        onDismiss,
                                    }: SubscriptionScreenProps) {

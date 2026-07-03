@@ -444,7 +444,10 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                         <Text
                             style={[
                                 tw`absolute top-1/3 self-center text-sm`,
-                                {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.6)" : riverMode ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"},
+                                {
+                                    fontFamily: fonts.body,
+                                    color: georgiaMode ? "rgba(255,255,255,0.6)" : riverMode ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"
+                                },
                             ]}
                         >
                             Tap any slot to plan your day
