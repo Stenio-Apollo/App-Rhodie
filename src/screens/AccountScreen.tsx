@@ -20,6 +20,15 @@ import {
 type AccountRoute = "account" | "support" | "guide" | "subscription";
 
 const GEORGIA_ACCENT_COLOR = "#DAC8AE";
+const VISUAL_MODE_OPTIONS: Array<{
+    id: VisualMode;
+    label: string;
+    icon: ComponentProps<typeof Ionicons>["name"];
+}> = [
+    {id: "sonny", label: "Sonny", icon: "moon"},
+    {id: "river", label: "River", icon: "sunny"},
+    {id: "georgia", label: "Georgia", icon: "star"},
+];
 
 function AccountRouteEntry({
                                label,
@@ -102,6 +111,7 @@ interface AccountScreenProps {
     onDeleteAccount: () => Promise<string | null>;
     onResetOnboarding: () => Promise<void>;
     visualMode: VisualMode;
+    onChangeVisualMode: (visualMode: VisualMode) => void;
     backgroundMusic: {
         trackId: BackgroundMusicTrackId;
         setTrackId: (trackId: BackgroundMusicTrackId) => void;
@@ -163,6 +173,7 @@ export function AccountScreen({
                                   onDeleteAccount,
                                   onResetOnboarding,
                                   visualMode,
+                                  onChangeVisualMode,
                                   backgroundMusic,
                               }: AccountScreenProps) {
     const mountedRef = useRef(true);
@@ -174,6 +185,7 @@ export function AccountScreen({
     const [notice, setNotice] = useState<string | null>(null);
     const [noticeTone, setNoticeTone] = useState<"success" | "error">("success");
     const [route, setRoute] = useState<AccountRoute>("account");
+    const [visualDropdownOpen, setVisualDropdownOpen] = useState(false);
     const [musicDropdownOpen, setMusicDropdownOpen] = useState(false);
     const bg = visualMode === "georgia"
         ? require("../../public/images/rh11.jpg")
@@ -274,6 +286,10 @@ export function AccountScreen({
     const selectedMusicOption = useMemo(
         () => BACKGROUND_MUSIC_OPTIONS.find((option) => option.id === backgroundMusic.trackId) ?? BACKGROUND_MUSIC_OPTIONS[0],
         [backgroundMusic.trackId],
+    );
+    const selectedVisualOption = useMemo(
+        () => VISUAL_MODE_OPTIONS.find((option) => option.id === visualMode) ?? VISUAL_MODE_OPTIONS[1],
+        [visualMode],
     );
 
     async function handleSaveProfile() {
@@ -460,15 +476,15 @@ export function AccountScreen({
                     {route === "account" ? (
                         <>
                             <TranslucentCard radius={24} style={tw`p-4`}>
-                                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Background
-                                    music</Text>
+                                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Visuals</Text>
                                 <Pressable
                                     accessibilityRole="button"
-                                    accessibilityLabel="Select background music"
-                                    accessibilityState={{expanded: musicDropdownOpen}}
+                                    accessibilityLabel="Select visual mode"
+                                    accessibilityState={{expanded: visualDropdownOpen}}
                                     onPress={() => {
                                         haptics.selection();
-                                        setMusicDropdownOpen((current) => !current);
+                                        setVisualDropdownOpen((current) => !current);
+                                        setMusicDropdownOpen(false);
                                     }}
                                     style={({pressed}) => [
                                         tw`mt-3 flex-row items-center justify-between rounded-xl border px-4 py-3`,
@@ -476,17 +492,113 @@ export function AccountScreen({
                                         pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                     ]}
                                 >
-                                    <Text
+                                    <View style={tw`flex-row items-center gap-2`}>
+                                        <Ionicons name={selectedVisualOption.icon} size={17} color={frostedControlTextColor}/>
+                                        <Text
+                                            style={[
+                                                tw`text-sm font-semibold`,
+                                                {
+                                                    fontFamily: fonts.body,
+                                                    color: frostedControlTextColor,
+                                                },
+                                            ]}
+                                        >
+                                            {selectedVisualOption.label}
+                                        </Text>
+                                    </View>
+                                    <Ionicons
+                                        name={visualDropdownOpen ? "chevron-up" : "chevron-down"}
+                                        size={18}
+                                        color={frostedControlTextColor}
+                                    />
+                                </Pressable>
+                                {visualDropdownOpen ? (
+                                    <View
                                         style={[
-                                            tw`text-sm font-semibold`,
+                                            tw`mt-2 overflow-hidden rounded-xl border`,
                                             {
-                                                fontFamily: fonts.body,
-                                                color: frostedControlTextColor,
+                                                borderColor: frostedControlBorderColor,
+                                                backgroundColor: frostedDropdownSurfaceColor,
                                             },
                                         ]}
                                     >
-                                        {selectedMusicOption.label}
-                                    </Text>
+                                        {VISUAL_MODE_OPTIONS.map((option) => {
+                                            const active = visualMode === option.id;
+                                            return (
+                                                <Pressable
+                                                    key={option.id}
+                                                    accessibilityRole="button"
+                                                    accessibilityState={{selected: active}}
+                                                    onPress={() => {
+                                                        haptics.selection();
+                                                        onChangeVisualMode(option.id);
+                                                        setVisualDropdownOpen(false);
+                                                    }}
+                                                    style={({pressed}) => [
+                                                        tw`flex-row items-center justify-between px-4 py-3`,
+                                                        active ? {backgroundColor: georgiaMode ? GEORGIA_ACCENT_COLOR : badgeColor} : null,
+                                                        pressed && {opacity: 0.78},
+                                                    ]}
+                                                >
+                                                    <View style={tw`flex-row items-center gap-2`}>
+                                                        <Ionicons
+                                                            name={option.icon}
+                                                            size={17}
+                                                            color={active ? "#111111" : frostedControlTextColor}
+                                                        />
+                                                        <Text
+                                                            style={[
+                                                                tw`text-sm font-semibold`,
+                                                                {
+                                                                    fontFamily: fonts.body,
+                                                                    color: active ? "#111111" : frostedControlTextColor,
+                                                                },
+                                                            ]}
+                                                        >
+                                                            {option.label}
+                                                        </Text>
+                                                    </View>
+                                                    {active ? (
+                                                        <Ionicons name="checkmark" size={17} color="#111111"/>
+                                                    ) : null}
+                                                </Pressable>
+                                            );
+                                        })}
+                                    </View>
+                                ) : null}
+                            </TranslucentCard>
+
+                            <TranslucentCard radius={24} style={tw`p-4`}>
+                                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Soundscape</Text>
+                                <Pressable
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Select background music"
+                                    accessibilityState={{expanded: musicDropdownOpen}}
+                                    onPress={() => {
+                                        haptics.selection();
+                                        setMusicDropdownOpen((current) => !current);
+                                        setVisualDropdownOpen(false);
+                                    }}
+                                    style={({pressed}) => [
+                                        tw`mt-3 flex-row items-center justify-between rounded-xl border px-4 py-3`,
+                                        frostedControlStyle,
+                                        pressed && {opacity: 0.78, transform: [{translateY: 1}]},
+                                    ]}
+                                >
+                                    <View style={tw`flex-row items-center gap-2`}>
+                                        <Ionicons name={selectedMusicOption.icon} size={17} color={frostedControlTextColor}/>
+                                        <Text
+                                            style={[
+                                                tw`text-sm font-semibold`,
+                                                {
+                                                    fontFamily: fonts.body,
+                                                    color: frostedControlTextColor,
+                                                },
+                                            ]}
+                                        >
+                                            {selectedMusicOption.label}
+                                        </Text>
+                                    </View>
                                     <Ionicons
                                         name={musicDropdownOpen ? "chevron-up" : "chevron-down"}
                                         size={18}
@@ -521,17 +633,24 @@ export function AccountScreen({
                                                         pressed && {opacity: 0.78},
                                                     ]}
                                                 >
-                                                    <Text
-                                                        style={[
-                                                            tw`text-sm font-semibold`,
-                                                            {
-                                                                fontFamily: fonts.body,
-                                                                color: active ? "#111111" : frostedControlTextColor,
-                                                            },
-                                                        ]}
-                                                    >
-                                                        {option.label}
-                                                    </Text>
+                                                    <View style={tw`flex-row items-center gap-2`}>
+                                                        <Ionicons
+                                                            name={option.icon}
+                                                            size={17}
+                                                            color={active ? "#111111" : frostedControlTextColor}
+                                                        />
+                                                        <Text
+                                                            style={[
+                                                                tw`text-sm font-semibold`,
+                                                                {
+                                                                    fontFamily: fonts.body,
+                                                                    color: active ? "#111111" : frostedControlTextColor,
+                                                                },
+                                                            ]}
+                                                        >
+                                                            {option.label}
+                                                        </Text>
+                                                    </View>
                                                     {active ? (
                                                         <Ionicons name="checkmark" size={17} color="#111111"/>
                                                     ) : null}

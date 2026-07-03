@@ -4,7 +4,6 @@ import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import type {VisualMode} from "../state/useVisualMode";
-import {Button} from "./ui/Button";
 
 interface AppHeaderProps {
     fullName: string | null | undefined;
@@ -13,7 +12,6 @@ interface AppHeaderProps {
     visualMode: VisualMode;
     avatarBusy?: boolean;
     onChangeAvatar?: () => void;
-    onToggleVisualMode: () => void;
     onToggleAccount: () => void;
 }
 
@@ -24,7 +22,6 @@ export function AppHeader({
                               visualMode,
                               avatarBusy = false,
                               onChangeAvatar,
-                              onToggleVisualMode,
                               onToggleAccount,
                           }: AppHeaderProps) {
     const riverMode = visualMode === "river";
@@ -36,10 +33,10 @@ export function AppHeader({
     const avatarFallbackColor = lightMode ? "#111111" : "#FFF6E8";
     const avatarFallbackBackgroundColor = lightMode ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.4)";
     const modeButton = visualMode === "georgia"
-        ? {label: "Georgia", backgroundColor: "#111111", textColor: "#FFF6E8"}
+        ? {label: "Georgia", icon: "star" as const, backgroundColor: "#111111", textColor: "#FFF6E8", iconColor: "#DAC8AE"}
         : visualMode === "river"
-            ? {label: "River", backgroundColor: "#F0F8FF", textColor: "#111111"}
-            : {label: "Sonny", backgroundColor: "#000000", textColor: "#FFF6E8"};
+            ? {label: "River", icon: "sunny" as const, backgroundColor: "#F0F8FF", textColor: "#111111", iconColor: "#ba885a"}
+            : {label: "Sonny", icon: "moon" as const, backgroundColor: "#000000", textColor: "#FFF6E8", iconColor: "#ba885a"};
     const headerButtonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},
@@ -110,13 +107,12 @@ export function AppHeader({
                 </View>
             </View>
             <View style={tw`flex-row items-center gap-2`}>
-                <Button
-                    label={modeButton.label}
-                    onPress={onToggleVisualMode}
-                    shine
-                    style={[tw`rounded-full px-3 py-1.5`, headerModeButtonStyle]}
-                    textStyle={[tw`text-[11px]`, {color: modeButton.textColor}]}
-                />
+                <View style={[tw`flex-row items-center gap-1.5 rounded-full px-3 py-1.5`, headerModeButtonStyle]}>
+                    <Ionicons name={modeButton.icon} size={13} color={modeButton.iconColor}/>
+                    <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: modeButton.textColor}]}>
+                        {modeButton.label}
+                    </Text>
+                </View>
                 <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={accountOpen ? "Close account menu" : "Open account menu"}

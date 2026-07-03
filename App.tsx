@@ -608,7 +608,7 @@ function AppContent() {
                                             : require("./public/images/ambient.jpg")}
                                     resizeMode="cover"
                                     style={StyleSheet.absoluteFill}
-                                    imageStyle={{opacity: 0.79}}
+                                    imageStyle={{opacity: visualModeState.mode === "sonny" ? 0.49 : 0.79}}
                                 />
                             </View>
                         ) : null}
@@ -621,15 +621,6 @@ function AppContent() {
                             visualMode={visualModeState.mode}
                             onChangeAvatar={() => {
                                 void handleChangeAvatar();
-                            }}
-                            onToggleVisualMode={() => {
-                                visualModeState.setMode(
-                                    visualModeState.mode === "georgia"
-                                        ? "river"
-                                        : visualModeState.mode === "river"
-                                            ? "sonny"
-                                            : "georgia",
-                                );
                             }}
                             onToggleAccount={() => {
                                 setMessagesOpen(false);
@@ -663,6 +654,7 @@ function AppContent() {
                                         onDeleteAccount={handleDeleteAccount}
                                         onResetOnboarding={onboarding.resetOnboarding}
                                         visualMode={visualModeState.mode}
+                                        onChangeVisualMode={visualModeState.setMode}
                                         backgroundMusic={{
                                             trackId: backgroundMusicState.trackId,
                                             setTrackId: backgroundMusicState.setTrackId,

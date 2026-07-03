@@ -8,14 +8,15 @@ export type BackgroundMusicTrackId = "silent" | "forest" | "alpine" | "thunder" 
 export interface BackgroundMusicOption {
     id: BackgroundMusicTrackId;
     label: string;
+    icon: "leaf" | "paw" | "flash" | "water" | "volume-mute";
 }
 
 export const BACKGROUND_MUSIC_OPTIONS: BackgroundMusicOption[] = [
-    {id: "forest", label: "Forest"},
-    {id: "alpine", label: "Alpine"},
-    {id: "thunder", label: "Thunder"},
-    {id: "waves", label: "Waves"},
-    {id: "silent", label: "Silent"},
+    {id: "forest", label: "Forest", icon: "leaf"},
+    {id: "alpine", label: "Alpine", icon: "paw"},
+    {id: "thunder", label: "Thunder", icon: "flash"},
+    {id: "waves", label: "Waves", icon: "water"},
+    {id: "silent", label: "Silent", icon: "volume-mute"},
 ];
 
 const DEFAULT_BACKGROUND_MUSIC_TRACK: BackgroundMusicTrackId = "forest";
