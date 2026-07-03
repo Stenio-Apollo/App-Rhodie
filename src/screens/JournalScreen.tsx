@@ -16,6 +16,7 @@ import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {ScreenBackground} from "../components/ScreenBackground";
 import {PurposePhotoFrame} from "../components/PurposePhotoFrame";
+import {imagePickerAssetToDataUri} from "../lib/image-picker-data-uri";
 
 const GEORGIA_SURFACE_COLOR = "#111111";
 const GEORGIA_ACCENT_COLOR = "#DAC8AE";
@@ -262,20 +263,17 @@ export function JournalScreen({
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: "images",
-                allowsEditing: false,
-                quality: 0.45,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.25,
                 base64: true,
             });
 
             if (result.canceled || result.assets.length === 0) return;
 
             const asset = result.assets[0];
-            if (!asset.base64) {
-                throw new Error("The selected image could not be prepared for encrypted storage.");
-            }
-
-            const mimeType = asset.mimeType ?? "image/jpeg";
-            await journal.addPurposeImage(`data:${mimeType};base64,${asset.base64}`, selectedDate, mimeType);
+            const {dataUri, mimeType} = await imagePickerAssetToDataUri(asset, "image/jpeg");
+            await journal.addPurposeImage(dataUri, selectedDate, mimeType);
             haptics.saveJournalEntry();
         } catch (error) {
             Alert.alert("Image not added", error instanceof Error ? error.message : "That image could not be encrypted.");

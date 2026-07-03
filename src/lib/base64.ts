@@ -1,7 +1,11 @@
 const BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+export function stripDataUriPrefix(input: string): string {
+    return input.replace(/^data:[^;]+;base64,/, "").replace(/\s/g, "");
+}
+
 export function base64ToUint8Array(input: string): Uint8Array {
-    const base64 = input.replace(/^data:[^;]+;base64,/, "").replace(/\s/g, "");
+    const base64 = stripDataUriPrefix(input);
     if (!base64) return new Uint8Array();
 
     const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
@@ -25,4 +29,11 @@ export function base64ToUint8Array(input: string): Uint8Array {
     }
 
     return bytes;
+}
+
+export function base64ToArrayBuffer(input: string): ArrayBuffer {
+    const bytes = base64ToUint8Array(input);
+    const buffer = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(buffer).set(bytes);
+    return buffer;
 }

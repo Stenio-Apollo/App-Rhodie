@@ -1,13 +1,19 @@
 import * as ImagePicker from "expo-image-picker";
 import {supabase} from "./supabase";
-import {base64ToUint8Array} from "./base64";
+import {base64ToArrayBuffer, stripDataUriPrefix} from "./base64";
+import {imagePickerAssetToDataUri} from "./image-picker-data-uri";
 
-function extensionFromAsset(asset: ImagePicker.ImagePickerAsset): string {
-    const mimeType = asset.mimeType?.toLowerCase();
-    if (mimeType === "image/png") return "png";
-    if (mimeType === "image/webp") return "webp";
-    if (mimeType === "image/jpeg" || mimeType === "image/jpg") return "jpg";
+function extensionFromMimeType(mimeType: string | null | undefined): string {
+    const normalizedMimeType = mimeType?.toLowerCase();
+    if (normalizedMimeType === "image/png") return "png";
+    if (normalizedMimeType === "image/webp") return "webp";
+    if (normalizedMimeType === "image/jpeg" || normalizedMimeType === "image/jpg") return "jpg";
+    return "jpg";
+}
 
+function extensionFromAsset(asset: ImagePicker.ImagePickerAsset, mimeType?: string): string {
+    const mimeExtension = extensionFromMimeType(mimeType ?? asset.mimeType);
+    if (mimeExtension !== "jpg" || mimeType || asset.mimeType) return mimeExtension;
     const fileName = asset.fileName ?? asset.uri;
     const match = fileName.match(/\.([a-z0-9]+)(?:\?|#|$)/i);
     const extension = match?.[1]?.toLowerCase();
@@ -38,13 +44,11 @@ export async function pickAndUploadProfileAvatar(userId: string): Promise<string
     if (result.canceled || result.assets.length === 0) return null;
 
     const asset = result.assets[0];
-    if (!asset.base64) {
-        throw new Error("The selected profile picture could not be prepared for upload.");
-    }
+    const {dataUri, mimeType} = await imagePickerAssetToDataUri(asset, "image/jpeg");
 
-    const extension = extensionFromAsset(asset);
+    const extension = extensionFromAsset(asset, mimeType);
     const path = `${userId}/avatar-${Date.now()}.${extension}`;
-    const fileBody = base64ToUint8Array(asset.base64);
+    const fileBody = base64ToArrayBuffer(stripDataUriPrefix(dataUri));
     const {error} = await supabase.storage
         .from("profile-avatars")
         .upload(path, fileBody, {
