@@ -15,11 +15,10 @@ interface GoalCheckModalProps {
 }
 
 export function GoalCheckModal({visible, goal, onSelect, onRequestClose, visualMode}: GoalCheckModalProps) {
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const riverMode = visualMode === "river";
     const badgeColor = "#ba885a";
-    const surfaceColor = georgiaMode ? "#111111" : coastMode ? "#708090" : riverMode ? "#FFFFFF" : "#000000";
+    const surfaceColor = georgiaMode ? "#111111" : riverMode ? "#FFFFFF" : "#000000";
     const primaryTextColor = riverMode ? "#111111" : "#FFFFFF";
     const mutedTextColor = riverMode ? "rgba(17,17,17,0.66)" : "rgba(255,255,255,0.72)";
     const borderColor = riverMode ? "rgba(17,17,17,0.16)" : "rgba(255,255,255,0.18)";

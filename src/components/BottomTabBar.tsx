@@ -23,9 +23,7 @@ const TAB_ITEMS: ReadonlyArray<{ key: Tab; label: string; icon: TabIconName; act
 const ACTIVE_NAV_COLOR = "#B55941";
 const GEORGIA_NAV_COLOR = "#ba885a";
 const RIVER_NAV_COLOR = "#FF3800";
-const SONNY_NAV_COLOR = "#FF3800";
-const COAST_NAV_COLOR = "#FF3800";
-const COAST_SURFACE_COLOR = "#708090";
+const SONNY_NAV_COLOR = "#ba885a";
 const GEORGIA_FROST_SURFACE_COLOR = "rgba(0,0,0,0.28)";
 const INACTIVE_COLOR = "#E4E0D4";
 const ROW_HORIZONTAL_PADDING = 3;
@@ -46,16 +44,12 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
     const tabCount = TAB_ITEMS.length;
     const activeIndex = accountOpen ? -1 : TAB_ITEMS.findIndex((item) => item.key === activeTab);
     const riverMode = visualMode === "river";
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
-    const coastOrRiver = riverMode || coastMode;
-    const lightMode = coastOrRiver;
+    const lightMode = riverMode;
     const activeNavColor = sonnyMode
         ? SONNY_NAV_COLOR
-        : coastMode
-            ? COAST_NAV_COLOR
-            : riverMode
+        : riverMode
                 ? RIVER_NAV_COLOR
                 : georgiaMode
                     ? GEORGIA_NAV_COLOR
@@ -230,7 +224,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
                     {/* Base tint behind everything */}
                     <View
                         pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: coastMode ? COAST_SURFACE_COLOR : georgiaMode ? GEORGIA_FROST_SURFACE_COLOR : lightMode ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.49)"}]}
+                        style={[StyleSheet.absoluteFill, {backgroundColor: georgiaMode ? GEORGIA_FROST_SURFACE_COLOR : lightMode ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.49)"}]}
                     />
 
                     {/* Top rim highlight — the "shine" */}

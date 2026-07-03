@@ -28,21 +28,18 @@ export function AppHeader({
                               onToggleAccount,
                           }: AppHeaderProps) {
     const riverMode = visualMode === "river";
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const lightMode = riverMode || coastMode || georgiaMode;
+    const lightMode = riverMode || georgiaMode;
     const headerTextColor = georgiaMode ? "#FFFFFF" : lightMode ? "#111111" : "#E4E0D4";
-    const logoTextColor = coastMode || georgiaMode ? "#FFFFFF" : headerTextColor;
-    const logoBorderColor = coastMode || georgiaMode ? "#FFFFFF" : lightMode ? "rgba(17,17,17,0.72)" : "#FFFFFF";
+    const logoTextColor = georgiaMode ? "#FFFFFF" : headerTextColor;
+    const logoBorderColor = georgiaMode ? "#FFFFFF" : lightMode ? "rgba(17,17,17,0.72)" : "#FFFFFF";
     const avatarFallbackColor = lightMode ? "#111111" : "#FFF6E8";
     const avatarFallbackBackgroundColor = lightMode ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.4)";
     const modeButton = visualMode === "georgia"
         ? {label: "Georgia", backgroundColor: "#111111", textColor: "#FFF6E8"}
         : visualMode === "river"
             ? {label: "River", backgroundColor: "#F0F8FF", textColor: "#111111"}
-            : visualMode === "sonny"
-                ? {label: "Sonny", backgroundColor: "#000000", textColor: "#FFF6E8"}
-                : {label: "Coast", backgroundColor: "#708090", textColor: "#FFF6E8"};
+            : {label: "Sonny", backgroundColor: "#000000", textColor: "#FFF6E8"};
     const headerButtonDepthStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 5},

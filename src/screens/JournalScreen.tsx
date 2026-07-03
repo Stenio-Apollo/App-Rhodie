@@ -17,8 +17,8 @@ import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {ScreenBackground} from "../components/ScreenBackground";
 import {PurposePhotoFrame} from "../components/PurposePhotoFrame";
 
-const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#111111";
+const GEORGIA_ACCENT_COLOR = "#DAC8AE";
 
 function isoToday(): string {
     return toLocalISODate();
@@ -47,18 +47,20 @@ function JournalRouteEntry({
                                icon,
                                active,
                                onPress,
-                               coastOrRiver = false,
+                               activeColor,
+                               darkContent = false,
                                whiteContent = false,
                            }: {
     label: string;
     icon: ComponentProps<typeof Ionicons>["name"];
     active: boolean;
     onPress: () => void;
-    coastOrRiver?: boolean;
+    activeColor?: string;
+    darkContent?: boolean;
     whiteContent?: boolean;
 }) {
     const badgeColor = "#ba885a";
-    const color = active ? badgeColor : whiteContent ? "#FFFFFF" : coastOrRiver ? "#000000" : "#E4E0D4";
+    const color = active ? activeColor ?? badgeColor : whiteContent ? "#FFFFFF" : darkContent ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -118,16 +120,15 @@ export function JournalScreen({
     const badgeIcon = require("../../public/images/badge.png");
     const promptEntryBg = require("../../public/images/newspaper 1.jpg");
     const {keyboardInset} = useKeyboardInset();
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const solidMode = coastMode || georgiaMode;
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const riverMode = visualMode === "river";
+    const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
+    const solidMode = georgiaMode;
     const badgeColor = "#ba885a";
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
-    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
-    const journalContentTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
-    const journalMutedTextColor = coastMode || georgiaMode ? "rgba(255,255,255,0.7)" : mutedTextColor;
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
+    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : riverMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
+    const journalContentTextColor = georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const journalMutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : mutedTextColor;
     const entryHeaderStyle = georgiaMode
         ? [
             tw`relative flex-row items-center justify-center border-b px-4 py-3`,
@@ -136,28 +137,28 @@ export function JournalScreen({
         : tw`relative flex-row items-center justify-center border-b border-slate-700 px-4 py-3`;
     const entrySurfaceStyle = georgiaMode
         ? tw`p-4`
-        : coastOrRiver
+        : riverMode
         ? [
             tw`rounded-[24px] border p-4`,
-            coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+            tw`border-black/10`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`rounded-[24px] border border-slate-700/60 bg-black/22 p-4`;
     const entryInputStyle = georgiaMode
         ? tw`flex-1 px-4 py-4 text-base leading-6 text-white`
-        : coastOrRiver
+        : riverMode
         ? [
             tw`mt-4 flex-1 rounded-[24px] border px-4 py-4 text-base leading-6`,
-            coastMode ? tw`border-black/10 text-white` : coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+            tw`border-black/10 text-[#111111]`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4 text-base leading-6 text-[#E4E0D4]`;
     const gratitudeInputShellStyle = georgiaMode
         ? tw`mt-4 flex-1 px-4 py-4`
-        : coastOrRiver
+        : riverMode
             ? [
                 tw`mt-4 flex-1 rounded-[24px] border px-4 py-4`,
-                coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+                tw`border-black/10`,
                 {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
             ]
             : tw`mt-4 flex-1 rounded-[24px] border border-slate-700/60 bg-black/22 px-4 py-4`;
@@ -166,22 +167,23 @@ export function JournalScreen({
             tw`mb-3 rounded-2xl border border-white/10 px-3 py-3 text-base text-white`,
             {backgroundColor: "rgba(255,255,255,0.08)"},
         ]
-        : coastOrRiver
+        : riverMode
             ? [
                 tw`mb-3 rounded-2xl border px-3 py-3 text-base`,
-                coastMode ? tw`border-black/10 text-white` : coastOrRiver ? tw`border-black/10 text-[#111111]` : tw`border-slate-700/60 text-[#E4E0D4]`,
+                tw`border-black/10 text-[#111111]`,
                 {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
             ]
             : tw`mb-3 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-3 text-base text-[#E4E0D4]`;
-    const entryPlaceholderTextColor = georgiaMode ? "rgba(255,255,255,0.55)" : coastMode ? "rgba(255,255,255,0.55)" : "#6b7280";
-    const entryActionColor = georgiaMode ? badgeColor : journalContentTextColor;
-    const entryHeaderTextColor = georgiaMode ? badgeColor : journalContentTextColor;
+    const entryPlaceholderTextColor = georgiaMode ? "rgba(255,255,255,0.55)" : "#6b7280";
+    const entryActionColor = georgiaMode ? GEORGIA_ACCENT_COLOR : journalContentTextColor;
+    const entryHeaderTextColor = georgiaMode ? GEORGIA_ACCENT_COLOR : riverMode ? badgeColor : journalContentTextColor;
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(selectedDate), [selectedDate]);
-    const quoteHeaderTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
-    const quoteBodyTextColor = georgiaMode ? "#FFFFFF" : coastMode ? primaryTextColor : quoteHeaderTextColor;
-    const quoteHeaderDateColor = georgiaMode ? "rgba(255,255,255,0.82)" : coastOrRiver ? "rgba(0,0,0,0.79)" : badgeColor;
+    const quoteHeaderTextColor = georgiaMode ? "#DAC8AE" : riverMode ? badgeColor : primaryTextColor;
+    const journalSectionHeaderTextColor = georgiaMode ? GEORGIA_ACCENT_COLOR : riverMode ? badgeColor : primaryTextColor;
+    const quoteBodyTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#000000" : quoteHeaderTextColor;
+    const quoteHeaderDateColor = georgiaMode ? "rgba(255,255,255,0.82)" : riverMode ? "rgba(0,0,0,0.79)" : badgeColor;
     const purposeImages = journal.purposeImages.filter((image) => image.date === selectedDate);
     const purposeImageRows = purposeImages.reduce<typeof purposeImages[]>((rows, image, index) => {
         if (index % 3 === 0) rows.push([]);
@@ -192,14 +194,12 @@ export function JournalScreen({
     const deletingPurposeImage = journal.purposeImages.find((image) => image.id === deletingPurposeImageId) ?? null;
     const purposeDialogSurfaceColor = georgiaMode
         ? GEORGIA_SURFACE_COLOR
-        : coastMode
-            ? COAST_SURFACE_COLOR
-            : visualMode === "river"
+        : riverMode
                 ? "#FFFFFF"
                 : "#0f0f0f";
-    const purposeDialogTextColor = georgiaMode || coastMode || visualMode === "sonny" ? "#FFFFFF" : "#111111";
-    const purposeDialogMutedColor = georgiaMode || coastMode || visualMode === "sonny" ? "rgba(255,255,255,0.68)" : "rgba(17,17,17,0.66)";
-    const purposeDialogBorderColor = georgiaMode || coastMode || visualMode === "sonny" ? "rgba(255,255,255,0.16)" : "rgba(17,17,17,0.14)";
+    const purposeDialogTextColor = georgiaMode || visualMode === "sonny" ? "#FFFFFF" : "#111111";
+    const purposeDialogMutedColor = georgiaMode || visualMode === "sonny" ? "rgba(255,255,255,0.68)" : "rgba(17,17,17,0.66)";
+    const purposeDialogBorderColor = georgiaMode || visualMode === "sonny" ? "rgba(255,255,255,0.16)" : "rgba(17,17,17,0.14)";
 
     function openPromptEntry() {
         haptics.navigation();
@@ -380,32 +380,36 @@ export function JournalScreen({
                             icon="create-outline"
                             active={route === "write"}
                             onPress={() => setRoute("write")}
-                            coastOrRiver={coastOrRiver || georgiaMode}
-                            whiteContent={coastMode || georgiaMode}
+                            activeColor={georgiaMode ? GEORGIA_ACCENT_COLOR : undefined}
+                            darkContent={riverMode || georgiaMode}
+                            whiteContent={georgiaMode}
                         />
                         <JournalRouteEntry
                             label="Memory"
                             icon="albums-outline"
                             active={route === "memory"}
                             onPress={() => setRoute("memory")}
-                            coastOrRiver={coastOrRiver || georgiaMode}
-                            whiteContent={coastMode || georgiaMode}
+                            activeColor={georgiaMode ? GEORGIA_ACCENT_COLOR : undefined}
+                            darkContent={riverMode || georgiaMode}
+                            whiteContent={georgiaMode}
                         />
                         <JournalRouteEntry
                             label="Audio"
                             icon="mic-outline"
                             active={route === "audio"}
                             onPress={() => setRoute("audio")}
-                            coastOrRiver={coastOrRiver || georgiaMode}
-                            whiteContent={coastMode || georgiaMode}
+                            activeColor={georgiaMode ? GEORGIA_ACCENT_COLOR : undefined}
+                            darkContent={riverMode || georgiaMode}
+                            whiteContent={georgiaMode}
                         />
                         <JournalRouteEntry
                             label="My Reason"
                             icon="image-outline"
                             active={route === "purpose"}
                             onPress={() => setRoute("purpose")}
-                            coastOrRiver={coastOrRiver || georgiaMode}
-                            whiteContent={coastMode || georgiaMode}
+                            activeColor={georgiaMode ? GEORGIA_ACCENT_COLOR : undefined}
+                            darkContent={riverMode || georgiaMode}
+                            whiteContent={georgiaMode}
                         />
                     </View>
                 ) : null}
@@ -587,7 +591,7 @@ export function JournalScreen({
                             <TranslucentCard radius={28} style={tw`items-center p-4`}>
                                 <Text style={[tw`text-center text-xl`, {
                                     fontFamily: fonts.heading,
-                                    color: primaryTextColor
+                                    color: journalSectionHeaderTextColor
                                 }]}>
                                     Audio Journal
                                 </Text>
@@ -615,7 +619,7 @@ export function JournalScreen({
                                     <View style={tw`flex-1`}>
                                         <Text style={[tw`text-xl`, {
                                             fontFamily: fonts.heading,
-                                            color: primaryTextColor
+                                            color: journalSectionHeaderTextColor
                                         }]}>
                                             My Reason
                                         </Text>

@@ -17,7 +17,6 @@ import type {VisualMode} from "../state/useVisualMode";
 import {TranslucentCard} from "../components/TranslucentCard";
 import {ScreenBackground} from "../components/ScreenBackground";
 
-const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#111111";
 const QUOTE_TOP_OFFSET = 57;
 const QUOTE_MIN_CONTENT_GAP = 11;
@@ -104,23 +103,22 @@ export function TodayScreen({
         shadowRadius: 8,
         elevation: 6,
     };
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
+    const riverMode = visualMode === "river";
     const sonnyMode = visualMode === "sonny";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const solidMode = coastMode || georgiaMode;
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
+    const solidMode = georgiaMode;
     const badgeColor = "#ba885a";
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
-    const quoteHeaderTextColor = georgiaMode || sonnyMode ? badgeColor : coastMode ? "#FFFFFF" : primaryTextColor;
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
+    const quoteHeaderTextColor = georgiaMode ? "#DAC8AE" : sonnyMode || riverMode ? badgeColor : primaryTextColor;
     const quoteBodyTextColor = primaryTextColor;
-    const taskIconColor = visualMode === "river" || coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
-    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.74)" : coastOrRiver ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
-    const secondaryTextClass = georgiaMode ? tw`text-white/70` : coastOrRiver ? tw`text-black/70` : tw`text-slate-300`;
-    const nestedItemStyle = coastOrRiver || georgiaMode
+    const taskIconColor = georgiaMode ? "#DAC8AE" : riverMode ? badgeColor : primaryTextColor;
+    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.74)" : riverMode ? "rgba(17,17,17,0.66)" : "rgba(228,224,212,0.68)";
+    const secondaryTextClass = georgiaMode ? tw`text-white/70` : riverMode ? tw`text-black/70` : tw`text-slate-300`;
+    const nestedItemStyle = riverMode || georgiaMode
         ? [
             tw`mt-2 rounded-2xl border px-3 py-2`,
-            georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700/60`,
+            georgiaMode ? tw`border-white/10` : riverMode ? tw`border-black/10` : tw`border-slate-700/60`,
             {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`mt-2 rounded-2xl border border-slate-700/60 bg-black/22 px-3 py-2`;
@@ -176,7 +174,7 @@ export function TodayScreen({
                         <Image
                             source={stickyNoteIcon}
                             resizeMode="contain"
-                            style={{width: 26, height: 26, tintColor: "#DAC8AE"}}
+                            style={{width: 26, height: 26, tintColor: visualMode === "river" ? badgeColor : "#DAC8AE"}}
                         />
                     </Pressable>
                 </View>
@@ -184,7 +182,7 @@ export function TodayScreen({
                       style={tw`absolute left-4 right-4 top-6 z-10 flex-row items-center justify-between`}>
                     <Text style={[tw`text-xs font-semibold`, {
                         fontFamily: fonts.body,
-                        color: georgiaMode ? "rgba(255,255,255,0.74)" : coastOrRiver ? "rgba(17,17,17,0.62)" : badgeColor
+                        color: georgiaMode ? "rgba(255,255,255,0.74)" : riverMode ? "rgba(17,17,17,0.62)" : badgeColor
                     }]}>Today • {today}</Text>
                     {profile?.birthday && isToday(profile.birthday) ? (
                         <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>
@@ -242,16 +240,23 @@ export function TodayScreen({
                         style={({pressed}) => [pressed && tw`opacity-85`]}
                     >
                         <TranslucentCard radius={24} style={tw`p-4`}>
-                            <Text style={[tw`text-sm font-semibold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Weekly
+                            <Text style={[tw`text-sm font-semibold`, {
+                                fontFamily: fonts.heading,
+                                color: primaryTextColor
+                            }]}>Weekly
                                 goal</Text>
                             {weeklyGoal ? (
                                 <>
-                                    <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: primaryTextColor}]}
-                                          numberOfLines={3}>
+                                    <Text
+                                        style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: primaryTextColor}]}
+                                        numberOfLines={3}>
                                         {weeklyGoal.text}
                                     </Text>
                                     <Text
-                                        style={[tw`mt-2 text-[11px] font-semibold`, {fontFamily: fonts.body, color: mutedTextColor}]}>
+                                        style={[tw`mt-2 text-[11px] font-semibold`, {
+                                            fontFamily: fonts.body,
+                                            color: mutedTextColor
+                                        }]}>
                                         Week of {weeklyGoal.weekStartDate}
                                     </Text>
                                     <Text
@@ -302,14 +307,18 @@ export function TodayScreen({
                     >
                         <TranslucentCard radius={24} style={tw`p-4`}>
                             <Text
-                                style={[tw`text-sm font-semibold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Gratitude</Text>
+                                style={[tw`text-sm font-semibold`, {
+                                    fontFamily: fonts.heading,
+                                    color: primaryTextColor
+                                }]}>Gratitude</Text>
                             {latestGratitude ? (
                                 <Text style={[tw`mt-2 text-base`, {fontFamily: fonts.body, color: primaryTextColor}]}
                                       numberOfLines={4}>
                                     {latestGratitude.text}
                                 </Text>
                             ) : (
-                                <Text style={[tw`mt-2 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>No gratitude
+                                <Text style={[tw`mt-2 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>No
+                                    gratitude
                                     entry
                                     yet for
                                     today.</Text>
@@ -323,12 +332,17 @@ export function TodayScreen({
                     >
                         <TranslucentCard radius={24} style={tw`p-4`}>
                             <View style={tw`flex-row items-center gap-2`}>
-                                <SvgUri width={16} height={16} uri={tasksIconUri} fill={taskIconColor} stroke={taskIconColor}/>
+                                <SvgUri width={16} height={16} uri={tasksIconUri} fill={taskIconColor}
+                                        stroke={taskIconColor}/>
                                 <Text
-                                    style={[tw`text-sm font-semibold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>Tasks</Text>
+                                    style={[tw`text-sm font-semibold`, {
+                                        fontFamily: fonts.heading,
+                                        color: primaryTextColor
+                                    }]}>Tasks</Text>
                             </View>
                             {dueToday.length === 0 ? (
-                                <Text style={[tw`mt-2 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>Nothing due
+                                <Text style={[tw`mt-2 text-sm`, secondaryTextClass, {fontFamily: fonts.body}]}>Nothing
+                                    due
                                     today.</Text>
                             ) : (
                                 dueToday.map((task) => {
@@ -340,19 +354,29 @@ export function TodayScreen({
                                                     color: primaryTextColor
                                                 }]}>{task.title}</Text>
                                             {task.description ? (
-                                                <Text style={[tw`mt-1 text-xs`, secondaryTextClass, {fontFamily: fonts.body}]}
-                                                      numberOfLines={2}>
+                                                <Text
+                                                    style={[tw`mt-1 text-xs`, secondaryTextClass, {fontFamily: fonts.body}]}
+                                                    numberOfLines={2}>
                                                     {task.description}
                                                 </Text>
                                             ) : null}
                                             <View style={tw`mt-2 flex-row items-center justify-between`}>
                                                 <Text
-                                                    style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.78)" : coastOrRiver ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"}]}>
+                                                    style={[tw`text-[11px] font-semibold`, {
+                                                        fontFamily: fonts.body,
+                                                        color: georgiaMode ? "rgba(255,255,255,0.78)" : riverMode ? "rgba(17,17,17,0.72)" : "rgba(228,224,212,0.8)"
+                                                    }]}>
                                                     {statusLabel[task.status]}{task.dueTime ? ` • ${task.dueTime}` : ""}
                                                 </Text>
                                                 {task.priority ? (
                                                     <Text
-                                                        style={[tw`text-[11px] font-semibold text-orange-300`, {fontFamily: fonts.body}]}>
+                                                        style={[
+                                                            tw`text-[11px] font-semibold`,
+                                                            {
+                                                                fontFamily: fonts.body,
+                                                                color: visualMode === "river" ? badgeColor : "#FDBA74",
+                                                            },
+                                                        ]}>
                                                         {task.priority} priority
                                                     </Text>
                                                 ) : null}
@@ -360,7 +384,7 @@ export function TodayScreen({
                                         </>
                                     );
 
-                                    if (georgiaMode || sonnyMode || coastOrRiver) {
+                                    if (georgiaMode || sonnyMode || riverMode) {
                                         return (
                                             <View key={task.id} style={[tw`mt-2`, calendarTaskShellStyle]}>
                                                 <TranslucentCard radius={16} style={[tw`p-3`, calendarTaskCardStyle]}>

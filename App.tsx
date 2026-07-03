@@ -71,7 +71,7 @@ function getVisualModeShellColor(visualMode: VisualMode): string {
     if (visualMode === "georgia") return "#111111";
     if (visualMode === "river") return "#DDEAF2";
     if (visualMode === "sonny") return "#000000";
-    return "#708090";
+    return "#DDEAF2";
 }
 
 function AppContent() {
@@ -585,10 +585,12 @@ function AppContent() {
                     style={[tw`flex-1`, {backgroundColor: shellBackgroundColor}]}
                 >
                     <StatusBar style="light"/>
-                    {visualModeState.mode === "georgia" ? (
+                    {visualModeState.mode === "georgia" || visualModeState.mode === "sonny" ? (
                         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                             <ImageBackground
-                                source={require("./public/images/rh11.jpg")}
+                                source={visualModeState.mode === "sonny"
+                                    ? require("./public/images/rh6.jpg")
+                                    : require("./public/images/ambient.jpg")}
                                 resizeMode="cover"
                                 style={StyleSheet.absoluteFill}
                                 imageStyle={{opacity: 0.33}}
@@ -607,13 +609,11 @@ function AppContent() {
                     }}
                     onToggleVisualMode={() => {
                         visualModeState.setMode(
-                            visualModeState.mode === "coast"
-                                ? "georgia"
-                                : visualModeState.mode === "georgia"
-                                    ? "river"
-                                    : visualModeState.mode === "river"
-                                        ? "sonny"
-                                        : "coast",
+                            visualModeState.mode === "georgia"
+                                ? "river"
+                                : visualModeState.mode === "river"
+                                    ? "sonny"
+                                    : "georgia",
                         );
                     }}
                     onToggleAccount={() => {

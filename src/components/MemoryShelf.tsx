@@ -16,10 +16,8 @@ type CategoryFilter = "all" | "prompt" | "gratitude";
 const ACCENT = "#FF3800";
 const SONNY_ACCENT = "#FF3800";
 const DARK_BADGE_COLOR = "#ba885a";
-const COAST_BADGE_COLOR = DARK_BADGE_COLOR;
 const CREAM = "#F0F8FF";
 const TEXT_PRIMARY = "#E4E0D4";
-const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#111111";
 const GEORGIA_FROST_SURFACE_COLOR = "rgba(0,0,0,0.28)";
 const GEORGIA_FROST_PANEL_COLOR = "rgba(0,0,0,0.32)";
@@ -96,12 +94,11 @@ function formatLookbackLabel(deltaDays: number): string {
 
 function StatPill({label, value}: {label: string; value: string | number}) {
     const visualMode = useScreenVisualMode();
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const coastOrRiver = visualMode === "river" || coastMode;
-    const borderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)";
-    const backgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
+    const riverMode = visualMode === "river";
+    const sonnyMode = visualMode === "sonny";
+    const borderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(245,219,201,0.22)";
+    const backgroundColor = georgiaMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.4)";
     return (
         <View
             style={[
@@ -116,11 +113,11 @@ function StatPill({label, value}: {label: string; value: string | number}) {
             <ButtonShine/>
             <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                 fontFamily: fonts.strong,
-                color: georgiaMode ? "rgba(255,255,255,0.65)" : coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)",
+                color: georgiaMode ? "rgba(255,255,255,0.65)" : riverMode ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)",
             }]}>
                 {label}
             </Text>
-            <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : TEXT_PRIMARY}]}>
+            <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY}]}>
                 {value}
             </Text>
         </View>
@@ -137,14 +134,13 @@ function FilterChip({
     onPress: () => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const riverMode = visualMode === "river";
     const accentColor = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
     const accentBorderColor = visualMode === "sonny" ? "#CB0000" : "#C82D00";
-    const inactiveBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
-    const inactiveBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.78)" : "rgba(15,15,15,0.85)";
+    const sonnyMode = visualMode === "sonny";
+    const inactiveBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(223,196,170,0.28)";
+    const inactiveBackgroundColor = georgiaMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(15,15,15,0.85)";
     return (
         <Pressable
             accessibilityRole="button"
@@ -156,7 +152,7 @@ function FilterChip({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-full border px-3.5 py-1.5`,
                 active
-                    ? {borderColor: coastOrRiver ? "#C82D00" : visualMode === "sonny" ? accentBorderColor : CREAM, backgroundColor: coastOrRiver ? "#FF3800" : visualMode === "sonny" ? accentColor : CREAM, ...buttonDepthStyle}
+                    ? {borderColor: riverMode ? "#C82D00" : sonnyMode ? accentBorderColor : CREAM, backgroundColor: riverMode ? "#FF3800" : sonnyMode ? accentColor : CREAM, ...buttonDepthStyle}
                     : {
                         borderColor: inactiveBorderColor,
                         backgroundColor: inactiveBackgroundColor,
@@ -168,7 +164,7 @@ function FilterChip({
             <ButtonShine/>
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: georgiaMode ? (active ? "#111111" : "#FFFFFF") : active ? (coastOrRiver || visualMode === "sonny" ? "#FFF6E8" : "#0f0f0f") : coastOrRiver ? "#111111" : CREAM,
+                color: georgiaMode ? (active ? "#111111" : "#FFFFFF") : active ? (riverMode || sonnyMode ? "#FFF6E8" : "#0f0f0f") : riverMode ? "#111111" : CREAM,
             }]}>
                 {label}
             </Text>
@@ -198,15 +194,14 @@ function EntryCard({
     const isPrompt = entry.category === "prompt";
     const entryPrompt = isPrompt ? getDailyJournalPrompt(entry.date) : null;
     const visualMode = useScreenVisualMode();
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const coastOrRiver = visualMode === "river" || coastMode;
-    const badgeColor = georgiaMode ? "#DAC8AE" : coastOrRiver ? COAST_BADGE_COLOR : DARK_BADGE_COLOR;
-    const cardBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.28)";
-    const cardBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.35)";
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : TEXT_PRIMARY;
-    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.58)";
+    const riverMode = visualMode === "river";
+    const sonnyMode = visualMode === "sonny";
+    const badgeColor = georgiaMode ? "#DAC8AE" : riverMode ? DARK_BADGE_COLOR : DARK_BADGE_COLOR;
+    const cardBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(223,196,170,0.28)";
+    const cardBackgroundColor = georgiaMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.35)";
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY;
+    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : riverMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.58)";
     return (
         <View
             style={[
@@ -220,7 +215,7 @@ function EntryCard({
         >
             <ButtonShine/>
             <View style={tw`flex-row items-center justify-between`}>
-                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : CREAM}]}>
+                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM}]}>
                     {entry.date}
                 </Text>
                 <View
@@ -250,7 +245,7 @@ function EntryCard({
             </Text>
             {entryPrompt ? (
                 <View style={[tw`mt-3 rounded-xl border p-3`, {borderColor: cardBorderColor}]}>
-                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : CREAM}]}>
+                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {fontFamily: fonts.strong, color: georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM}]}>
                         Prompt responded to
                     </Text>
                     <Text
@@ -268,7 +263,7 @@ function EntryCard({
                     keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                     multiline
                     style={[
-                        georgiaMode ? [tw`mt-3 rounded-xl border px-3 py-2`, {borderColor: GEORGIA_FROST_BORDER_COLOR, backgroundColor: "rgba(255,255,255,0.08)"}] : coastOrRiver ? [tw`mt-3 rounded-xl border border-black/10 px-3 py-2`, {backgroundColor: coastMode ? solidSurfaceColor : "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
+                        georgiaMode ? [tw`mt-3 rounded-xl border px-3 py-2`, {borderColor: GEORGIA_FROST_BORDER_COLOR, backgroundColor: "rgba(255,255,255,0.08)"}] : riverMode ? [tw`mt-3 rounded-xl border border-black/10 px-3 py-2`, {backgroundColor: "rgba(255,255,255,0.34)"}] : tw`mt-3 rounded-xl border border-[#2c2c2c] bg-[#0a0a0a] px-3 py-2`,
                         {fontFamily: fonts.body, color: primaryTextColor},
                     ]}
                 />
@@ -284,7 +279,7 @@ function EntryCard({
                 </Text>
             )}
             <View style={tw`mt-3 flex-row items-center justify-between`}>
-                <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.65)" : coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)"}]}>
+                <Text style={[tw`text-[11px] font-semibold`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.65)" : riverMode ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)"}]}>
                     {new Date(entry.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -318,14 +313,13 @@ function ActionPill({
     accent?: boolean;
 }) {
     const visualMode = useScreenVisualMode();
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const riverMode = visualMode === "river";
     const accentColor = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
     const accentBorderColor = visualMode === "sonny" ? "#CB0000" : ACCENT;
-    const inactiveBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.42)";
-    const inactiveBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
+    const sonnyMode = visualMode === "sonny";
+    const inactiveBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(223,196,170,0.42)";
+    const inactiveBackgroundColor = georgiaMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.4)";
     return (
         <Pressable
             accessibilityRole="button"
@@ -337,7 +331,7 @@ function ActionPill({
             style={({pressed}) => [
                 tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
                 accent
-                    ? {borderColor: coastOrRiver ? "#C82D00" : accentBorderColor, backgroundColor: coastOrRiver ? "#FF3800" : accentColor, ...buttonDepthStyle}
+                    ? {borderColor: riverMode ? "#C82D00" : accentBorderColor, backgroundColor: riverMode ? "#FF3800" : accentColor, ...buttonDepthStyle}
                     : {
                         borderColor: inactiveBorderColor,
                         backgroundColor: inactiveBackgroundColor,
@@ -348,11 +342,11 @@ function ActionPill({
         >
             <ButtonShine/>
             {icon ? (
-                <Ionicons name={icon} size={12} color={georgiaMode ? "#FFFFFF" : accent ? "#FFF6E8" : coastOrRiver ? "#111111" : CREAM}/>
+                <Ionicons name={icon} size={12} color={georgiaMode ? "#FFFFFF" : accent ? "#FFF6E8" : riverMode ? "#111111" : CREAM}/>
             ) : null}
             <Text style={[tw`text-[11px] font-semibold`, {
                 fontFamily: fonts.strong,
-                color: georgiaMode ? "#FFFFFF" : accent ? "#FFF6E8" : coastOrRiver ? "#111111" : CREAM,
+                color: georgiaMode ? "#FFFFFF" : accent ? "#FFF6E8" : riverMode ? "#111111" : CREAM,
             }]}>
                 {label}
             </Text>
@@ -451,21 +445,20 @@ export function MemoryShelf({
     const hasAnyEntries = entries.length > 0;
     const isFiltered = Boolean(searchTerm.trim()) || categoryFilter !== "all" || scopeToDate;
     const visualMode = useScreenVisualMode();
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const solidMode = coastMode || georgiaMode;
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const solidMode = georgiaMode;
+    const riverMode = visualMode === "river";
     const sonnyMode = visualMode === "sonny";
-    const accentColor = sonnyMode ? SONNY_ACCENT : coastOrRiver ? "#FF3800" : ACCENT;
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : TEXT_PRIMARY;
-    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
-    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.65)" : coastOrRiver ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
-    const panelBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c";
-    const panelBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_PANEL_COLOR : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)";
-    const shellBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? "rgba(0,0,0,0.12)" : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
-    const blurSurfaceColor = coastMode ? solidSurfaceColor : georgiaMode ? GEORGIA_FROST_SURFACE_COLOR : coastOrRiver ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.77)";
-    const blurBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.14)" : "#334155";
+    const accentColor = sonnyMode ? SONNY_ACCENT : riverMode ? "#FF3800" : ACCENT;
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY;
+    const headerTextColor = georgiaMode ? "#DAC8AE" : riverMode || sonnyMode ? "#ba885a" : primaryTextColor;
+    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : riverMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
+    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.65)" : riverMode ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const panelBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "#2c2c2c";
+    const panelBackgroundColor = georgiaMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.4)";
+    const shellBackgroundColor = georgiaMode ? "rgba(0,0,0,0.12)" : riverMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
+    const blurSurfaceColor = georgiaMode ? GEORGIA_FROST_SURFACE_COLOR : riverMode ? "rgba(255,255,255,0.42)" : sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.77)";
+    const blurBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.24)" : "#334155";
 
     return (
         <View
@@ -475,8 +468,8 @@ export function MemoryShelf({
             ]}
         >
             <BlurView
-                intensity={72}
-                tint={coastOrRiver ? "light" : "dark"}
+                intensity={sonnyMode ? 42 : 72}
+                tint={riverMode ? "light" : "dark"}
                 style={[
                     tw`overflow-hidden rounded-[24px] border`,
                     {borderColor: blurBorderColor},
@@ -487,13 +480,13 @@ export function MemoryShelf({
                     style={[StyleSheet.absoluteFill, {backgroundColor: blurSurfaceColor}]}
                 />
                 <LinearGradient
-                    colors={coastMode || georgiaMode ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"] : coastOrRiver ? ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
+                    colors={georgiaMode ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"] : riverMode ? ["rgba(232,244,255,0.30)", "rgba(210,232,255,0.06)", "transparent"] : sonnyMode ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)", "transparent"]}
                     locations={[0, 0.5, 1]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                 />
                 <LinearGradient
-                    colors={solidMode ? ["transparent", "rgba(0,0,0,0.1)"] : coastOrRiver ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
+                    colors={solidMode ? ["transparent", "rgba(0,0,0,0.1)"] : riverMode ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
                     pointerEvents="none"
                     style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                 />
@@ -501,7 +494,7 @@ export function MemoryShelf({
                 <View style={tw`p-3`}>
                     <View style={tw`flex-row items-center justify-between`}>
                         <View style={tw`flex-1`}>
-                            <Text style={[tw`text-base font-bold`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
+                            <Text style={[tw`text-base font-bold`, {fontFamily: fonts.heading, color: headerTextColor}]}>
                                 Memory shelf
                             </Text>
                             <Text style={[tw`mt-1 text-xs`, {
@@ -554,12 +547,12 @@ export function MemoryShelf({
                                 ]}
                             >
                                 <ButtonShine/>
-                                <Ionicons name="search" size={16} color={georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : CREAM}/>
+                                <Ionicons name="search" size={16} color={georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM}/>
                                 <TextInput
                                     value={searchTerm}
                                     onChangeText={setSearchTerm}
                                     placeholder="Search your entries"
-                                    placeholderTextColor={georgiaMode ? "rgba(255,255,255,0.5)" : coastOrRiver ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.5)"}
+                                    placeholderTextColor={georgiaMode ? "rgba(255,255,255,0.5)" : riverMode ? "rgba(17,17,17,0.45)" : "rgba(228,224,212,0.5)"}
                                     keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                                     returnKeyType="search"
                                     style={[tw`flex-1 text-sm`, {fontFamily: fonts.body, color: primaryTextColor}]}
@@ -571,7 +564,7 @@ export function MemoryShelf({
                                         onPress={() => setSearchTerm("")}
                                         hitSlop={8}
                                     >
-                                        <Ionicons name="close-circle" size={16} color={georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : CREAM}/>
+                                        <Ionicons name="close-circle" size={16} color={georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM}/>
                                     </Pressable>
                                 ) : null}
                             </View>
@@ -603,13 +596,13 @@ export function MemoryShelf({
                                             onPress={handleClearDateScope}
                                             style={({pressed}) => [
                                                 tw`overflow-hidden rounded-full border px-3 py-1`,
-                                                {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: panelBackgroundColor},
+                                                {borderColor: riverMode ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: panelBackgroundColor},
                                                 pressed && {opacity: 0.78},
                                             ]}
                                         >
                                             <Text style={[tw`text-[10px] font-semibold`, {
                                                 fontFamily: fonts.strong,
-                                                color: georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : CREAM,
+                                                color: georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM,
                                             }]}>
                                                 Show all dates
                                             </Text>
@@ -629,15 +622,15 @@ export function MemoryShelf({
                                                 style={({pressed}) => [
                                                     tw`overflow-hidden rounded-full border px-3 py-1.5`,
                                                     isSelected
-                                                        ? {borderColor: accentColor, backgroundColor: coastOrRiver ? "rgba(255,56,0,0.12)" : "rgba(255,56,0,0.42)", ...buttonDepthStyle}
-                                                        : {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)", backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
+                                                        ? {borderColor: accentColor, backgroundColor: riverMode ? "rgba(255,56,0,0.12)" : "rgba(255,56,0,0.42)", ...buttonDepthStyle}
+                                                        : {borderColor: riverMode ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)", backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
                                                     pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
                                                 <ButtonShine/>
                                                 <Text style={[tw`text-[11px] font-semibold`, {
                                                     fontFamily: fonts.strong,
-                                                    color: georgiaMode ? (isSelected ? "#111111" : "#FFFFFF") : isSelected ? (coastOrRiver ? accentColor : "#FFF6E8") : coastOrRiver ? "#111111" : CREAM,
+                                                    color: georgiaMode ? (isSelected ? "#111111" : "#FFFFFF") : isSelected ? (riverMode ? accentColor : "#FFF6E8") : riverMode ? "#111111" : CREAM,
                                                 }]}>
                                                     {isToday ? `${date} • today` : date}
                                                 </Text>
@@ -681,7 +674,7 @@ export function MemoryShelf({
                                                     </View>
                                                     <Text style={[tw`text-[11px] font-semibold`, {
                                                         fontFamily: fonts.strong,
-                                                        color: georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : CREAM,
+                                                        color: georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM,
                                                     }]}>
                                                         {item.date}
                                                     </Text>
@@ -726,7 +719,7 @@ export function MemoryShelf({
                                 </Text>
                                 <Text style={[tw`mt-2 text-center text-xs leading-5`, {
                                     fontFamily: fonts.body,
-                                    color: georgiaMode ? "rgba(255,255,255,0.72)" : coastOrRiver ? "rgba(17,17,17,0.65)" : "rgba(228,224,212,0.65)",
+                                    color: georgiaMode ? "rgba(255,255,255,0.72)" : riverMode ? "rgba(17,17,17,0.65)" : "rgba(228,224,212,0.65)",
                                 }]}>
                                     Write a prompt response or list three good things to add your first memory here.
                                 </Text>
@@ -741,7 +734,7 @@ export function MemoryShelf({
                                 <ButtonShine/>
                                 <Text style={[tw`text-center text-sm`, {
                                     fontFamily: fonts.body,
-                                    color: georgiaMode ? "rgba(255,255,255,0.78)" : coastOrRiver ? "rgba(17,17,17,0.78)" : "rgba(228,224,212,0.78)",
+                                    color: georgiaMode ? "rgba(255,255,255,0.78)" : riverMode ? "rgba(17,17,17,0.78)" : "rgba(228,224,212,0.78)",
                                 }]}>
                                     {isFiltered
                                         ? "Nothing matches the current filters."

@@ -163,7 +163,6 @@ export function PlannerEventSheet({
         () => EVENT_PRESETS.filter((preset) => isPresetVisibleForStart(preset, startMinutes)),
         [startMinutes],
     );
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const riverMode = visualMode === "river";
     const sonnyMode = visualMode === "sonny";
@@ -171,9 +170,7 @@ export function PlannerEventSheet({
     const badgeColor = "#ba885a";
     const themeSurfaceColor = georgiaMode
         ? "#111111"
-        : coastMode
-            ? "#708090"
-            : riverMode
+        : riverMode
                 ? "#FFFFFF"
                 : "#000000";
     const themeTextColor = lightMode ? "#111111" : "#FFFFFF";

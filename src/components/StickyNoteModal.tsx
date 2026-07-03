@@ -3,6 +3,7 @@ import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {Button} from "./ui/Button";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
+import {useScreenVisualMode} from "./ScreenBackground";
 
 interface StickyNoteModalProps {
     visible: boolean;
@@ -23,6 +24,9 @@ export function StickyNoteModal({
                                 }: StickyNoteModalProps) {
     const canAddTask = text.trim().length > 0;
     const {keyboardInset} = useKeyboardInset();
+    const visualMode = useScreenVisualMode();
+    const riverMode = visualMode === "river";
+    const stickyNoteHeaderColor = riverMode ? "#ba885a" : "#2B2B2B";
 
     return (
         <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
@@ -45,10 +49,16 @@ export function StickyNoteModal({
                     <View style={tw`mb-4 flex-row items-start justify-between gap-4`}>
                         <View style={tw`flex-1`}>
                             <Text
-                                style={[tw`text-xs uppercase tracking-[2px] text-[#2B2B2B]/70`, {fontFamily: fonts.body}]}>
+                                style={[tw`text-xs uppercase tracking-[2px]`, {
+                                    fontFamily: fonts.body,
+                                    color: riverMode ? "rgba(186,136,90,0.78)" : "rgba(43,43,43,0.7)",
+                                }]}>
                                 Quick note
                             </Text>
-                            <Text style={[tw`mt-1 text-2xl text-[#2B2B2B]`, {fontFamily: fonts.heading}]}>
+                            <Text style={[tw`mt-1 text-2xl`, {
+                                fontFamily: fonts.heading,
+                                color: stickyNoteHeaderColor,
+                            }]}>
                                 Sticky note
                             </Text>
                         </View>

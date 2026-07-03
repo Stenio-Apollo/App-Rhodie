@@ -14,11 +14,10 @@ interface GoalFeedbackModalProps {
 }
 
 export function GoalFeedbackModal({visible, message, goal, onContinue, visualMode}: GoalFeedbackModalProps) {
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const riverMode = visualMode === "river";
     const badgeColor = "#ba885a";
-    const surfaceColor = georgiaMode ? "#111111" : coastMode ? "#708090" : riverMode ? "#FFFFFF" : "#000000";
+    const surfaceColor = georgiaMode ? "#111111" : riverMode ? "#FFFFFF" : "#000000";
     const primaryTextColor = riverMode ? "#111111" : "#FFFFFF";
     const borderColor = riverMode ? "rgba(17,17,17,0.16)" : "rgba(255,255,255,0.18)";
     const nestedSurfaceColor = riverMode ? "rgba(17,17,17,0.06)" : "rgba(255,255,255,0.08)";

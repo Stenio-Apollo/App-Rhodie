@@ -23,33 +23,30 @@ export function TranslucentCard({
                                 }: PropsWithChildren<TranslucentCardProps>) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const lightMode = riverMode || coastMode || georgiaMode;
-    const solidSurfaceColor = georgiaMode ? "#111111" : "#708090";
-    const frostedLight = riverMode || coastMode;
+    const sonnyMode = visualMode === "sonny";
+    const lightMode = riverMode || georgiaMode;
+    const frostedLight = riverMode;
     const borderColor = georgiaMode
         ? "rgba(255,255,255,0.22)"
-        : lightMode ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.18)";
-    const surfaceColor = coastMode
-        ? solidSurfaceColor
-        : georgiaMode
+        : lightMode ? "rgba(255,255,255,0.35)" : sonnyMode ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.18)";
+    const surfaceColor = georgiaMode
             ? "rgba(0,0,0,0.28)"
             : lightMode
                 ? "rgba(255,255,255,0.22)"
-                : "rgba(20,20,20,0.28)";
-    const topGradient: GradientColors = coastMode
-        ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"]
-        : georgiaMode
+                : sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(20,20,20,0.28)";
+    const topGradient: GradientColors = georgiaMode
             ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"]
             : lightMode
-                ? ["rgba(255,255,255,0.42)", "rgba(240,248,255,0.16)", "transparent"]
-                : ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.03)", "transparent"];
-    const bottomGradient: GradientColors = coastMode || georgiaMode
+                ? ["rgba(232,244,255,0.38)", "rgba(210,232,255,0.18)", "transparent"]
+                : sonnyMode
+                    ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"]
+                    : ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.03)", "transparent"];
+    const bottomGradient: GradientColors = georgiaMode
         ? ["transparent", "rgba(0,0,0,0.24)"]
         : lightMode
             ? ["transparent", "rgba(0,0,0,0.16)"]
-            : ["transparent", "rgba(0,0,0,0.28)"];
+            : sonnyMode ? ["transparent", "rgba(0,0,0,0.24)"] : ["transparent", "rgba(0,0,0,0.28)"];
     const shadowStyle = {
         shadowColor: "#000000",
         shadowOffset: {width: 0, height: 8},
@@ -62,7 +59,7 @@ export function TranslucentCard({
         return (
             <View style={[{borderRadius: radius}, shadowStyle, containerStyle]}>
                 <BlurView
-                    intensity={frostedLight ? 42 : georgiaMode ? 38 : 34}
+                    intensity={frostedLight ? 42 : georgiaMode ? 38 : sonnyMode ? 42 : 34}
                     tint={frostedLight ? "light" : "dark"}
                     style={[
                         tw`overflow-hidden border`,

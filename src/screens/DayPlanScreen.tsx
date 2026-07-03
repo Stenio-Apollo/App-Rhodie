@@ -192,14 +192,13 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const bg = visualMode === "georgia"
         ? require("../../public/images/rhbull3.jpg")
         : require("../../public/images/rh16.jpg");
-    const coastMode = visualMode === "coast";
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const riverMode = visualMode === "river";
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
-    const badgeColor = "#ba885a";
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
-    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.58)" : coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
-    const planHeaderTextColor = georgiaMode || sonnyMode ? badgeColor : coastMode ? "#FFFFFF" : primaryTextColor;
+    const badgeColor = georgiaMode ? "#DAC8AE" : "#ba885a";
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
+    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.58)" : riverMode ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
+    const planHeaderTextColor = georgiaMode || sonnyMode || riverMode ? badgeColor : primaryTextColor;
 
     const dayEvents = useMemo(
         () =>
@@ -344,8 +343,8 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                                         {
                                             borderTopWidth: slot.isHourMark ? 1 : 0.5,
                                             borderTopColor: slot.isHourMark
-                                                ? coastOrRiver ? "rgba(17,17,17,0.24)" : "rgba(228,224,212,0.18)"
-                                                : coastOrRiver ? "rgba(17,17,17,0.12)" : "rgba(228,224,212,0.08)",
+                                                ? riverMode ? "rgba(17,17,17,0.24)" : "rgba(228,224,212,0.18)"
+                                                : riverMode ? "rgba(17,17,17,0.12)" : "rgba(228,224,212,0.08)",
                                         },
                                     ]}
                                 />
@@ -445,7 +444,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                         <Text
                             style={[
                                 tw`absolute top-1/3 self-center text-sm`,
-                                {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.6)" : coastOrRiver ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"},
+                                {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.6)" : riverMode ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)"},
                             ]}
                         >
                             Tap any slot to plan your day

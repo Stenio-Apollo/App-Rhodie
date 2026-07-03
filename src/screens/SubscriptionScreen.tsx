@@ -1,4 +1,7 @@
-import {ImageBackground, Linking, ScrollView, Text, View} from "react-native";
+import {type PropsWithChildren} from "react";
+import {ImageBackground, Linking, ScrollView, StyleSheet, Text, View} from "react-native";
+import {BlurView} from "expo-blur";
+import {LinearGradient} from "expo-linear-gradient";
 import {Button} from "../components/ui/Button";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
@@ -30,6 +33,44 @@ interface SubscriptionScreenProps {
     onDismiss?: () => void;
 }
 
+function FrostedPanel({children, compact = false}: PropsWithChildren<{ compact?: boolean }>) {
+    return (
+        <View
+            style={[
+                {
+                    borderRadius: compact ? 20 : 28,
+                    shadowColor: "#000000",
+                    shadowOffset: {width: 0, height: compact ? 6 : 14},
+                    shadowOpacity: compact ? 0.24 : 0.34,
+                    shadowRadius: compact ? 12 : 22,
+                    elevation: compact ? 7 : 10,
+                },
+            ]}
+        >
+            <BlurView
+                intensity={38}
+                tint="dark"
+                style={[
+                    tw`overflow-hidden border`,
+                    {
+                        borderRadius: compact ? 20 : 28,
+                        borderColor: "rgba(255,255,255,0.24)",
+                    },
+                ]}
+            >
+                <View pointerEvents="none" style={[StyleSheet.absoluteFill, {backgroundColor: "rgba(0,0,0,0.32)"}]}/>
+                <LinearGradient
+                    colors={["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "rgba(0,0,0,0.28)"]}
+                    locations={[0, 0.52, 1]}
+                    pointerEvents="none"
+                    style={StyleSheet.absoluteFill}
+                />
+                {children}
+            </BlurView>
+        </View>
+    );
+}
+
 export function SubscriptionScreen({
                                        loading,
                                        trialActive,
@@ -51,215 +92,192 @@ export function SubscriptionScreen({
     const trialEndsLabel = trialEndsAt
         ? new Date(trialEndsAt).toLocaleDateString(undefined, {month: "short", day: "numeric", year: "numeric"})
         : null;
-    const paywallBackground = require("../../public/images/rhelk1.jpg");
-    const buttonStyle = {
-        backgroundColor: "#E1B996",
+    const paywallBackground = require("../../public/images/ambient.jpg");
+    const orangeButtonStyle = {
+        backgroundColor: "#DAC8AE",
         borderWidth: 1,
-        borderColor: "rgba(43,43,43,0.22)",
-        shadowColor: "#000000",
-        shadowOffset: {width: 0, height: 5},
-        shadowOpacity: 0.24,
-        shadowRadius: 8,
+        borderColor: "rgba(255,255,255,0.18)",
+        shadowColor: "#DAC8AE",
+        shadowOffset: {width: 0, height: 8},
+        shadowOpacity: 0.3,
+        shadowRadius: 14,
         elevation: 6,
     };
-    const burntOrangeButtonStyle = {
-        ...buttonStyle,
-        backgroundColor: "#B55941",
-        borderColor: "rgba(255,255,255,0.18)",
+    const restoreButtonStyle = {
+        backgroundColor: "#DAC8AE",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.24)",
     };
-    const blackButtonStyle = {
-        ...buttonStyle,
-        backgroundColor: "#111111",
-        borderColor: "rgba(255,255,255,0.16)",
-    };
-    const buttonTextStyle = {color: "#111111"};
-    const lightButtonTextStyle = {color: "#FFF6E8"};
+    const restoreButtonTextStyle = {color: "#111111"};
+    const orangeButtonTextStyle = {color: "#111111"};
 
     return (
-        <ImageBackground source={paywallBackground} style={tw`flex-1`} imageStyle={tw`opacity-70`}>
+        <ImageBackground source={paywallBackground} style={tw`flex-1`} imageStyle={tw`opacity-95`}>
             <ScrollView
-                style={[tw`flex-1 bg-black/25`, {paddingHorizontal: 1}]}
-                contentContainerStyle={tw`flex-grow justify-center px-6 py-8`}
+                style={tw`flex-1 bg-black/40`}
+                contentContainerStyle={[tw`flex-grow px-5 py-8`, {justifyContent: "space-between"}]}
             >
-                <View
-                    style={[
-                        tw`rounded-3xl border p-6`,
-                        {
-                            backgroundColor: "rgba(223,196,170,0.78)",
-                            borderColor: "rgba(223,196,170,0.72)",
-                            shadowColor: "#000000",
-                            shadowOffset: {width: 0, height: 10},
-                            shadowOpacity: 0.28,
-                            shadowRadius: 18,
-                            elevation: 9,
-                        },
-                    ]}
-                >
-                    <Text style={[tw`text-3xl`, {fontFamily: fonts.heading, color: "#111111"}]}>
-                        Rhodie Pro
-                    </Text>
-                    <Text style={[tw`mt-2 text-sm`, {fontFamily: fonts.body, color: "#111111"}]}>
-                        Continue with Rhodie Pro to keep full access after your free trial.
-                    </Text>
-                    {allowDismiss && onDismiss ? (
-                        <View style={tw`mt-4 self-start`}>
+                <View style={tw`pt-20 px-1`}>
+                    <View style={tw`flex-row items-start justify-between gap-4`}>
+                        <View style={tw`flex-1`}>
+                            <Text style={[tw`text-xs uppercase tracking-[2px]`, {
+                                fontFamily: fonts.strong,
+                                color: "#DAC8AE"
+                            }]}>
+                                Rhodie Pro
+                            </Text>
+                            <Text style={[tw`mt-2 text-4xl leading-10`, {fontFamily: fonts.heading, color: "#FFFFFF"}]}>
+                            </Text>
+                        </View>
+                        {allowDismiss && onDismiss ? (
                             <Button
                                 label="Back"
                                 onPress={onDismiss}
                                 shine
-                                style={buttonStyle}
-                                textStyle={buttonTextStyle}
+                                style={restoreButtonStyle}
+                                textStyle={restoreButtonTextStyle}
                             />
-                        </View>
-                    ) : null}
-
-                    <View style={tw`mt-5 gap-2`}>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#111111"}]}>
-                            • Full access to journaling, task planning, calendar tools, and insights
-                        </Text>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#111111"}]}>
-                            • 14 days of free access from the moment your account is created
-                        </Text>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#111111"}]}>
-                            • Monthly or yearly auto-renewing plans after the trial ends
-                        </Text>
-                        <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: "#111111"}]}>
-                            • Restore purchases any time from your App Store account
-                        </Text>
+                        ) : null}
                     </View>
 
-                    {trialActive ? (
-                        <Text style={[tw`mt-5 text-xs`, {fontFamily: fonts.body, color: "#14532d"}]}>
-                            Your free access is active{trialEndsLabel ? ` until ${trialEndsLabel}` : ""}.
-                        </Text>
-                    ) : trialEndsLabel ? (
-                        <Text style={[tw`mt-5 text-xs`, {fontFamily: fonts.body, color: "#7c2d12"}]}>
-                            Your 14-day free access ended on {trialEndsLabel}. Choose a plan to continue.
-                        </Text>
-                    ) : null}
+                    <Text
+                        style={[tw`mt-1 text-sm leading-5`, {fontFamily: fonts.body, color: "#FFFFFF"}]}>
+                        Full access to encrypted journaling, gratitude entries, goal tracking, task management, calendar
+                        planning,
+                        insights, and social connection with others who are also embarking on the journey to betterment.
+                    </Text>
 
-                    {error ? (
-                        <Text style={[tw`mt-5 text-xs`, {fontFamily: fonts.body, color: "#7f1d1d"}]}>
-                            {error}
-                        </Text>
-                    ) : null}
-
-                    <View style={tw`mt-5 gap-3`}>
-                        {plans.map((plan) => (
+                    <View style={tw`mt-5 flex-row flex-wrap gap-2`}>
+                        {["14-day free access", "Private by design", "Cancel in App Store"].map((label) => (
                             <View
-                                key={plan.id}
+                                key={label}
                                 style={[
-                                    tw`rounded-2xl border p-4`,
+                                    tw`rounded-full border px-3 py-2`,
                                     {
-                                        backgroundColor: "#DFC4AA",
-                                        borderColor: "rgba(43,43,43,0.18)",
-                                        shadowColor: "#000000",
-                                        shadowOffset: {width: 0, height: 5},
-                                        shadowOpacity: 0.18,
-                                        shadowRadius: 9,
-                                        elevation: 5,
+                                        backgroundColor: "rgba(255,255,255,0.14)",
+                                        borderColor: "rgba(255,255,255,0.18)",
                                     },
                                 ]}
                             >
-                                <View style={tw`flex-row items-start justify-between gap-3`}>
-                                    <View style={tw`flex-1`}>
-                                        <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: "#111111"}]}>
-                                            {plan.title}
-                                        </Text>
-                                        <Text style={[tw`mt-1 text-xs`, {fontFamily: fonts.body, color: "#2B2B2B"}]}>
-                                            {plan.subtitle}
-                                        </Text>
-                                        <Text style={[tw`mt-2 text-lg`, {fontFamily: fonts.heading, color: "#111111"}]}>
-                                            {plan.priceLabel ?? "Not in current offering"}
-                                        </Text>
-                                        {plan.productIdentifier ? (
-                                            <Text
-                                                style={[tw`mt-1 text-[11px]`, {
-                                                    fontFamily: fonts.body,
-                                                    color: "rgba(17,17,17,0.58)",
-                                                }]}>
-                                                {plan.productIdentifier}
-                                            </Text>
-                                        ) : null}
-                                    </View>
-
-                                    <View style={tw`w-28`}>
-                                        <Button
-                                            label={purchaseBusy ? "Starting..." : `Buy ${plan.title}`}
-                                            onPress={() => onPurchasePlan(plan.id)}
-                                            disabled={!purchaseEnabled || purchaseBusy}
-                                            shine
-                                            style={buttonStyle}
-                                            textStyle={buttonTextStyle}
-                                        />
-                                    </View>
-                                </View>
+                                <Text style={[tw`text-[11px]`, {fontFamily: fonts.button, color: "#FFFFFF"}]}>
+                                    {label}
+                                </Text>
                             </View>
                         ))}
                     </View>
 
-                    <View style={tw`mt-3`}>
+                    {trialActive ? (
+                        <Text style={[tw`mt-5 text-xs`, {fontFamily: fonts.body, color: "#BBF7D0"}]}>
+                            Free access active{trialEndsLabel ? ` until ${trialEndsLabel}` : ""}.
+                        </Text>
+                    ) : trialEndsLabel ? (
+                        <Text style={[tw`mt-5 text-xs`, {fontFamily: fonts.body, color: "#FED7AA"}]}>
+                            Free access ended on {trialEndsLabel}. Choose a plan to continue.
+                        </Text>
+                    ) : null}
+
+                    <View style={tw`mt-4`}>
                         <Button
-                            label={restoreBusy ? "Restoring..." : "Restore purchases"}
+                            label={restoreBusy ? "Restoring..." : "Restore purchase"}
                             onPress={onRestore}
                             shine
-                            style={burntOrangeButtonStyle}
-                            textStyle={buttonTextStyle}
+                            style={restoreButtonStyle}
+                            textStyle={restoreButtonTextStyle}
                         />
                     </View>
 
-                    {legalLinksReady ? (
-                        <Text style={[tw`mt-5 text-xs`, {fontFamily: fonts.body, color: "#111111"}]}>
-                            By continuing, you agree to the{" "}
-                            <Text
-                                onPress={() => {
-                                    haptics.selection();
-                                    if (termsOfUseUrl) void Linking.openURL(termsOfUseUrl);
-                                }}
-                                style={{color: "#5f2f20"}}
-                            >
-                                Terms of Use
-                            </Text>
-                            {" "}(
-                            <Text
-                                onPress={() => {
-                                    haptics.selection();
-                                    if (termsOfUseUrl) void Linking.openURL(termsOfUseUrl);
-                                }}
-                                style={{color: "#5f2f20"}}
-                            >
-                                EULA
-                            </Text>
-                            )
-                            {" "}and{" "}
-                            <Text
-                                onPress={() => {
-                                    haptics.selection();
-                                    if (privacyPolicyUrl) void Linking.openURL(privacyPolicyUrl);
-                                }}
-                                style={{color: "#5f2f20"}}
-                            >
-                                Privacy Policy
-                            </Text>
-                            .
+                    {error ? (
+                        <Text style={[tw`mt-4 text-xs`, {fontFamily: fonts.body, color: "#FECACA"}]}>
+                            {error}
                         </Text>
-                    ) : (
-                        <Text style={[tw`mt-5 text-xs`, {fontFamily: fonts.body, color: "#7c2d12"}]}>
-                            Add `EXPO_PUBLIC_TERMS_OF_USE_URL` and `EXPO_PUBLIC_PRIVACY_POLICY_URL` before submission.
-                        </Text>
-                    )}
+                    ) : null}
+                </View>
 
-                    <View style={tw`mt-6`}>
-                        <Button
-                            label={loading ? "Checking access..." : "Sign out"}
-                            onPress={onSignOut}
-                            disabled={loading}
-                            shine
-                            style={blackButtonStyle}
-                            textStyle={lightButtonTextStyle}
-                        />
+                <View style={tw`mt-8`}>
+                    <View style={tw`gap-3`}>
+                        {plans.map((plan) => {
+                            return (
+                                <FrostedPanel key={plan.id} compact>
+                                    <View style={tw`p-4`}>
+                                        <View style={tw`flex-row items-center justify-between gap-3`}>
+                                            <View style={tw`flex-1`}>
+                                                <Text style={[tw`text-lg`, {
+                                                    fontFamily: fonts.heading,
+                                                    color: "#FFFFFF"
+                                                }]}>
+                                                    {plan.id === "yearly" ? "Yearly Access" : "Monthly Access"}
+                                                </Text>
+                                                <Text style={[tw`mt-1 text-xs`, {
+                                                    fontFamily: fonts.body,
+                                                    color: "rgba(255,255,255,0.74)"
+                                                }]}>
+                                                    {plan.priceLabel ?? "Unavailable"}
+                                                </Text>
+                                            </View>
+                                            <Button
+                                                label={purchaseBusy ? "Starting..." : "Buy"}
+                                                onPress={() => onPurchasePlan(plan.id)}
+                                                disabled={!purchaseEnabled || purchaseBusy}
+                                                shine
+                                                style={[orangeButtonStyle, tw`min-w-[92px]`]}
+                                                textStyle={orangeButtonTextStyle}
+                                            />
+                                        </View>
+                                    </View>
+                                </FrostedPanel>
+                            );
+                        })}
+                    </View>
+
+                    <View style={tw`mt-4`}>
+                        {legalLinksReady ? (
+                            <Text style={[tw`text-center text-xs leading-5`, {
+                                fontFamily: fonts.body,
+                                color: "rgba(255,255,255,0.78)"
+                            }]}>
+                                By continuing, you agree to the{" "}
+                                <Text
+                                    onPress={() => {
+                                        haptics.selection();
+                                        if (termsOfUseUrl) void Linking.openURL(termsOfUseUrl);
+                                    }}
+                                    style={{color: "#DAC8AE"}}
+                                >
+                                    Terms of Use
+                                </Text>
+                                {" "}(
+                                <Text
+                                    onPress={() => {
+                                        haptics.selection();
+                                        if (termsOfUseUrl) void Linking.openURL(termsOfUseUrl);
+                                    }}
+                                    style={{color: "#DAC8AE"}}
+                                >
+                                    EULA
+                                </Text>
+                                )
+                                {" "}and{" "}
+                                <Text
+                                    onPress={() => {
+                                        haptics.selection();
+                                        if (privacyPolicyUrl) void Linking.openURL(privacyPolicyUrl);
+                                    }}
+                                    style={{color: "#DAC8AE"}}
+                                >
+                                    Privacy Policy
+                                </Text>
+                                .
+                            </Text>
+                        ) : (
+                            <Text
+                                style={[tw`text-center text-xs leading-5`, {fontFamily: fonts.body, color: "#FED7AA"}]}>
+                                Add `EXPO_PUBLIC_TERMS_OF_USE_URL` and `EXPO_PUBLIC_PRIVACY_POLICY_URL` before
+                                submission.
+                            </Text>
+                        )}
                     </View>
                 </View>
+
             </ScrollView>
         </ImageBackground>
     );

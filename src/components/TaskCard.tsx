@@ -10,8 +10,6 @@ import {useScreenVisualMode} from "./ScreenBackground";
 const COMPLETE_BUTTON_COLOR = "#DAC8AE";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
-const COAST_SURFACE_COLOR = "#708090";
-const GEORGIA_SURFACE_COLOR = "#111111";
 
 const buttonDepthStyle = {
     shadowColor: "#000000",
@@ -60,16 +58,14 @@ function ActionPill({
 }) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const lightCardMode = riverMode || coastMode;
-    const whiteTextMode = coastMode || georgiaMode || sonnyMode;
+    const lightCardMode = riverMode;
+    const whiteTextMode = georgiaMode || sonnyMode;
     const actionAccentColor = COMPLETE_BUTTON_COLOR;
     const textColor = accent ? "#0f0f0f" : whiteTextMode ? "#FFFFFF" : lightCardMode ? "#111111" : CREAM;
-    const actionBorderColor = coastMode || riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(255,255,255,0.14)" : sonnyMode ? "rgba(247,247,247,0.18)" : "rgba(223,196,170,0.42)";
-    const actionBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? "rgba(0,0,0,0.28)" : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.92)";
+    const actionBorderColor = riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(255,255,255,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(223,196,170,0.42)";
+    const actionBackgroundColor = georgiaMode ? "rgba(0,0,0,0.28)" : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(15,15,15,0.92)";
     return (
         <Pressable
             accessibilityRole="button"
@@ -111,16 +107,14 @@ interface TaskCardProps {
 export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const whiteTextMode = coastMode || georgiaMode || sonnyMode;
+    const whiteTextMode = georgiaMode || sonnyMode;
     const primaryTextColor = whiteTextMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY;
     const bodyTextColor = whiteTextMode ? "rgba(255,255,255,0.82)" : riverMode ? "rgba(17,17,17,0.82)" : "rgba(228,224,212,0.82)";
     const dueTextColor = whiteTextMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM;
-    const cardBorderColor = coastMode || riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(255,255,255,0.14)" : sonnyMode ? "rgba(247,247,247,0.18)" : "#2c2c2c";
-    const cardBackgroundColor = coastMode ? solidSurfaceColor : georgiaMode ? "rgba(0,0,0,0.36)" : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "#000000" : "rgba(15,15,15,0.94)";
+    const cardBorderColor = riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(255,255,255,0.14)" : sonnyMode ? "rgba(255,255,255,0.20)" : "#2c2c2c";
+    const cardBackgroundColor = georgiaMode ? "rgba(0,0,0,0.36)" : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(15,15,15,0.94)";
     return (
         <Pressable
             onPress={haptics.tapTask}

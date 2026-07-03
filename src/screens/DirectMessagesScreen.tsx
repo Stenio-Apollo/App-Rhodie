@@ -23,7 +23,6 @@ interface DirectMessagesScreenProps {
     visualMode: VisualMode;
 }
 
-const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#111111";
 
 function displayName(author: CommunityAuthor): string {
@@ -81,9 +80,8 @@ function messageReceipt(
 function Avatar({author, size = 38}: { author: CommunityAuthor; size?: number }) {
     const initial = displayName(author)[0]?.toUpperCase() ?? "R";
     const visualMode = useScreenVisualMode();
-    const coastMode = visualMode === "coast";
-    const coastOrRiver = visualMode === "river" || coastMode;
-    const accentColor = visualMode === "sonny" ? "#FF3800" : coastOrRiver ? "#FF3800" : "#B55941";
+    const riverMode = visualMode === "river";
+    const accentColor = visualMode === "sonny" ? "#FF3800" : riverMode ? "#FF3800" : "#B55941";
     if (author.avatarUrl) {
         return (
             <Image
@@ -110,21 +108,20 @@ function ConversationButton({
     onPress: () => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const solidMode = coastMode || georgiaMode;
-    const coastOrRiver = visualMode === "river" || coastMode;
-    const accentColor = visualMode === "sonny" ? "#FF3800" : coastOrRiver ? "#FF3800" : "#B55941";
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#ffffff";
-    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
+    const riverMode = visualMode === "river";
+    const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
+    const solidMode = georgiaMode;
+    const accentColor = visualMode === "sonny" ? "#FF3800" : riverMode ? "#FF3800" : "#B55941";
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#ffffff";
+    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : riverMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.7)";
     return (
         <Pressable
             onPress={onPress}
             style={({pressed}) => [
                 tw`rounded-3xl border px-4 py-3`,
-                georgiaMode ? tw`border-white/10` : coastOrRiver ? tw`border-black/10` : tw`border-slate-700`,
-                selected ? (georgiaMode ? {backgroundColor: "rgba(255,255,255,0.12)"} : solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/24`) : georgiaMode ? {backgroundColor: "rgba(0,0,0,0.28)"} : coastOrRiver ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/18`) : tw`bg-black/70`,
+                georgiaMode ? tw`border-white/10` : riverMode ? tw`border-black/10` : tw`border-slate-700`,
+                selected ? (georgiaMode ? {backgroundColor: "rgba(255,255,255,0.12)"} : solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/24`) : georgiaMode ? {backgroundColor: "rgba(0,0,0,0.28)"} : riverMode ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/18`) : tw`bg-black/70`,
                 pressed && tw`opacity-80`,
             ]}
         >
@@ -161,19 +158,18 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
     const {keyboardInset} = useKeyboardInset();
     const routeOpacity = useRef(new Animated.Value(0)).current;
     const routeTranslateY = useRef(new Animated.Value(-14)).current;
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const solidMode = coastMode || georgiaMode;
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const riverMode = visualMode === "river";
+    const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
+    const solidMode = georgiaMode;
     const sonnyMode = visualMode === "sonny";
-    const accentColor = sonnyMode ? "#FF3800" : coastOrRiver ? "#FF3800" : "#B55941";
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#ffffff";
-    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.62)" : coastOrRiver ? "rgba(17,17,17,0.62)" : "rgba(255,255,255,0.55)";
-    const emptyStateStyle = coastOrRiver || georgiaMode
+    const accentColor = sonnyMode ? "#FF3800" : riverMode ? "#FF3800" : "#B55941";
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#ffffff";
+    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.62)" : riverMode ? "rgba(17,17,17,0.62)" : "rgba(255,255,255,0.55)";
+    const emptyStateStyle = riverMode || georgiaMode
         ? [
             tw`rounded-2xl px-4 py-3 text-center text-sm`,
-            georgiaMode ? tw`text-white` : coastOrRiver ? tw`text-[#111111]` : tw`text-[#E4E0D4]`,
+            georgiaMode ? tw`text-white` : riverMode ? tw`text-[#111111]` : tw`text-[#E4E0D4]`,
             {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"},
         ]
         : tw`rounded-2xl bg-black/70 px-4 py-3 text-center text-sm text-[#E4E0D4]`;
@@ -277,7 +273,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
             {visualMode === "georgia" ? (
                 <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                     <ImageBackground
-                        source={require("../../public/images/rh11.jpg")}
+                        source={require("../../public/images/ambient.jpg")}
                         resizeMode="cover"
                         style={[StyleSheet.absoluteFill, {backgroundColor: GEORGIA_SURFACE_COLOR}]}
                         imageStyle={{opacity: 0.33}}
@@ -348,7 +344,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                                     <Fragment key={message.id}>
                                         {showDate ? (
                                             <View style={tw`my-1 items-center`}>
-                                                <Text style={[tw`px-3 py-1 text-[10px]`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.65)" : coastOrRiver ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.65)"}]}>
+                                                <Text style={[tw`px-3 py-1 text-[10px]`, {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.65)" : riverMode ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.65)"}]}>
                                                     {formatDateLabel(message.createdAt)}
                                                 </Text>
                                             </View>
@@ -364,7 +360,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                                                 delayLongPress={320}
 	                                                style={({pressed}) => [
 	                                                    tw`rounded-3xl border border-slate-700 px-4 py-3`,
-	                                                    mine ? {backgroundColor: accentColor} : georgiaMode ? {backgroundColor: "rgba(0,0,0,0.28)"} : coastOrRiver ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/24`) : tw`bg-black/70`,
+	                                                    mine ? {backgroundColor: accentColor} : georgiaMode ? {backgroundColor: "rgba(0,0,0,0.28)"} : riverMode ? (solidMode ? {backgroundColor: solidSurfaceColor} : tw`bg-white/24`) : tw`bg-black/70`,
 	                                                    actionSelected ? {
 	                                                        borderColor: accentColor,
 	                                                        shadowColor: accentColor,
@@ -449,7 +445,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                             keyboardAppearance="dark"
                             multiline
                             style={[
-                                coastOrRiver
+                                riverMode
                                     ? [tw`max-h-24 flex-1 rounded-2xl border border-black/10 px-3 py-2 text-sm text-[#111111]`, {backgroundColor: solidMode ? solidSurfaceColor : "rgba(255,255,255,0.24)"}]
                                     : georgiaMode
                                         ? [tw`max-h-24 flex-1 rounded-2xl border border-white/10 px-3 py-2 text-sm text-white`, {backgroundColor: "rgba(0,0,0,0.28)"}]
@@ -468,7 +464,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                                 pressed && tw`opacity-75`,
                             ]}
                         >
-                            <Ionicons name="send" size={17} color={georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4"}/>
+                            <Ionicons name="send" size={17} color={georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4"}/>
                         </Pressable>
                     </View>
                 </View>

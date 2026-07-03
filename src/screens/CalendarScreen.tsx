@@ -23,13 +23,16 @@ import type {VisualMode} from "../state/useVisualMode";
 import {useKeyboardInset} from "../lib/useKeyboardInset";
 import {ScreenBackground} from "../components/ScreenBackground";
 
+const GEORGIA_ACCENT_COLOR = "#DAC8AE";
+
 function CalendarRouteEntry({
                                 label,
                                 icon,
                                 onPress,
                                 disabled = false,
                                 active = false,
-                                coastOrRiver = false,
+                                activeColor,
+                                darkContent = false,
                                 whiteContent = false,
                             }: {
     label: string;
@@ -37,17 +40,18 @@ function CalendarRouteEntry({
     onPress: () => void;
     disabled?: boolean;
     active?: boolean;
-    coastOrRiver?: boolean;
+    activeColor?: string;
+    darkContent?: boolean;
     whiteContent?: boolean;
 }) {
     const badgeColor = "#ba885a";
     const color = disabled
-        ? (whiteContent ? "rgba(228,224,212,0.35)" : coastOrRiver ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
+        ? (whiteContent ? "rgba(228,224,212,0.35)" : darkContent ? "rgba(17,17,17,0.35)" : "rgba(228,224,212,0.35)")
         : active
-            ? badgeColor
+            ? activeColor ?? badgeColor
         : whiteContent
             ? "#E4E0D4"
-            : coastOrRiver ? "#000000" : "#E4E0D4";
+            : darkContent ? "#000000" : "#E4E0D4";
 
     return (
         <Pressable
@@ -131,19 +135,18 @@ export function CalendarScreen({
         ? require("../../public/images/rhram1.jpg")
         : require("../../public/images/rh211.jpg");
     const {keyboardInset} = useKeyboardInset();
-    const coastMode = visualMode === "coast";
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const riverMode = visualMode === "river";
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
     const accentColor = "#FF3800";
     const sonnyBadgeColor = "#ba885a";
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : "#E4E0D4";
-    const headerTextColor = georgiaMode || sonnyMode ? sonnyBadgeColor : coastMode ? "#FFFFFF" : primaryTextColor;
-    const selectedDateTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
-    const bodyMutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.7)" : "#94a3b8";
-    const calendarTaskTextColor = coastMode || georgiaMode ? "#FFFFFF" : primaryTextColor;
-    const calendarTaskMutedTextColor = georgiaMode ? "rgba(255,255,255,0.78)" : coastMode ? "rgba(255,255,255,0.78)" : bodyMutedTextColor;
-    const calendarTaskCardShellStyle = sonnyMode || georgiaMode || coastOrRiver
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
+    const headerTextColor = georgiaMode ? "#DAC8AE" : sonnyMode || riverMode ? sonnyBadgeColor : primaryTextColor;
+    const selectedDateTextColor = georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const bodyMutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : riverMode ? "rgba(17,17,17,0.7)" : "#94a3b8";
+    const calendarTaskTextColor = georgiaMode ? "#FFFFFF" : primaryTextColor;
+    const calendarTaskMutedTextColor = georgiaMode ? "rgba(255,255,255,0.78)" : bodyMutedTextColor;
+    const calendarTaskCardShellStyle = sonnyMode || georgiaMode || riverMode
         ? {
             borderRadius: 20,
             shadowColor: sonnyBadgeColor,
@@ -153,13 +156,8 @@ export function CalendarScreen({
             elevation: 10,
         }
         : null;
-    const calendarTaskCardStyle = sonnyMode
-        ? {
-            backgroundColor: "#000000",
-            borderColor: "rgba(186,136,90,0.52)",
-        }
-        : null;
-    const headerSecondaryTextColor = georgiaMode || sonnyMode ? "#FFFFFF" : coastMode ? "rgba(255,255,255,0.7)" : coastOrRiver ? "rgba(17,17,17,0.7)" : "#cbd5e1";
+    const calendarTaskCardStyle = null;
+    const headerSecondaryTextColor = georgiaMode || sonnyMode ? "#FFFFFF" : riverMode ? "rgba(17,17,17,0.7)" : "#cbd5e1";
 
     const markedDates = useMemo(() => {
         const map: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
@@ -268,31 +266,33 @@ export function CalendarScreen({
                         icon="calendar-outline"
                         onPress={openCalendarRoute}
                         active={route === "calendar"}
-                        coastOrRiver={coastOrRiver || georgiaMode}
-                        whiteContent={visualMode === "coast" || georgiaMode}
+                        activeColor={georgiaMode ? GEORGIA_ACCENT_COLOR : undefined}
+                        darkContent={riverMode || georgiaMode}
+                        whiteContent={georgiaMode}
                     />
                     <CalendarRouteEntry
                         label="Google"
                         icon="logo-google"
                         onPress={handleGoogleRoutePress}
                         disabled={!googleCalendar.available || googleCalendar.busy}
-                        coastOrRiver={coastOrRiver || georgiaMode}
-                        whiteContent={visualMode === "coast" || georgiaMode}
+                        darkContent={riverMode || georgiaMode}
+                        whiteContent={georgiaMode}
                     />
                     <CalendarRouteEntry
                         label="Tasks"
                         icon="checkbox-outline"
                         onPress={onOpenTasks}
-                        coastOrRiver={coastOrRiver || georgiaMode}
-                        whiteContent={visualMode === "coast" || georgiaMode}
+                        darkContent={riverMode || georgiaMode}
+                        whiteContent={georgiaMode}
                     />
                     <CalendarRouteEntry
                         label="Goals"
                         icon="flag-outline"
                         onPress={() => openGoalsRoute()}
                         active={route === "goals"}
-                        coastOrRiver={coastOrRiver || georgiaMode}
-                        whiteContent={visualMode === "coast" || georgiaMode}
+                        activeColor={georgiaMode ? GEORGIA_ACCENT_COLOR : undefined}
+                        darkContent={riverMode || georgiaMode}
+                        whiteContent={georgiaMode}
                     />
                 </View>
                 {route === "goals" ? (

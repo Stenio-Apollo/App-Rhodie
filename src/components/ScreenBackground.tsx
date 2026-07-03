@@ -16,11 +16,7 @@ const riverGradientColors = [
     "#EFE8DF",
 ] as const;
 
-const sonnyBackgroundColor = "#000000";
-const coastBackgroundColor = "#708090";
-const georgiaBackgroundColor = "#111111";
-
-const ScreenVisualModeContext = createContext<VisualMode>("coast");
+const ScreenVisualModeContext = createContext<VisualMode>("river");
 
 export function useScreenVisualMode() {
     return useContext(ScreenVisualModeContext);
@@ -51,7 +47,7 @@ export function ScreenBackground({
     if (visualMode === "sonny") {
         return (
             <ScreenVisualModeContext.Provider value={visualMode}>
-                <View style={[tw`flex-1`, {backgroundColor: sonnyBackgroundColor}, style]}>{children}</View>
+                <View style={[tw`flex-1`, {backgroundColor: "transparent"}, style]}>{children}</View>
             </ScreenVisualModeContext.Provider>
         );
     }
@@ -60,14 +56,6 @@ export function ScreenBackground({
         return (
             <ScreenVisualModeContext.Provider value={visualMode}>
                 <View style={[tw`flex-1`, style]}>{children}</View>
-            </ScreenVisualModeContext.Provider>
-        );
-    }
-
-    if (visualMode === "coast") {
-        return (
-            <ScreenVisualModeContext.Provider value={visualMode}>
-                <View style={[tw`flex-1`, {backgroundColor: coastBackgroundColor}, style]}>{children}</View>
             </ScreenVisualModeContext.Provider>
         );
     }

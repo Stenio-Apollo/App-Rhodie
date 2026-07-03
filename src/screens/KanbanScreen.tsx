@@ -19,7 +19,6 @@ const ACCENT = "#FF3800";
 const SONNY_ACCENT = "#FF3800";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
-const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_SURFACE_COLOR = "#111111";
 const SOLID_THEME_PLACEHOLDER_COLOR = "rgba(247,247,247,0.77)";
 
@@ -63,22 +62,21 @@ function ThemedField({
     inputRef?: React.RefObject<TextInput>;
 }) {
     const visualMode = useScreenVisualMode();
-    const coastOrRiver = visualMode === "river" || visualMode === "coast";
-    const coastMode = visualMode === "coast";
+    const riverMode = visualMode === "river";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const solidMode = coastMode || georgiaMode;
+    const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
+    const solidMode = georgiaMode;
     const sonnyMode = visualMode === "sonny";
-    const fieldTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : sonnyMode ? "#FFFFFF" : TEXT_PRIMARY;
-    const fieldPlaceholderColor = georgiaMode || sonnyMode ? SOLID_THEME_PLACEHOLDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.5)";
+    const fieldTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : sonnyMode ? "#FFFFFF" : TEXT_PRIMARY;
+    const fieldPlaceholderColor = georgiaMode || sonnyMode ? SOLID_THEME_PLACEHOLDER_COLOR : riverMode ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.5)";
     return (
         <View
             style={[
                 tw`overflow-hidden rounded-xl border px-3 py-2.5`,
-                coastOrRiver || georgiaMode
+                riverMode || georgiaMode || sonnyMode
                     ? {
-                        borderColor: georgiaMode ? "rgba(255,255,255,0.14)" : "rgba(17,17,17,0.14)",
-                        backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
+                        borderColor: georgiaMode || sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(17,17,17,0.14)",
+                        backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : sonnyMode ? "rgba(0,0,0,0.30)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
                         ...buttonDepthStyle,
                     }
                     : {borderColor: sonnyMode ? "rgba(247,247,247,0.18)" : "#2c2c2c", backgroundColor: sonnyMode ? "#000000" : "rgba(15,15,15,0.94)", ...buttonDepthStyle},
@@ -112,25 +110,24 @@ function ThemedButton({
     disabled?: boolean;
 }) {
     const visualMode = useScreenVisualMode();
-    const coastOrRiver = visualMode === "river" || visualMode === "coast";
-    const coastMode = visualMode === "coast";
+    const riverMode = visualMode === "river";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const solidMode = coastMode || georgiaMode;
+    const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
+    const solidMode = georgiaMode;
     const sonnyMode = visualMode === "sonny";
     const accentColor = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
     const georgiaButtonTextColor = "#FFFFFF";
     const pickDateButton = label === "Pick date" || label === "Hide";
     const badgeButton = pickDateButton;
-    const buttonContentColor = (georgiaMode || coastMode) && badgeButton
+    const buttonContentColor = georgiaMode && badgeButton
         ? "#0f0f0f"
-        : coastMode || georgiaMode
+        : georgiaMode
             ? georgiaButtonTextColor
             : badgeButton
                 ? "#0f0f0f"
                 : accent
                     ? "#FFF6E8"
-                    : coastOrRiver
+                    : riverMode
                         ? "#111111"
                         : sonnyMode ? georgiaButtonTextColor : CREAM;
     return (
@@ -145,10 +142,10 @@ function ThemedButton({
                     ? {borderColor: accentColor, backgroundColor: accentColor, ...buttonDepthStyle}
                     : badgeButton
                         ? {borderColor: "#ba885a", backgroundColor: "#ba885a", ...buttonDepthStyle}
-                    : coastOrRiver || georgiaMode
+                    : riverMode || georgiaMode || sonnyMode
                         ? {
-                            borderColor: georgiaMode ? "rgba(255,255,255,0.14)" : "rgba(17,17,17,0.14)",
-                            backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
+                            borderColor: georgiaMode || sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(17,17,17,0.14)",
+                            backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : sonnyMode ? "rgba(0,0,0,0.30)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
                             ...buttonDepthStyle,
                         }
                         : {borderColor: sonnyMode ? "rgba(247,247,247,0.18)" : "rgba(223,196,170,0.42)", backgroundColor: sonnyMode ? "#000000" : "rgba(15,15,15,0.92)", ...buttonDepthStyle},
@@ -219,15 +216,14 @@ export function KanbanScreen({
     const titleInputRef = useRef<TextInput>(null);
     const {keyboardInset} = useKeyboardInset();
     const fabBottom = useMemo(() => Animated.add(keyboardInset, 47), [keyboardInset]);
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
-    const solidSurfaceColor = georgiaMode ? GEORGIA_SURFACE_COLOR : COAST_SURFACE_COLOR;
-    const solidMode = coastMode || georgiaMode;
-    const coastOrRiver = visualMode === "river" || coastMode;
+    const riverMode = visualMode === "river";
+    const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
+    const solidMode = georgiaMode;
     const sonnyMode = visualMode === "sonny";
     const themeAccent = visualMode === "sonny" ? SONNY_ACCENT : ACCENT;
-    const primaryTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : sonnyMode ? "#FFFFFF" : TEXT_PRIMARY;
-    const accentTextColor = coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : CREAM;
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : sonnyMode ? "#FFFFFF" : TEXT_PRIMARY;
+    const accentTextColor = georgiaMode ? "#DAC8AE" : riverMode ? "#111111" : CREAM;
 
     const filteredGrouped = useMemo(() => {
         if (!filterDate) return grouped;
@@ -305,15 +301,15 @@ export function KanbanScreen({
                             </View>
                         ) : null}
 
-                        <View style={[tw`mt-2 overflow-hidden rounded-[28px] p-1`, {backgroundColor: georgiaMode ? "transparent" : solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
+                        <View style={[tw`mt-2 overflow-hidden rounded-[28px] p-1`, {backgroundColor: georgiaMode ? "transparent" : solidMode ? solidSurfaceColor : riverMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}]}>
                             <BlurView
-                                intensity={30}
-                                tint={coastOrRiver ? "light" : "dark"}
-                                style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: georgiaMode ? "rgba(255,255,255,0.18)" : coastOrRiver ? "rgba(17,17,17,0.14)" : "rgba(51,65,85,0.6)"}]}
+                                intensity={sonnyMode ? 42 : 30}
+                                tint={riverMode ? "light" : "dark"}
+                                style={[tw`overflow-hidden rounded-[24px] border`, {borderColor: georgiaMode ? "rgba(255,255,255,0.18)" : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.24)" : "rgba(51,65,85,0.6)"}]}
                             >
                                 <View
                                     pointerEvents="none"
-                                    style={[StyleSheet.absoluteFill, {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : coastOrRiver ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.22)"}]}
+                                    style={[StyleSheet.absoluteFill, {backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.22)"}]}
                                 />
                                 <LinearGradient
                                     colors={["rgba(181,89,65,0.06)", "rgba(255,255,255,0.015)", "transparent"]}
@@ -351,22 +347,22 @@ export function KanbanScreen({
                                         <View
                                             style={[
                                                 tw`flex-1 overflow-hidden flex-row items-center gap-2 rounded-xl border px-3 py-2.5`,
-                                                coastOrRiver || georgiaMode
+                                                riverMode || georgiaMode || sonnyMode
                                                     ? {
-                                                        borderColor: georgiaMode ? "rgba(255,255,255,0.14)" : "rgba(17,17,17,0.14)",
-                                                        backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
+                                                        borderColor: georgiaMode || sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(17,17,17,0.14)",
+                                                        backgroundColor: georgiaMode ? "rgba(0,0,0,0.28)" : sonnyMode ? "rgba(0,0,0,0.30)" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.34)",
                                                         ...buttonDepthStyle,
                                                     }
                                                     : {borderColor: sonnyMode ? "rgba(247,247,247,0.18)" : "#2c2c2c", backgroundColor: sonnyMode ? "#000000" : "rgba(15,15,15,0.94)", ...buttonDepthStyle},
                                             ]}
                                         >
                                             <ButtonShine/>
-                                            <Ionicons name="calendar-outline" size={14} color={coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : sonnyMode ? "#FFFFFF" : CREAM}/>
+                                            <Ionicons name="calendar-outline" size={14} color={georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : sonnyMode ? "#FFFFFF" : CREAM}/>
                                             <Text style={[tw`flex-1 text-sm`, {
                                                 fontFamily: fonts.body,
                                                 color: dueDate
                                                     ? primaryTextColor
-                                                    : georgiaMode || sonnyMode ? SOLID_THEME_PLACEHOLDER_COLOR : coastOrRiver ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.55)",
+                                                    : georgiaMode || sonnyMode ? SOLID_THEME_PLACEHOLDER_COLOR : riverMode ? "rgba(17,17,17,0.45)" : "rgba(223,196,170,0.55)",
                                             }]}>
                                                 {dueDate ? `Due ${formattedDueDate}` : "No due date"}
                                             </Text>
@@ -380,7 +376,7 @@ export function KanbanScreen({
                                                     }}
                                                     hitSlop={8}
                                                 >
-                                                    <Ionicons name="close-circle" size={16} color={coastMode || georgiaMode ? "#FFFFFF" : coastOrRiver ? "#111111" : sonnyMode ? "#FFFFFF" : CREAM}/>
+                                                    <Ionicons name="close-circle" size={16} color={georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : sonnyMode ? "#FFFFFF" : CREAM}/>
                                                 </Pressable>
                                             ) : null}
                                         </View>
@@ -436,11 +432,11 @@ export function KanbanScreen({
                                                                 tw`overflow-hidden rounded-xl border px-3.5 py-2`,
                                                                 isActive
                                                                 ? {
-                                                                        borderColor: georgiaMode ? "#DAC8AE" : coastOrRiver ? "#8FBBD0" : sonnyMode ? "#DAC8AE" : CREAM,
-                                                                        backgroundColor: georgiaMode ? "#DAC8AE" : coastOrRiver ? "#B9D8E8" : sonnyMode ? "#DAC8AE" : CREAM,
+                                                                        borderColor: georgiaMode ? "#DAC8AE" : riverMode ? "#8FBBD0" : sonnyMode ? "#DAC8AE" : CREAM,
+                                                                        backgroundColor: georgiaMode ? "#DAC8AE" : riverMode ? "#B9D8E8" : sonnyMode ? "#DAC8AE" : CREAM,
                                                                         ...buttonDepthStyle,
                                                                     }
-                                                                    : coastOrRiver || georgiaMode
+                                                                    : riverMode || georgiaMode
                                                                         ? {
                                                                             borderColor: georgiaMode ? "rgba(255,255,255,0.14)" : "rgba(17,17,17,0.14)",
                                                                             backgroundColor: georgiaMode ? "rgba(15,15,15,0.92)" : "rgba(255,255,255,0.78)",
@@ -457,7 +453,7 @@ export function KanbanScreen({
                                                             <ButtonShine/>
                                                             <Text style={[tw`text-[11px] font-semibold uppercase tracking-[1px]`, {
                                                                 fontFamily: fonts.strong,
-                                                                color: georgiaMode ? (isActive ? "#0f0f0f" : "#FFFFFF") : coastOrRiver ? "#0f0f0f" : sonnyMode ? (isActive ? "#0f0f0f" : "#FFFFFF") : isActive ? "#0f0f0f" : CREAM,
+                                                                color: georgiaMode ? (isActive ? "#0f0f0f" : "#FFFFFF") : riverMode ? "#0f0f0f" : sonnyMode ? (isActive ? "#0f0f0f" : "#FFFFFF") : isActive ? "#0f0f0f" : CREAM,
                                                             }]}>
                                                                 {item}
                                                             </Text>

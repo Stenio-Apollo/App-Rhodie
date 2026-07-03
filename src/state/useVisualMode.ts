@@ -4,22 +4,22 @@ import {useCallback, useEffect, useState} from "react";
 const LEGACY_STORAGE_PREFIX = "rhnative.visual-mode.v1";
 const STORAGE_PREFIX = "rhnative.visual-mode.v2";
 
-export type VisualMode = "coast" | "georgia" | "river" | "sonny";
+export type VisualMode = "georgia" | "river" | "sonny";
 
 function storageKey(userId: string | null | undefined, prefix = STORAGE_PREFIX): string {
     return `${prefix}.${userId ?? "local"}`;
 }
 
 function normalizeVisualMode(value: string | null): VisualMode {
-    if (value === "georgia" || value === "river" || value === "sonny" || value === "coast") return value;
-    return "coast";
+    if (value === "georgia" || value === "river" || value === "sonny") return value;
+    return "river";
 }
 
 function normalizeLegacyVisualMode(value: string | null): VisualMode {
     if (value === "georgia") return "sonny";
     if (value === "sunset" || value === "warm") return "georgia";
     if (value === "surfSide" || value === "copper") return "river";
-    return "coast";
+    return "river";
 }
 
 export async function clearVisualModeStorage(userId?: string | null): Promise<void> {
@@ -30,7 +30,7 @@ export async function clearVisualModeStorage(userId?: string | null): Promise<vo
 }
 
 export function useVisualMode(userId?: string | null) {
-    const [mode, setModeState] = useState<VisualMode>("coast");
+    const [mode, setModeState] = useState<VisualMode>("river");
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {

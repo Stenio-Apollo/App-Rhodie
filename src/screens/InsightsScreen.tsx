@@ -57,11 +57,9 @@ const buttonShadow = {
     shadowOffset: {width: 0, height: 5},
     elevation: 6,
 };
-const COAST_SURFACE_COLOR = "#708090";
 const GEORGIA_FROST_SURFACE_COLOR = "rgba(0,0,0,0.28)";
 const GEORGIA_FROST_PANEL_COLOR = "rgba(0,0,0,0.32)";
 const GEORGIA_FROST_BORDER_COLOR = "rgba(255,255,255,0.22)";
-const SONNY_SURFACE_COLOR = "#000000";
 const BADGE_COLOR = "#ba885a";
 
 interface InsightsScreenProps {
@@ -98,6 +96,7 @@ interface ThemeStyles {
     itemBorderColor: string;
     itemSurfaceColor: string;
     primaryTextColor: string;
+    briefHeaderTextColor: string;
     secondaryTextColor: string;
     mutedTextColor: string;
     accentColor: string;
@@ -109,14 +108,13 @@ interface ThemeStyles {
 }
 
 function getInsightsTheme(visualMode: VisualMode): ThemeStyles {
-    const coastMode = visualMode === "coast";
     const riverMode = visualMode === "river";
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
 
     if (georgiaMode) {
         return {
-            background: require("../../public/images/rh11.jpg"),
+            background: require("../../public/images/ambient.jpg"),
             headerBorderColor: GEORGIA_FROST_BORDER_COLOR,
             headerSurfaceColor: GEORGIA_FROST_PANEL_COLOR,
             sectionBorderColor: GEORGIA_FROST_BORDER_COLOR,
@@ -124,6 +122,7 @@ function getInsightsTheme(visualMode: VisualMode): ThemeStyles {
             itemBorderColor: "rgba(255,255,255,0.16)",
             itemSurfaceColor: GEORGIA_FROST_PANEL_COLOR,
             primaryTextColor: "#FFFFFF",
+            briefHeaderTextColor: "#DAC8AE",
             secondaryTextColor: "rgba(255,255,255,0.76)",
             mutedTextColor: "rgba(255,255,255,0.6)",
             accentColor: BADGE_COLOR,
@@ -132,27 +131,6 @@ function getInsightsTheme(visualMode: VisualMode): ThemeStyles {
             backButtonTextColor: "#FFFFFF",
             blurTint: "dark",
             frosted: true,
-        };
-    }
-
-    if (coastMode) {
-        return {
-            background: require("../../public/images/newspaper 1.jpg"),
-            headerBorderColor: "rgba(255,255,255,0.24)",
-            headerSurfaceColor: COAST_SURFACE_COLOR,
-            sectionBorderColor: "rgba(255,255,255,0.22)",
-            sectionSurfaceColor: COAST_SURFACE_COLOR,
-            itemBorderColor: "rgba(255,255,255,0.18)",
-            itemSurfaceColor: "rgba(255,255,255,0.1)",
-            primaryTextColor: "#FFFFFF",
-            secondaryTextColor: "rgba(255,255,255,0.76)",
-            mutedTextColor: "rgba(255,255,255,0.6)",
-            accentColor: "#FF3800",
-            buttonTextColor: "#FFF6E8",
-            backButtonColor: "#111111",
-            backButtonTextColor: "#FFFFFF",
-            blurTint: "dark",
-            frosted: false,
         };
     }
 
@@ -166,6 +144,7 @@ function getInsightsTheme(visualMode: VisualMode): ThemeStyles {
             itemBorderColor: "rgba(17,17,17,0.12)",
             itemSurfaceColor: "rgba(255,255,255,0.5)",
             primaryTextColor: "#111111",
+            briefHeaderTextColor: BADGE_COLOR,
             secondaryTextColor: "rgba(17,17,17,0.74)",
             mutedTextColor: "rgba(17,17,17,0.58)",
             accentColor: "#FF3800",
@@ -179,13 +158,14 @@ function getInsightsTheme(visualMode: VisualMode): ThemeStyles {
 
     return {
         background: require("../../public/images/rh2.jpg"),
-        headerBorderColor: sonnyMode ? "rgba(255,56,0,0.3)" : "rgba(251,247,243,0.22)",
-        headerSurfaceColor: sonnyMode ? SONNY_SURFACE_COLOR : "rgba(251,247,243,0.64)",
-        sectionBorderColor: sonnyMode ? "rgba(255,56,0,0.24)" : "rgba(251,247,243,0.22)",
-        sectionSurfaceColor: sonnyMode ? "rgba(0,0,0,0.82)" : "rgba(251,247,243,0.64)",
-        itemBorderColor: sonnyMode ? "rgba(255,56,0,0.18)" : "rgba(43,43,43,0.14)",
-        itemSurfaceColor: sonnyMode ? "rgba(255,255,255,0.06)" : "rgba(251,247,243,0.72)",
+        headerBorderColor: sonnyMode ? "rgba(255,255,255,0.24)" : "rgba(251,247,243,0.22)",
+        headerSurfaceColor: sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(251,247,243,0.64)",
+        sectionBorderColor: sonnyMode ? "rgba(255,255,255,0.22)" : "rgba(251,247,243,0.22)",
+        sectionSurfaceColor: sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(251,247,243,0.64)",
+        itemBorderColor: sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(43,43,43,0.14)",
+        itemSurfaceColor: sonnyMode ? "rgba(0,0,0,0.24)" : "rgba(251,247,243,0.72)",
         primaryTextColor: sonnyMode ? "#FFFFFF" : "#2B2B2B",
+        briefHeaderTextColor: sonnyMode ? BADGE_COLOR : "#2B2B2B",
         secondaryTextColor: sonnyMode ? "rgba(255,255,255,0.78)" : "rgba(43,43,43,0.86)",
         mutedTextColor: sonnyMode ? "rgba(255,255,255,0.6)" : "rgba(43,43,43,0.72)",
         accentColor: sonnyMode ? "#FF3800" : "#B55941",
@@ -307,7 +287,7 @@ export function InsightsScreen({onBackToPeers, visualMode}: InsightsScreenProps)
                                 }]}>
                                     Insights • Official sources
                                 </Text>
-                                <Text style={[tw`mt-1 text-2xl font-black`, {fontFamily: fonts.heading, color: theme.primaryTextColor}]}>
+                                <Text style={[tw`mt-1 text-2xl font-black`, {fontFamily: fonts.heading, color: theme.briefHeaderTextColor}]}>
                                     The Rhodie Brief
                                 </Text>
                             </View>

@@ -511,7 +511,7 @@ export function PrivacyPassphraseScreen({encryption, onSignOut}: PrivacyPassphra
                                             disabled={busy}
                                             style={({pressed}) => [
                                                 tw`h-20 w-20 items-center justify-center rounded-full`,
-                                                pressed && tw`rounded-2xl bg-[#FF3800]/49`,
+                                                pressed && tw`rounded-2xl bg-[#DAC8AE]/79`,
                                                 busy && tw`opacity-50`,
                                             ]}
                                         >

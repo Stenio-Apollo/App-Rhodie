@@ -16,13 +16,10 @@ interface TranslucentCalendarProps {
 export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalendarProps) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const coastMode = visualMode === "coast";
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
-    const lightMode = riverMode || coastMode || georgiaMode;
-    const frostedLight = riverMode || coastMode;
-    const solidMode = coastMode || sonnyMode;
-    const solidSurfaceColor = sonnyMode ? "#000000" : georgiaMode ? "#111111" : "#708090";
+    const lightMode = riverMode || georgiaMode;
+    const frostedLight = riverMode;
     const calendarTextColor = georgiaMode ? "#FFFFFF" : lightMode ? "#000000" : "#E4E0D4";
     const calendarMutedTextColor = georgiaMode ? "rgba(255,255,255,0.72)" : lightMode ? "rgba(0,0,0,0.72)" : "rgba(228,224,212,0.75)";
     const calendarDisabledTextColor = georgiaMode ? "rgba(255,255,255,0.35)" : lightMode ? "rgba(0,0,0,0.25)" : "rgba(228,224,212,0.25)";
@@ -82,19 +79,19 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
             : frostedLight
                 ? "rgba(17,17,17,0.14)"
                 : sonnyMode
-                    ? "rgba(247,247,247,0.18)"
+                    ? "rgba(255,255,255,0.24)"
                     : "rgba(51,65,85,0.6)";
         const innerSurface = georgiaMode
             ? "rgba(0,0,0,0.28)"
-            : solidMode
-                ? solidSurfaceColor
+            : sonnyMode
+                ? "rgba(0,0,0,0.34)"
                 : "rgba(255,255,255,0.42)";
         const topGradient = georgiaMode
             ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] as const
-            : solidMode
-                ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)", "transparent"] as const
-                : ["rgba(255,255,255,0.32)", "rgba(255,255,255,0.04)", "transparent"] as const;
-        const bottomGradient = georgiaMode || solidMode
+            : sonnyMode
+                ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] as const
+                : ["rgba(232,244,255,0.30)", "rgba(210,232,255,0.06)", "transparent"] as const;
+        const bottomGradient = georgiaMode || sonnyMode
             ? ["transparent", "rgba(0,0,0,0.24)"] as const
             : ["transparent", "rgba(223,196,170,0.16)"] as const;
         return (
@@ -102,7 +99,7 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
                 style={[
                     tw`mt-3 overflow-hidden rounded-[28px] p-1`,
                     {
-                        backgroundColor: georgiaMode ? "transparent" : solidMode ? solidSurfaceColor : "rgba(255,255,255,0.2)",
+                        backgroundColor: georgiaMode ? "transparent" : sonnyMode ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.2)",
                         shadowColor: "#000000",
                         shadowOffset: {width: 0, height: 8},
                         shadowOpacity: georgiaMode ? 0.32 : 0.16,
@@ -112,7 +109,7 @@ export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalend
                 ]}
             >
                 <BlurView
-                    intensity={georgiaMode ? 38 : 72}
+                    intensity={georgiaMode ? 38 : sonnyMode ? 42 : 72}
                     tint={frostedLight ? "light" : "dark"}
                     style={[tw`overflow-hidden rounded-[24px] border`, {borderColor}]}
                 >

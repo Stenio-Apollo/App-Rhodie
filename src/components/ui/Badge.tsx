@@ -11,11 +11,10 @@ interface BadgeProps {
 export function Badge({label, tone = "default"}: BadgeProps) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const coastMode = visualMode === "coast";
-    const lightMode = riverMode || coastMode;
+    const lightMode = riverMode;
     const georgiaMode = visualMode === "georgia";
     const sonnyMode = visualMode === "sonny";
-    const whiteTextMode = coastMode || georgiaMode;
+    const whiteTextMode = georgiaMode;
     const isAccent = tone === "accent";
     const isCount = tone === "count";
     const badgeBorderColor = isAccent

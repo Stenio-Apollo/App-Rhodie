@@ -50,7 +50,8 @@ interface BirthdayPickerProps {
     showClear?: boolean;
     clearTextColor?: string;
     pickerBackgroundClass?: string;
-    coastOrRiver?: boolean;
+    lightMode?: boolean;
+    georgiaMode?: boolean;
     sonnyMode?: boolean;
 }
 
@@ -62,12 +63,19 @@ export function BirthdayPicker({
                                    showClear = false,
                                    clearTextColor,
                                    pickerBackgroundClass = "bg-black/20",
-                                   coastOrRiver = false,
+                                   lightMode = false,
+                                   georgiaMode = false,
                                    sonnyMode = false,
                                }: BirthdayPickerProps) {
     const [open, setOpen] = useState(false);
-    const accentColor = "#FF3800";
-    const accentSurfaceColor = sonnyMode ? "rgba(255,56,0,0.14)" : "rgba(255,56,0,0.08)";
+    const accentColor = georgiaMode ? "#DAC8AE" : "#FF3800";
+    const accentSurfaceColor = georgiaMode
+        ? "rgba(218,200,174,0.18)"
+        : sonnyMode ? "rgba(255,56,0,0.14)" : "rgba(255,56,0,0.08)";
+    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.62)" : lightMode ? "rgba(17,17,17,0.58)" : "#94a3b8";
+    const primaryTextColor = georgiaMode ? "#FFFFFF" : lightMode ? "#111111" : "#fbf7f3";
+    const borderColor = georgiaMode ? "rgba(255,255,255,0.18)" : lightMode ? "rgba(17,17,17,0.14)" : "#2c2c2c";
+    const inactiveOptionTextColor = georgiaMode ? "rgba(255,255,255,0.74)" : lightMode ? "#111111" : "#94a3b8";
 
     useEffect(() => {
         if (!month) {
@@ -90,7 +98,7 @@ export function BirthdayPicker({
             <Text
                 style={[
                     tw`text-xs`,
-                    {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                    {fontFamily: fonts.body, color: mutedTextColor},
                 ]}
             >
                 Birthday
@@ -102,11 +110,11 @@ export function BirthdayPicker({
                 }}
                 style={({pressed}) => [
                     tw`mt-2 rounded-lg border px-3 py-3`,
-                    {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
+                    {borderColor, backgroundColor: georgiaMode ? "rgba(255,255,255,0.06)" : "transparent"},
                     pressed && tw`opacity-90`,
                 ]}
             >
-                <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: coastOrRiver ? "#111111" : "#fbf7f3"}]}>
+                <Text style={[tw`text-sm`, {fontFamily: fonts.body, color: primaryTextColor}]}>
                     {birthdayLabel(month, day, placeholder)}
                 </Text>
             </Pressable>
@@ -116,13 +124,13 @@ export function BirthdayPicker({
                     <View
                         style={[
                             tw`flex-1 rounded-lg border ${pickerBackgroundClass}`,
-                            {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
+                            {borderColor},
                         ]}
                     >
                         <Text
                             style={[
                                 tw`px-3 pt-3 text-[11px]`,
-                                {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                                {fontFamily: fonts.body, color: mutedTextColor},
                             ]}
                         >
                             Month
@@ -139,13 +147,13 @@ export function BirthdayPicker({
                                         }}
                                         style={({pressed}) => [
                                             tw`px-3 py-3`,
-                                            active ? {backgroundColor: coastOrRiver || sonnyMode ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
+                                            active ? {backgroundColor: lightMode || sonnyMode || georgiaMode ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
                                             pressed && tw`opacity-90`,
                                         ]}
                                     >
                                         <Text style={[tw`text-sm`, {
                                             fontFamily: fonts.body,
-                                            color: active ? (coastOrRiver || sonnyMode ? accentColor : "#fbf7f3") : coastOrRiver ? "#111111" : "#94a3b8",
+                                            color: active ? (lightMode || sonnyMode || georgiaMode ? accentColor : "#fbf7f3") : inactiveOptionTextColor,
                                         }]}>
                                             {option.label}
                                         </Text>
@@ -158,13 +166,13 @@ export function BirthdayPicker({
                     <View
                         style={[
                             tw`flex-1 rounded-lg border ${pickerBackgroundClass}`,
-                            {borderColor: coastOrRiver ? "rgba(17,17,17,0.14)" : "#2c2c2c"},
+                            {borderColor},
                         ]}
                     >
                         <Text
                             style={[
                                 tw`px-3 pt-3 text-[11px]`,
-                                {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.58)" : "#94a3b8"},
+                                {fontFamily: fonts.body, color: mutedTextColor},
                             ]}
                         >
                             Day
@@ -181,13 +189,13 @@ export function BirthdayPicker({
                                         }}
                                         style={({pressed}) => [
                                             tw`px-3 py-3`,
-                                            active ? {backgroundColor: coastOrRiver || sonnyMode ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
+                                            active ? {backgroundColor: lightMode || sonnyMode || georgiaMode ? accentSurfaceColor : "rgba(251,247,243,0.12)"} : null,
                                             pressed && tw`opacity-90`,
                                         ]}
                                     >
                                         <Text style={[tw`text-sm`, {
                                             fontFamily: fonts.body,
-                                            color: active ? (coastOrRiver || sonnyMode ? accentColor : "#fbf7f3") : coastOrRiver ? "#111111" : "#94a3b8",
+                                            color: active ? (lightMode || sonnyMode || georgiaMode ? accentColor : "#fbf7f3") : inactiveOptionTextColor,
                                         }]}>
                                             {Number(option)}
                                         </Text>
@@ -197,7 +205,7 @@ export function BirthdayPicker({
                                 <Text
                                     style={[
                                         tw`px-3 py-3 text-sm`,
-                                        {fontFamily: fonts.body, color: coastOrRiver ? "rgba(17,17,17,0.48)" : "#64748b"},
+                                        {fontFamily: fonts.body, color: georgiaMode ? "rgba(255,255,255,0.48)" : lightMode ? "rgba(17,17,17,0.48)" : "#64748b"},
                                     ]}
                                 >
                                     Pick a month first
@@ -216,7 +224,7 @@ export function BirthdayPicker({
                     }}
                     style={({pressed}) => [tw`mt-3 self-start`, pressed && tw`opacity-80`]}
                 >
-                    <Text style={[tw`text-xs`, {fontFamily: fonts.button, color: clearTextColor ?? (coastOrRiver ? "#111111" : "#B55941")}]}>
+                    <Text style={[tw`text-xs`, {fontFamily: fonts.button, color: clearTextColor ?? (georgiaMode ? accentColor : lightMode ? "#111111" : "#B55941")}]}>
                         Clear birthday
                     </Text>
                 </Pressable>

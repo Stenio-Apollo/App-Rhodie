@@ -9,14 +9,10 @@ interface LoadingVideoOverlayProps {
     message?: string;
 }
 
-const videoFrameStyle = {
-    ...StyleSheet.absoluteFillObject,
-    width: "120%" as const,
-    left: "-16%" as const,
-};
+const loadingVideoSize = 172;
 
 export function LoadingVideoOverlay({visible, message = "Loading..."}: LoadingVideoOverlayProps) {
-    const player = useVideoPlayer(require("../../assets/videos/rhloading3.mp4"), (instance) => {
+    const player = useVideoPlayer(require("../../assets/videos/landcruiser.mp4"), (instance) => {
         instance.loop = true;
         instance.muted = true;
         instance.play();
@@ -33,17 +29,17 @@ export function LoadingVideoOverlay({visible, message = "Loading..."}: LoadingVi
     if (!visible) return null;
 
     return (
-        <View style={[StyleSheet.absoluteFill, {zIndex: 1000}]} pointerEvents="auto">
+        <View style={[StyleSheet.absoluteFill, tw`items-center justify-center bg-white`, {zIndex: 1000}]} pointerEvents="auto">
             <VideoView
                 player={player}
-                style={videoFrameStyle}
-                contentFit="cover"
+                style={{width: loadingVideoSize, height: loadingVideoSize}}
+                contentFit="contain"
                 nativeControls={false}
                 allowsFullscreen={false}
                 allowsPictureInPicture={false}
             />
-            <View style={tw`flex-1 items-center justify-end bg-black/35 pb-12`}>
-                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#E4E0D4"}]}>{message}</Text>
+            <View style={tw`absolute bottom-12 items-center`}>
+                <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: "#111111"}]}>{message}</Text>
             </View>
         </View>
     );
