@@ -163,7 +163,7 @@ export function PlannerEventSheet({
         () => EVENT_PRESETS.filter((preset) => isPresetVisibleForStart(preset, startMinutes)),
         [startMinutes],
     );
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const sonnyMode = visualMode === "sonny";
     const lightMode = riverMode;

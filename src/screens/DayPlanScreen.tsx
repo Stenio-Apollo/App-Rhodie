@@ -189,11 +189,15 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
     const [sheetStartAt, setSheetStartAt] = useState<string | undefined>(undefined);
     const [sheetEvent, setSheetEvent] = useState<PlannerEvent | undefined>(undefined);
-    const bg = visualMode === "georgia"
-        ? require("../../public/images/rhbull3.jpg")
-        : require("../../public/images/rh16.jpg");
+    const bg = visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+        : visualMode === "georgia"
+            ? require("../../public/images/rhbull3.jpg")
+            : require("../../public/images/rh16.jpg");
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
     const badgeColor = georgiaMode ? "#DAC8AE" : "#ba885a";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";

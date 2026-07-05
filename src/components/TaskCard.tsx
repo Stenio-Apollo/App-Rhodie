@@ -58,7 +58,7 @@ function ActionPill({
 }) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
     const lightCardMode = riverMode;
     const whiteTextMode = georgiaMode || sonnyMode;
@@ -107,7 +107,7 @@ interface TaskCardProps {
 export function TaskCard({task, status, onDelete, onComplete}: TaskCardProps) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
     const whiteTextMode = georgiaMode || sonnyMode;
     const primaryTextColor = whiteTextMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY;

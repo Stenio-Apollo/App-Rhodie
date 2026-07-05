@@ -108,7 +108,7 @@ function ConversationButton({
     onPress: () => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
     const solidMode = georgiaMode;
@@ -158,7 +158,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
     const {keyboardInset} = useKeyboardInset();
     const routeOpacity = useRef(new Animated.Value(0)).current;
     const routeTranslateY = useRef(new Animated.Value(-14)).current;
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
     const solidMode = georgiaMode;
@@ -166,6 +166,17 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
     const accentColor = sonnyMode ? "#FF3800" : riverMode ? "#FF3800" : "#B55941";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#ffffff";
     const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.62)" : riverMode ? "rgba(17,17,17,0.62)" : "rgba(255,255,255,0.55)";
+    const routeBackgroundColor = georgiaMode ? GEORGIA_SURFACE_COLOR : riverMode ? "#EEF5F8" : "#050505";
+    const routeBackgroundSource = visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+        : georgiaMode
+            ? require("../../public/images/ambient.jpg")
+            : riverMode
+                ? require("../../public/images/white.jpg")
+                : require("../../public/images/rh6.jpg");
+    const routeBackgroundOpacity = georgiaMode ? 0.33 : riverMode ? 0.79 : 0.39;
     const emptyStateStyle = riverMode || georgiaMode
         ? [
             tw`rounded-2xl px-4 py-3 text-center text-sm`,
@@ -270,18 +281,19 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
             visualMode={visualMode}
             style={[tw`absolute inset-0 z-20`, {paddingBottom: keyboardInset}]}
         >
-            {visualMode === "georgia" ? (
-                <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-                    <ImageBackground
-                        source={require("../../public/images/ambient.jpg")}
-                        resizeMode="cover"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: GEORGIA_SURFACE_COLOR}]}
-                        imageStyle={{opacity: 0.33}}
-                    />
-                </View>
-            ) : null}
+            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                <ImageBackground
+                    source={routeBackgroundSource}
+                    resizeMode="cover"
+                    style={[StyleSheet.absoluteFill, {backgroundColor: routeBackgroundColor}]}
+                    imageStyle={{opacity: routeBackgroundOpacity}}
+                />
+            </View>
             <Animated.View style={[tw`flex-1`, {opacity: routeOpacity, transform: [{translateY: routeTranslateY}]}]}>
-            <View style={tw`flex-row items-center justify-between border-b border-slate-700 px-4 py-3`}>
+            <View style={[
+                tw`flex-row items-center justify-between border-b px-4 py-3`,
+                riverMode ? tw`border-black/10` : tw`border-slate-700`,
+            ]}>
                 <View style={tw`flex-row items-center gap-2`}>
                     {selectedConversation ? (
                         <Pressable

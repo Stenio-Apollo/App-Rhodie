@@ -16,7 +16,7 @@ interface TranslucentCalendarProps {
 export function TranslucentCalendar({markedDates, onDayPress}: TranslucentCalendarProps) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
     const lightMode = riverMode || georgiaMode;
     const frostedLight = riverMode;

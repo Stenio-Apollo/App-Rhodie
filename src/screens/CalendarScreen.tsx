@@ -131,17 +131,21 @@ export function CalendarScreen({
     const customGoalInputRef = useRef<TextInput>(null);
     const routeOpacity = useRef(new Animated.Value(1)).current;
     const routeTranslateY = useRef(new Animated.Value(0)).current;
-    const bg = visualMode === "georgia"
-        ? require("../../public/images/rhram1.jpg")
-        : require("../../public/images/rh211.jpg");
+    const bg = visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+        : visualMode === "georgia"
+            ? require("../../public/images/rhram1.jpg")
+            : require("../../public/images/rh211.jpg");
     const {keyboardInset} = useKeyboardInset();
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
-    const accentColor = "#FF3800";
     const sonnyBadgeColor = "#ba885a";
+    const accentColor = "#FF3800";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
-    const headerTextColor = georgiaMode ? "#DAC8AE" : sonnyMode || riverMode ? sonnyBadgeColor : primaryTextColor;
+    const headerTextColor = georgiaMode ? GEORGIA_ACCENT_COLOR : sonnyMode || riverMode ? sonnyBadgeColor : primaryTextColor;
     const selectedDateTextColor = georgiaMode ? "#FFFFFF" : primaryTextColor;
     const bodyMutedTextColor = georgiaMode ? "rgba(255,255,255,0.7)" : riverMode ? "rgba(17,17,17,0.7)" : "#94a3b8";
     const calendarTaskTextColor = georgiaMode ? "#FFFFFF" : primaryTextColor;
@@ -353,8 +357,21 @@ export function CalendarScreen({
                                     }}
                                 />
 
-                                <Text
-                                    style={[tw`mt-3 text-center text-lg font-extrabold`, {fontFamily: fonts.heading, color: selectedDateTextColor}]}>{selectedDate}</Text>
+                                {riverMode ? (
+                                    <View style={tw`mt-3 self-center`}>
+                                        <TranslucentCard radius={16} style={tw`px-4 py-2`}>
+                                            <Text
+                                                style={[tw`text-center text-lg font-extrabold`, {fontFamily: fonts.heading, color: selectedDateTextColor}]}>
+                                                {selectedDate}
+                                            </Text>
+                                        </TranslucentCard>
+                                    </View>
+                                ) : (
+                                    <Text
+                                        style={[tw`mt-3 text-center text-lg font-extrabold`, {fontFamily: fonts.heading, color: selectedDateTextColor}]}>
+                                        {selectedDate}
+                                    </Text>
+                                )}
                                 {selectedTasks.length === 0 ? (
                                     <View style={[tw`mt-2`, calendarTaskCardShellStyle]}>
                                         <TranslucentCard radius={16} style={[tw`p-3`, calendarTaskCardStyle]}>

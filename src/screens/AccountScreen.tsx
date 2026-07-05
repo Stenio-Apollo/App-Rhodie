@@ -28,6 +28,8 @@ const VISUAL_MODE_OPTIONS: Array<{
     {id: "sonny", label: "Sonny", icon: "moon"},
     {id: "river", label: "River", icon: "sunny"},
     {id: "georgia", label: "Georgia", icon: "star"},
+    {id: "evergreen", label: "Evergreen", icon: "leaf"},
+    {id: "navy", label: "Navy", icon: "boat"},
 ];
 
 function AccountRouteEntry({
@@ -187,10 +189,14 @@ export function AccountScreen({
     const [route, setRoute] = useState<AccountRoute>("account");
     const [visualDropdownOpen, setVisualDropdownOpen] = useState(false);
     const [musicDropdownOpen, setMusicDropdownOpen] = useState(false);
-    const bg = visualMode === "georgia"
-        ? require("../../public/images/rh11.jpg")
-        : require("../../public/images/newspaper 1.jpg");
-    const georgiaMode = visualMode === "georgia";
+    const bg = visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+            : visualMode === "georgia"
+                ? require("../../public/images/rh11.jpg")
+                : require("../../public/images/newspaper 1.jpg");
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const sonnyMode = visualMode === "sonny";
     const badgeColor = "#ba885a";

@@ -15,7 +15,7 @@ interface GoalCheckModalProps {
 }
 
 export function GoalCheckModal({visible, goal, onSelect, onRequestClose, visualMode}: GoalCheckModalProps) {
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const badgeColor = "#ba885a";
     const surfaceColor = georgiaMode ? "#111111" : riverMode ? "#FFFFFF" : "#000000";

@@ -6,6 +6,7 @@ import {toLocalISODate} from "../lib/date-utils";
 import {createId} from "../lib/id";
 import {decryptString, encryptString, encryptedPlaceholder, type EncryptionKey, looksEncrypted} from "../lib/e2ee";
 import type {EncryptionState} from "./useEncryption";
+import {dataUriMimeType, normalizeImageDataUriMimeType} from "../lib/image-data-uri";
 
 const STORAGE_PREFIX = "rhnative.journal.v2";
 const PURPOSE_STORAGE_PREFIX = "rhnative.journal-purpose-images.v1";
@@ -124,11 +125,13 @@ function parsePurposeImages(raw: string | null, key: EncryptionKey | null = null
             .filter((image): image is Partial<StoredPurposeImage> => Boolean(image) && typeof image === "object")
             .map((image) => {
                 const fallbackDataUri = typeof image.dataUri === "string" ? image.dataUri : "";
+                const dataUri = normalizeImageDataUriMimeType(decryptText(key, image.dataUriEncrypted, fallbackDataUri));
+                const mimeType = dataUriMimeType(dataUri) ?? (typeof image.mimeType === "string" && image.mimeType ? image.mimeType : "image/jpeg");
                 return {
                     id: typeof image.id === "string" && image.id ? image.id : createId(),
                     date: typeof image.date === "string" && image.date ? image.date : toLocalISODate(),
-                    dataUri: decryptText(key, image.dataUriEncrypted, fallbackDataUri),
-                    mimeType: typeof image.mimeType === "string" && image.mimeType ? image.mimeType : "image/jpeg",
+                    dataUri,
+                    mimeType,
                     createdAt: typeof image.createdAt === "string" && image.createdAt ? image.createdAt : new Date().toISOString(),
                 };
             })
@@ -382,11 +385,12 @@ export function useJournal(session: Session | null = null, encryption?: Encrypti
                 throw new Error("You can keep up to 9 My Reason photos.");
             }
 
+            const normalizedDataUri = normalizeImageDataUriMimeType(dataUri);
             const image: PurposeImage = {
                 id: createId(),
                 date,
-                dataUri,
-                mimeType,
+                dataUri: normalizedDataUri,
+                mimeType: dataUriMimeType(normalizedDataUri) ?? mimeType,
                 createdAt: new Date().toISOString(),
             };
 

@@ -109,12 +109,16 @@ interface ThemeStyles {
 
 function getInsightsTheme(visualMode: VisualMode): ThemeStyles {
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
 
     if (georgiaMode) {
         return {
-            background: require("../../public/images/ambient.jpg"),
+            background: visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+                : require("../../public/images/ambient.jpg"),
             headerBorderColor: GEORGIA_FROST_BORDER_COLOR,
             headerSurfaceColor: GEORGIA_FROST_PANEL_COLOR,
             sectionBorderColor: GEORGIA_FROST_BORDER_COLOR,

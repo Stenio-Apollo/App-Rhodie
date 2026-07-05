@@ -90,9 +90,13 @@ export function TodayScreen({
         [tasks, today],
     );
 
-    const bg = visualMode === "georgia"
-        ? require("../../public/images/rhhorse1.jpg")
-        : require("../../public/images/rh14.jpg");
+    const bg = visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+        : visualMode === "georgia"
+            ? require("../../public/images/rhhorse1.jpg")
+            : require("../../public/images/rh14.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const stickyNoteIcon = require("../../public/images/notes (1).png");
     const tasksIconUri = Asset.fromModule(require("../../public/images/calendar.svg")).uri;
@@ -103,7 +107,7 @@ export function TodayScreen({
         shadowRadius: 8,
         elevation: 6,
     };
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const sonnyMode = visualMode === "sonny";
     const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
@@ -174,7 +178,7 @@ export function TodayScreen({
                         <Image
                             source={stickyNoteIcon}
                             resizeMode="contain"
-                            style={{width: 26, height: 26, tintColor: visualMode === "river" ? badgeColor : "#DAC8AE"}}
+                            style={{width: 26, height: 26, tintColor: georgiaMode ? "#DAC8AE" : visualMode === "river" ? badgeColor : "#DAC8AE"}}
                         />
                     </Pressable>
                 </View>

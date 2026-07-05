@@ -145,7 +145,7 @@ function MetricButton({
 }) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const inactiveColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#ffffff";
     return (
         <Pressable
@@ -173,7 +173,7 @@ function AuthorMessageButton({
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     if (!onOpenDirectMessage || author.id === currentUserId) return null;
 
@@ -194,7 +194,7 @@ function AuthorMessageButton({
 
 function OwnerMenuButton({onPress}: { onPress: () => void }) {
     const visualMode = useScreenVisualMode();
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     return (
         <Pressable
@@ -226,7 +226,7 @@ function CommunityRouteEntry({
     badgeCount?: number;
 }) {
     const visualMode = useScreenVisualMode();
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const color = georgiaMode ? "#E4E0D4" : riverMode ? "#111111" : "#E4E0D4";
     return (
@@ -289,7 +289,7 @@ function CommentItem({
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#ffffff";
     const bodyTextColor = georgiaMode ? "rgba(255,255,255,0.82)" : riverMode ? "rgba(17,17,17,0.82)" : "rgba(255,255,255,0.9)";
@@ -479,7 +479,7 @@ function PostCard({
     onOpenDirectMessage?: (author: CommunityAuthor) => void;
 }) {
     const visualMode = useScreenVisualMode();
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#ffffff";
     const bodyTextColor = georgiaMode ? "rgba(255,255,255,0.82)" : riverMode ? "rgba(17,17,17,0.82)" : "#E4E0D4";
@@ -724,7 +724,7 @@ export function CommunityScreen({
     const today = useMemo(() => toLocalISODate(), []);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(today), [today]);
     const selectedComposerMode = COMPOSER_MODES.find((mode) => mode.key === composerMode) ?? COMPOSER_MODES[0];
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
     const solidMode = georgiaMode;
@@ -827,9 +827,13 @@ export function CommunityScreen({
         }
     }
 
-    const backgroundImage = visualMode === "georgia"
-        ? require("../../public/images/ambient.jpg")
-        : require("../../public/images/newspaper 1.jpg");
+    const backgroundImage = visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+        : visualMode === "georgia"
+            ? require("../../public/images/ambient.jpg")
+            : require("../../public/images/newspaper 1.jpg");
     const {keyboardInset} = useKeyboardInset();
 
     return (

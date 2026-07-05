@@ -115,13 +115,17 @@ export function JournalScreen({
     const gratitudeInputRef = useRef<TextInput>(null);
     const routeOpacity = useRef(new Animated.Value(1)).current;
     const routeTranslateY = useRef(new Animated.Value(0)).current;
-    const bg = visualMode === "georgia"
-        ? require("../../public/images/rhbull1.jpg")
-        : require("../../public/images/rh201.jpg");
+    const bg = visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+        : visualMode === "georgia"
+            ? require("../../public/images/rhbull1.jpg")
+            : require("../../public/images/rh201.jpg");
     const badgeIcon = require("../../public/images/badge.png");
     const promptEntryBg = require("../../public/images/newspaper 1.jpg");
     const {keyboardInset} = useKeyboardInset();
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
     const solidMode = georgiaMode;
@@ -181,7 +185,7 @@ export function JournalScreen({
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(selectedDate), [selectedDate]);
-    const quoteHeaderTextColor = georgiaMode ? "#DAC8AE" : riverMode ? badgeColor : primaryTextColor;
+    const quoteHeaderTextColor = georgiaMode ? GEORGIA_ACCENT_COLOR : riverMode ? badgeColor : primaryTextColor;
     const journalSectionHeaderTextColor = georgiaMode ? GEORGIA_ACCENT_COLOR : riverMode ? badgeColor : primaryTextColor;
     const quoteBodyTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#000000" : quoteHeaderTextColor;
     const quoteHeaderDateColor = georgiaMode ? "rgba(255,255,255,0.82)" : riverMode ? "rgba(0,0,0,0.79)" : badgeColor;
@@ -255,14 +259,8 @@ export function JournalScreen({
                 return;
             }
 
-            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (!permission.granted) {
-                Alert.alert("Photo access needed", "Allow photo access to add encrypted My Reason images.");
-                return;
-            }
-
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: "images",
+                mediaTypes: ["images"],
                 allowsEditing: true,
                 aspect: [1, 1],
                 quality: 0.25,

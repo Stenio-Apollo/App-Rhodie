@@ -109,19 +109,20 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     const [history, setHistory] = useState<ArchivedWeeklyGoal[]>([]);
     const visualMode = useScreenVisualMode();
     const georgiaMode = visualMode === "georgia";
+    const georgiaThemeMode = georgiaMode || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const sonnyMode = visualMode === "sonny";
-    const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
-    const secondaryTextColor = georgiaMode ? "rgba(255,255,255,0.68)" : riverMode ? "rgba(17,17,17,0.68)" : "#cbd5e1";
-    const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.55)" : riverMode ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
-    const routeHeaderTextColor = georgiaMode ? "#DAC8AE" : sonnyMode ? "#ba885a" : primaryTextColor;
-    const cardHeaderTextColor = georgiaMode ? "#FFFFFF" : primaryTextColor;
-    const cardSectionLabelTextColor = georgiaMode ? "#FFFFFF" : mutedTextColor;
-    const panelBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "#2c2c2c";
-    const panelBackgroundColor = georgiaMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.35)";
-    const shellBackgroundColor = georgiaMode ? "rgba(0,0,0,0.12)" : riverMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
-    const blurSurfaceColor = georgiaMode ? GEORGIA_FROST_SURFACE_COLOR : riverMode ? "rgba(255,255,255,0.42)" : sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.77)";
-    const blurBorderColor = georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.24)" : "#334155";
+    const primaryTextColor = georgiaThemeMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
+    const secondaryTextColor = georgiaThemeMode ? "rgba(255,255,255,0.68)" : riverMode ? "rgba(17,17,17,0.68)" : "#cbd5e1";
+    const mutedTextColor = georgiaThemeMode ? "rgba(255,255,255,0.55)" : riverMode ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+    const routeHeaderTextColor = georgiaThemeMode ? "#DAC8AE" : sonnyMode ? "#ba885a" : primaryTextColor;
+    const cardHeaderTextColor = georgiaThemeMode ? "#FFFFFF" : primaryTextColor;
+    const cardSectionLabelTextColor = georgiaThemeMode ? "#FFFFFF" : mutedTextColor;
+    const panelBorderColor = georgiaThemeMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "#2c2c2c";
+    const panelBackgroundColor = georgiaThemeMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.35)";
+    const shellBackgroundColor = georgiaThemeMode ? "rgba(0,0,0,0.12)" : riverMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
+    const blurSurfaceColor = georgiaThemeMode ? GEORGIA_FROST_SURFACE_COLOR : riverMode ? "rgba(255,255,255,0.42)" : sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.77)";
+    const blurBorderColor = georgiaThemeMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.24)" : "#334155";
     const accentColor = "#FF3800";
     const accentSoftColor = visualMode === "sonny" ? "rgba(255,56,0,0.18)" : "rgba(181,89,65,0.18)";
     const accentSelectedColor = "rgba(255,56,0,0.22)";
@@ -172,13 +173,13 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                         style={[StyleSheet.absoluteFill, {backgroundColor: blurSurfaceColor}]}
                     />
                     <LinearGradient
-                        colors={georgiaMode ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"] : riverMode ? ["rgba(232,244,255,0.30)", "rgba(210,232,255,0.06)", "transparent"] : sonnyMode ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
+                        colors={georgiaThemeMode ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"] : riverMode ? ["rgba(232,244,255,0.30)", "rgba(210,232,255,0.06)", "transparent"] : sonnyMode ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
                         locations={[0, 0.5, 1]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
                     />
                     <LinearGradient
-                        colors={georgiaMode ? ["transparent", "rgba(0,0,0,0.1)"] : riverMode ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
+                        colors={georgiaThemeMode ? ["transparent", "rgba(0,0,0,0.1)"] : riverMode ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
                         pointerEvents="none"
                         style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
                     />
@@ -188,8 +189,8 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                             style={[
                                 tw`rounded-2xl border p-3`,
                                 {
-                                    borderColor: georgiaMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)",
-                                    backgroundColor: georgiaMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
+                                    borderColor: georgiaThemeMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : "rgba(245,219,201,0.22)",
+                                    backgroundColor: georgiaThemeMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : "rgba(0,0,0,0.4)",
                                 },
                             ]}
                         >
@@ -225,7 +226,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                     <ProgressDots filled={filledForBadge} total={3}/>
                                     <Text style={[tw`mt-2 text-[10px]`, {
                                         fontFamily: fonts.body,
-                                        color: georgiaMode ? "rgba(255,255,255,0.6)" : riverMode ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
+                                        color: georgiaThemeMode ? "rgba(255,255,255,0.6)" : riverMode ? "rgba(17,17,17,0.6)" : "rgba(228,224,212,0.6)",
                                     }]}>
                                         {pointsToNextBadge} {pointsToNextBadge === 1 ? "point" : "points"} to next badge
                                     </Text>
@@ -264,7 +265,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         tw`mt-2 text-[11px] font-semibold`,
                                         {
                                             fontFamily: fonts.body,
-                                            color: weeklyGoal.achievedAt ? accentColor : georgiaMode ? "rgba(255,255,255,0.68)" : riverMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
+                                            color: weeklyGoal.achievedAt ? accentColor : georgiaThemeMode ? "rgba(255,255,255,0.68)" : riverMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.68)",
                                         },
                                     ]}
                                 >
@@ -336,7 +337,7 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                         <ButtonShine/>
                                         <View style={[
                                             tw`h-10 w-10 items-center justify-center rounded-full`,
-                                            {backgroundColor: selected ? accentSelectedColor : georgiaMode ? "rgba(255,255,255,0.08)" : riverMode ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
+                                            {backgroundColor: selected ? accentSelectedColor : georgiaThemeMode ? "rgba(255,255,255,0.08)" : riverMode ? "rgba(255,255,255,0.38)" : "rgba(228,224,212,0.08)"},
                                         ]}>
                                             <Ionicons
                                                 name={(preset.icon ?? "flag-outline") as React.ComponentProps<typeof Ionicons>["name"]}
@@ -390,11 +391,11 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 returnKeyType="done"
                                 maxLength={120}
                                 editable={!isGoalLocked}
-                                placeholderTextColor={georgiaMode || sonnyMode ? "rgba(255,255,255,0.45)" : riverMode ? "rgba(17,17,17,0.45)" : "#6b7280"}
+                                placeholderTextColor={georgiaThemeMode || sonnyMode ? "rgba(255,255,255,0.45)" : riverMode ? "rgba(17,17,17,0.45)" : "#6b7280"}
                                 keyboardAppearance={visualMode === "river" ? "light" : "dark"}
                                 style={[
                                     tw`mt-2`,
-                                    georgiaMode ? [tw`border-white/10 text-white`, {backgroundColor: "rgba(255,255,255,0.08)"}] : riverMode ? [tw`border-black/10 text-[#111111]`, {backgroundColor: "rgba(255,255,255,0.34)"}] : sonnyMode ? [tw`text-white`, {borderColor: "rgba(255,255,255,0.18)", backgroundColor: "rgba(0,0,0,0.30)"}] : null,
+                                    georgiaThemeMode ? [tw`border-white/10 text-white`, {backgroundColor: "rgba(255,255,255,0.08)"}] : riverMode ? [tw`border-black/10 text-[#111111]`, {backgroundColor: "rgba(255,255,255,0.34)"}] : sonnyMode ? [tw`text-white`, {borderColor: "rgba(255,255,255,0.18)", backgroundColor: "rgba(0,0,0,0.30)"}] : null,
                                 ]}
                             />
                             <Pressable

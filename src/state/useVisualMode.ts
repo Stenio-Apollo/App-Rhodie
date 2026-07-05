@@ -4,14 +4,14 @@ import {useCallback, useEffect, useState} from "react";
 const LEGACY_STORAGE_PREFIX = "rhnative.visual-mode.v1";
 const STORAGE_PREFIX = "rhnative.visual-mode.v2";
 
-export type VisualMode = "georgia" | "river" | "sonny";
+export type VisualMode = "georgia" | "river" | "sonny" | "evergreen" | "navy";
 
 function storageKey(userId: string | null | undefined, prefix = STORAGE_PREFIX): string {
     return `${prefix}.${userId ?? "local"}`;
 }
 
 function normalizeVisualMode(value: string | null): VisualMode {
-    if (value === "georgia" || value === "river" || value === "sonny") return value;
+    if (value === "georgia" || value === "river" || value === "sonny" || value === "evergreen" || value === "navy") return value;
     return "river";
 }
 

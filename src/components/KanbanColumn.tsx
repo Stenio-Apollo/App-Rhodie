@@ -22,7 +22,7 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({status, tasks, onDelete, onComplete, visualMode}: KanbanColumnProps) {
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
     const lightMode = riverMode || georgiaMode;
     const frostedLightMode = riverMode;

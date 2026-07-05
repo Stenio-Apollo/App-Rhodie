@@ -63,7 +63,7 @@ function ThemedField({
 }) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
     const solidMode = georgiaMode;
     const sonnyMode = visualMode === "sonny";
@@ -111,7 +111,7 @@ function ThemedButton({
 }) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
     const solidMode = georgiaMode;
     const sonnyMode = visualMode === "sonny";
@@ -203,9 +203,13 @@ export function KanbanScreen({
                                  onBack,
                              }: KanbanScreenProps) {
     const {tasks, grouped, addTask, deleteTask, move} = tasksState;
-    const bg = visualMode === "georgia"
-        ? require("../../public/images/rhCowboy.png")
-        : require("../../public/images/rh28.jpg");
+    const bg = visualMode === "navy"
+        ? require("../../public/images/navy.jpg")
+        : visualMode === "evergreen"
+            ? require("../../public/images/pine.jpg")
+        : visualMode === "georgia"
+            ? require("../../public/images/rhCowboy.png")
+            : require("../../public/images/rh28.jpg");
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -216,7 +220,7 @@ export function KanbanScreen({
     const titleInputRef = useRef<TextInput>(null);
     const {keyboardInset} = useKeyboardInset();
     const fabBottom = useMemo(() => Animated.add(keyboardInset, 47), [keyboardInset]);
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const riverMode = visualMode === "river";
     const solidSurfaceColor = GEORGIA_SURFACE_COLOR;
     const solidMode = georgiaMode;

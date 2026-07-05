@@ -12,7 +12,7 @@ export function Badge({label, tone = "default"}: BadgeProps) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
     const lightMode = riverMode;
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
     const whiteTextMode = georgiaMode;
     const isAccent = tone === "accent";

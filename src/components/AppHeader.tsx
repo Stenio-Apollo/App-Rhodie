@@ -4,6 +4,7 @@ import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
 import type {VisualMode} from "../state/useVisualMode";
+import {getVisualModeAccentColor} from "../theme/visual-mode-colors";
 
 interface AppHeaderProps {
     fullName: string | null | undefined;
@@ -25,15 +26,20 @@ export function AppHeader({
                               onToggleAccount,
                           }: AppHeaderProps) {
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const lightMode = riverMode || georgiaMode;
     const headerTextColor = georgiaMode ? "#FFFFFF" : lightMode ? "#111111" : "#E4E0D4";
     const logoTextColor = georgiaMode ? "#FFFFFF" : headerTextColor;
     const logoBorderColor = georgiaMode ? "#FFFFFF" : lightMode ? "rgba(17,17,17,0.72)" : "#FFFFFF";
     const avatarFallbackColor = lightMode ? "#111111" : "#FFF6E8";
     const avatarFallbackBackgroundColor = lightMode ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.4)";
-    const modeButton = visualMode === "georgia"
-        ? {label: "Georgia", icon: "star" as const, backgroundColor: "#111111", textColor: "#FFF6E8", iconColor: "#DAC8AE"}
+    const visualAccentColor = getVisualModeAccentColor(visualMode);
+    const modeButton = visualMode === "navy"
+        ? {label: "Navy", icon: "boat" as const, backgroundColor: visualAccentColor, textColor: "#FFF6E8", iconColor: "#FFF6E8"}
+        : visualMode === "evergreen"
+        ? {label: "Evergreen", icon: "leaf" as const, backgroundColor: visualAccentColor, textColor: "#FFF6E8", iconColor: "#FFF6E8"}
+        : visualMode === "georgia"
+        ? {label: "Georgia", icon: "star" as const, backgroundColor: "#111111", textColor: "#FFF6E8", iconColor: visualAccentColor}
         : visualMode === "river"
             ? {label: "River", icon: "sunny" as const, backgroundColor: "#F0F8FF", textColor: "#111111", iconColor: "#ba885a"}
             : {label: "Sonny", icon: "moon" as const, backgroundColor: "#000000", textColor: "#FFF6E8", iconColor: "#ba885a"};

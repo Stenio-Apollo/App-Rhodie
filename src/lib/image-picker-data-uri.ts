@@ -1,8 +1,5 @@
 import type * as ImagePicker from "expo-image-picker";
-
-export function dataUriMimeType(dataUri: string): string | null {
-    return dataUri.match(/^data:([^;]+);base64,/)?.[1] ?? null;
-}
+import {dataUriMimeType, normalizeImageDataUriMimeType} from "./image-data-uri";
 
 function blobToDataUri(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -24,20 +21,23 @@ export async function imagePickerAssetToDataUri(
     asset: ImagePicker.ImagePickerAsset,
     fallbackMimeType = "image/jpeg",
 ): Promise<{ dataUri: string; mimeType: string }> {
-    const mimeType = asset.mimeType ?? fallbackMimeType;
     if (asset.base64) {
+        // Expo native returns the base64 payload as JPEG image data, even when the
+        // source asset was another image type. Keep the data URI/content type aligned.
+        const mimeType = fallbackMimeType;
         return {
             dataUri: `data:${mimeType};base64,${asset.base64}`,
             mimeType,
         };
     }
 
+    const mimeType = asset.mimeType ?? fallbackMimeType;
     const response = await fetch(asset.uri);
     if (!response.ok) {
         throw new Error("The selected image could not be loaded.");
     }
 
-    const dataUri = await blobToDataUri(await response.blob());
+    const dataUri = normalizeImageDataUriMimeType(await blobToDataUri(await response.blob()));
     return {
         dataUri,
         mimeType: dataUriMimeType(dataUri) ?? mimeType,

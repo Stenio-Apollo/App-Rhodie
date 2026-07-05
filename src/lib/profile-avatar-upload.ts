@@ -28,13 +28,8 @@ function contentTypeFromExtension(extension: string): string {
 }
 
 export async function pickAndUploadProfileAvatar(userId: string): Promise<string | null> {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-        throw new Error("Allow photo access to choose a profile picture.");
-    }
-
     const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.82,

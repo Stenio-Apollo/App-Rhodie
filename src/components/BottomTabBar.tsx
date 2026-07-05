@@ -44,7 +44,7 @@ export function BottomTabBar({activeTab, accountOpen, visualMode, onTabPress}: B
     const tabCount = TAB_ITEMS.length;
     const activeIndex = accountOpen ? -1 : TAB_ITEMS.findIndex((item) => item.key === activeTab);
     const riverMode = visualMode === "river";
-    const georgiaMode = visualMode === "georgia";
+    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
     const sonnyMode = visualMode === "sonny";
     const lightMode = riverMode;
     const activeNavColor = sonnyMode

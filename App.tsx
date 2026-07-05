@@ -78,6 +78,8 @@ const SWIPE_DISTANCE_THRESHOLD = 70;
 const SWIPE_VERTICAL_LIMIT = 55;
 
 function getVisualModeShellColor(visualMode: VisualMode): string {
+    if (visualMode === "navy") return "#071426";
+    if (visualMode === "evergreen") return "#111111";
     if (visualMode === "georgia") return "#111111";
     if (visualMode === "river") return "#DDEAF2";
     if (visualMode === "sonny") return "#000000";
@@ -598,14 +600,18 @@ function AppContent() {
                         style={[tw`flex-1`, {backgroundColor: shellBackgroundColor}]}
                     >
                         <StatusBar style="light"/>
-                        {visualModeState.mode === "georgia" || visualModeState.mode === "sonny" || visualModeState.mode === "river" ? (
+                        {visualModeState.mode === "georgia" || visualModeState.mode === "sonny" || visualModeState.mode === "river" || visualModeState.mode === "evergreen" || visualModeState.mode === "navy" ? (
                             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                                 <ImageBackground
                                     source={visualModeState.mode === "sonny"
                                         ? require("./public/images/rh6.jpg")
                                         : visualModeState.mode === "river"
                                             ? require("./public/images/white.jpg")
-                                            : require("./public/images/ambient.jpg")}
+                                            : visualModeState.mode === "navy"
+                                                ? require("./public/images/navy.jpg")
+                                                : visualModeState.mode === "evergreen"
+                                                    ? require("./public/images/pine.jpg")
+                                                    : require("./public/images/ambient.jpg")}
                                     resizeMode="cover"
                                     style={StyleSheet.absoluteFill}
                                     imageStyle={{opacity: visualModeState.mode === "sonny" ? 0.49 : 0.79}}

@@ -39,6 +39,22 @@ export function ScreenBackground({
         );
     }
 
+    if (visualMode === "evergreen") {
+        return (
+            <ScreenVisualModeContext.Provider value={visualMode}>
+                <View style={[tw`flex-1`, {backgroundColor: "transparent"}, style]}>{children}</View>
+            </ScreenVisualModeContext.Provider>
+        );
+    }
+
+    if (visualMode === "navy") {
+        return (
+            <ScreenVisualModeContext.Provider value={visualMode}>
+                <View style={[tw`flex-1`, {backgroundColor: "transparent"}, style]}>{children}</View>
+            </ScreenVisualModeContext.Provider>
+        );
+    }
+
     if (visualMode === "georgia") {
         return (
             <ScreenVisualModeContext.Provider value={visualMode}>
