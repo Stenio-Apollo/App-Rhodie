@@ -12,14 +12,14 @@ function storageKey(userId: string | null | undefined, prefix = STORAGE_PREFIX):
 
 function normalizeVisualMode(value: string | null): VisualMode {
     if (value === "georgia" || value === "river" || value === "sonny" || value === "evergreen" || value === "navy") return value;
-    return "river";
+    return "evergreen";
 }
 
 function normalizeLegacyVisualMode(value: string | null): VisualMode {
     if (value === "georgia") return "sonny";
     if (value === "sunset" || value === "warm") return "georgia";
     if (value === "surfSide" || value === "copper") return "river";
-    return "river";
+    return "evergreen";
 }
 
 export async function clearVisualModeStorage(userId?: string | null): Promise<void> {
@@ -30,7 +30,7 @@ export async function clearVisualModeStorage(userId?: string | null): Promise<vo
 }
 
 export function useVisualMode(userId?: string | null) {
-    const [mode, setModeState] = useState<VisualMode>("river");
+    const [mode, setModeState] = useState<VisualMode>("evergreen");
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {

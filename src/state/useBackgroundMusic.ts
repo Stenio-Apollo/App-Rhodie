@@ -19,7 +19,7 @@ export const BACKGROUND_MUSIC_OPTIONS: BackgroundMusicOption[] = [
     {id: "silent", label: "Silent", icon: "volume-mute"},
 ];
 
-const DEFAULT_BACKGROUND_MUSIC_TRACK: BackgroundMusicTrackId = "forest";
+const DEFAULT_BACKGROUND_MUSIC_TRACK: BackgroundMusicTrackId = "alpine";
 
 function storageKey(userId: string | null | undefined): string {
     return `${STORAGE_PREFIX}.${userId ?? "local"}`;
