@@ -1,5 +1,6 @@
 import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Linking, Pressable, ScrollView, Text, View,} from "react-native";
+import {Linking, Pressable, ScrollView, Text, View,} from "react-native";
+import {showGuideAlert} from "../lib/guide-alert";
 import type {Session} from "@supabase/supabase-js";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
@@ -10,6 +11,7 @@ import type {Profile} from "../state/useProfile";
 import {BirthdayPicker, formatBirthday, parseBirthdayParts} from "../components/BirthdayPicker";
 import type {VisualMode} from "../state/useVisualMode";
 import {TranslucentCard} from "../components/TranslucentCard";
+import {TutorialCard} from "../components/TutorialCard";
 import {haptics} from "../lib/haptics";
 import {ScreenBackground} from "../components/ScreenBackground";
 import {
@@ -118,6 +120,8 @@ interface AccountScreenProps {
         trackId: BackgroundMusicTrackId;
         setTrackId: (trackId: BackgroundMusicTrackId) => void;
     };
+    showTutorial?: boolean;
+    onDismissTutorial?: () => void;
 }
 
 function formatDateLabel(value: string | null | undefined): string | null {
@@ -177,6 +181,8 @@ export function AccountScreen({
                                   visualMode,
                                   onChangeVisualMode,
                                   backgroundMusic,
+                                  showTutorial,
+                                  onDismissTutorial,
                               }: AccountScreenProps) {
     const mountedRef = useRef(true);
     const [name, setName] = useState(profile?.full_name ?? "");
@@ -328,7 +334,7 @@ export function AccountScreen({
     async function handleOpenSupportEmail() {
         const supported = await Linking.canOpenURL(supportEmailUrl);
         if (!supported) {
-            Alert.alert("Email unavailable", "Your device could not open the support email composer.");
+            void showGuideAlert({title: "Email unavailable", message: "Your device could not open the support email composer."});
             return;
         }
         await Linking.openURL(supportEmailUrl);
@@ -337,18 +343,18 @@ export function AccountScreen({
     async function handleManageSubscription() {
         const opened = await subscription.openManageSubscriptions();
         if (!opened) {
-            Alert.alert("Unavailable", "Subscription settings could not be opened on this device.");
+            void showGuideAlert({title: "Unavailable", message: "Subscription settings could not be opened on this device."});
         }
     }
 
     async function handleOpenExternalUrl(url: string | null, label: "Terms of Use" | "Privacy Policy" | "EULA") {
         if (!url) {
-            Alert.alert("Unavailable", `${label} is not configured in this build.`);
+            void showGuideAlert({title: "Unavailable", message: `${label} is not configured in this build.`});
             return;
         }
         const supported = await Linking.canOpenURL(url);
         if (!supported) {
-            Alert.alert("Unavailable", `${label} could not be opened on this device.`);
+            void showGuideAlert({title: "Unavailable", message: `${label} could not be opened on this device.`});
             return;
         }
         await Linking.openURL(url);
@@ -366,52 +372,46 @@ export function AccountScreen({
         }
     }
 
-    function confirmDeleteAccount() {
-        Alert.alert(
-            "Delete account?",
-            "This permanently deletes your profile, journal entries, tasks, calendar connection, notification tokens, and sign-in for this account. Your App Store subscription is managed separately and may need to be cancelled there first.",
-            [
-                {text: "Cancel", style: "cancel"},
-                {
-                    text: "Delete account",
-                    style: "destructive",
-                    onPress: () => {
-                        void runDeleteAccount();
-                    },
-                },
+    async function confirmDeleteAccount() {
+        const choice = await showGuideAlert({
+            title: "Delete account?",
+            message: "This permanently deletes your profile, journal entries, tasks, calendar connection, notification tokens, and sign-in for this account. Your App Store subscription is managed separately and may need to be cancelled there first.",
+            actions: [
+                {id: "cancel", label: "Cancel", tone: "cancel"},
+                {id: "delete", label: "Delete account", tone: "destructive"},
             ],
-        );
+        });
+        if (choice === "delete") {
+            void runDeleteAccount();
+        }
     }
 
-    function confirmResetOnboarding() {
-        Alert.alert(
-            "Replay onboarding?",
-            "This will show the onboarding flow and tutorial cards again on this device.",
-            [
-                {text: "Cancel", style: "cancel"},
-                {
-                    text: "Replay",
-                    onPress: () => {
-                        void onResetOnboarding();
-                    },
-                },
+    async function confirmResetOnboarding() {
+        const choice = await showGuideAlert({
+            title: "Replay onboarding?",
+            message: "This will show the onboarding flow and tutorial cards again on this device.",
+            actions: [
+                {id: "cancel", label: "Cancel", tone: "cancel"},
+                {id: "replay", label: "Replay", tone: "primary"},
             ],
-        );
+        });
+        if (choice === "replay") {
+            void onResetOnboarding();
+        }
     }
 
-    function confirmSignOut() {
-        Alert.alert(
-            "Sign out?",
-            "Are you sure you want to sign out of Rhodie?",
-            [
-                {text: "Cancel", style: "cancel"},
-                {
-                    text: "Sign out",
-                    style: "destructive",
-                    onPress: onSignOut,
-                },
+    async function confirmSignOut() {
+        const choice = await showGuideAlert({
+            title: "Sign out?",
+            message: "Are you sure you want to sign out of Rhodie?",
+            actions: [
+                {id: "cancel", label: "Cancel", tone: "cancel"},
+                {id: "signout", label: "Sign out", tone: "destructive"},
             ],
-        );
+        });
+        if (choice === "signout") {
+            onSignOut();
+        }
     }
 
     const subscriptionWarning = subscription.activeSubscription?.billingIssueDetectedAt
@@ -481,6 +481,34 @@ export function AccountScreen({
                 >
                     {route === "account" ? (
                         <>
+                            {showTutorial && onDismissTutorial ? (
+                                <TutorialCard
+                                    title="Make Rhodie yours"
+                                    body="Pick a visual theme and soundscape to match the mood you want."
+                                    onDismiss={onDismissTutorial}
+                                    visualMode={visualMode}
+                                    detailsIntro="Your Account is where you personalize how Rhodie looks and sounds — plus manage profile, subscription, and support."
+                                    detailsSteps={[
+                                        {
+                                            title: "Switch the visual theme",
+                                            body: "Open Visuals and choose Sonny, River, Georgia, Evergreen, or Navy — each changes the app's background and feel.",
+                                        },
+                                        {
+                                            title: "Pick a soundscape",
+                                            body: "Open Soundscape to play ambient background music while you use the app. Choose silence any time.",
+                                        },
+                                        {
+                                            title: "Update your profile",
+                                            body: "Set your name and birthday so Rhodie can personalize its greetings.",
+                                        },
+                                        {
+                                            title: "Replay the guide",
+                                            body: "Tap Replay on the right to see the onboarding walkthrough and tutorial cards again.",
+                                        },
+                                    ]}
+                                />
+                            ) : null}
+
                             <TranslucentCard radius={24} style={tw`p-4`}>
                                 <Text style={[tw`text-sm`, {fontFamily: fonts.heading, ...accountHeaderColorStyle}]}>Visuals</Text>
                                 <Pressable

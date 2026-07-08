@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Alert} from "react-native";
 import {loadTasks, saveTasks} from "../lib/storage";
+import {showGuideAlert} from "../lib/guide-alert";
 import {createTaskId, moveTask, tasksForStatus} from "../lib/task-utils";
 import type {Task, TaskPriority, TaskSource, TaskStatus} from "../types";
 import {supabase} from "../lib/supabase";
@@ -253,7 +253,10 @@ export function useTasks(session: Session | null, encryption?: EncryptionState) 
                 const {error} = await supabase.from("tasks").insert(taskToRemoteRow(session.user.id, nextTask, encryptionKey));
                 if (error) {
                     console.warn("Supabase task insert error", error.message);
-                    Alert.alert("Save error", "Could not save task to server. It will stay locally for now.");
+                    void showGuideAlert({
+                        title: "Save error",
+                        message: "Could not save task to server. It will stay locally for now.",
+                    });
                 }
             }
         },

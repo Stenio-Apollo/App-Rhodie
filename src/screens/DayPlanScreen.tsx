@@ -306,8 +306,28 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                         <View style={tw`px-4 pb-3`}>
                             <TutorialCard
                                 title="Plan"
-                                body="Tap a time slot. Rhodie reminds you before it starts."
+                                body="Time-block your day and let Rhodie ping you before each slot."
                                 onDismiss={onDismissTutorial}
+                                visualMode={visualMode}
+                                detailsIntro="Plan is a visual timeline of the day. Add blocks, adjust them, and get reminders before each one starts."
+                                detailsSteps={[
+                                    {
+                                        title: "Tap a time slot",
+                                        body: "Choose any slot on the timeline to open a new plan block.",
+                                    },
+                                    {
+                                        title: "Name the block",
+                                        body: "Give it a title so future-you knows what this window is for.",
+                                    },
+                                    {
+                                        title: "Adjust the window",
+                                        body: "Drag or edit start and end times to fit your day.",
+                                    },
+                                    {
+                                        title: "Get reminded",
+                                        body: "Rhodie sends a notification just before the block begins.",
+                                    },
+                                ]}
                             />
                         </View>
                     ) : null}

@@ -1,9 +1,10 @@
-import {Modal, Text, View} from "react-native";
+import {Modal, Pressable, Text, View} from "react-native";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import type {WeeklyGoal} from "../state/useWeeklyGoal";
-import {Button} from "./ui/Button";
 import type {VisualMode} from "../state/useVisualMode";
+import {GuideCard, guideCardTextPalette} from "./GuideCard";
+import {ScreenVisualModeContext} from "./ScreenBackground";
 
 interface GoalFeedbackModalProps {
     visible: boolean;
@@ -14,52 +15,47 @@ interface GoalFeedbackModalProps {
 }
 
 export function GoalFeedbackModal({visible, message, goal, onContinue, visualMode}: GoalFeedbackModalProps) {
-    const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
-    const riverMode = visualMode === "river";
-    const badgeColor = "#ba885a";
-    const surfaceColor = georgiaMode ? "#111111" : riverMode ? "#FFFFFF" : "#000000";
-    const primaryTextColor = riverMode ? "#111111" : "#FFFFFF";
-    const borderColor = riverMode ? "rgba(17,17,17,0.16)" : "rgba(255,255,255,0.18)";
-    const nestedSurfaceColor = riverMode ? "rgba(17,17,17,0.06)" : "rgba(255,255,255,0.08)";
-    const buttonDepthStyle = {
-        shadowColor: "#000000",
-        shadowOffset: {width: 0, height: 5},
-        shadowOpacity: 0.24,
-        shadowRadius: 8,
-        elevation: 6,
-    };
+    const palette = guideCardTextPalette(visualMode);
 
     return (
-        <Modal visible={visible} transparent animationType="fade" onRequestClose={onContinue}>
-            <View style={tw`flex-1 items-center justify-center bg-black/72 px-5`}>
-                <View style={[
-                    tw`w-full rounded-[28px] border p-5`,
-                    {borderColor: badgeColor, backgroundColor: surfaceColor},
-                ]}>
-                    <Text style={[tw`text-center text-xl`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
-                        {message}
-                    </Text>
-                    {goal ? (
-                        <View style={[
-                            tw`mt-4 rounded-2xl border px-3 py-3`,
-                            {borderColor, backgroundColor: nestedSurfaceColor},
-                        ]}>
-                            <Text style={[tw`text-center text-base`, {fontFamily: fonts.heading, color: primaryTextColor}]}>
-                                {goal.text}
-                            </Text>
-                        </View>
-                    ) : null}
-                    <View style={tw`mt-5`}>
-                        <Button
-                            label="Continue"
-                            onPress={onContinue}
-                            shine
-                            style={[tw`rounded-xl px-3 py-3`, {backgroundColor: badgeColor}, buttonDepthStyle]}
-                            textStyle={tw`text-sm text-white`}
-                        />
-                    </View>
-                </View>
-            </View>
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onContinue}
+            statusBarTranslucent
+        >
+            <ScreenVisualModeContext.Provider value={visualMode}>
+                <Pressable
+                    onPress={onContinue}
+                    style={tw`flex-1 items-center justify-center bg-black/72 px-5`}
+                >
+                    <Pressable onPress={() => undefined} style={tw`w-full`}>
+                        <GuideCard
+                            eyebrow="Weekly goal"
+                            title={message}
+                            visualMode={visualMode}
+                            active={visible}
+                            actions={[{id: "continue", label: "Continue", tone: "primary"}]}
+                            onAction={onContinue}
+                        >
+                            {goal ? (
+                                <View style={[
+                                    tw`rounded-2xl border px-3 py-3`,
+                                    {
+                                        borderColor: visualMode === "river" ? "rgba(17,17,17,0.16)" : "rgba(255,255,255,0.18)",
+                                        backgroundColor: visualMode === "river" ? "rgba(17,17,17,0.06)" : "rgba(255,255,255,0.08)",
+                                    },
+                                ]}>
+                                    <Text style={[tw`text-center text-base`, {fontFamily: fonts.heading, color: palette.heading}]}>
+                                        {goal.text}
+                                    </Text>
+                                </View>
+                            ) : null}
+                        </GuideCard>
+                    </Pressable>
+                </Pressable>
+            </ScreenVisualModeContext.Provider>
         </Modal>
     );
 }

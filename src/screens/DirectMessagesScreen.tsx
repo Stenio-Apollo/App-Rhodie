@@ -1,5 +1,6 @@
 import {Fragment, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Animated, Easing, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
+import {Animated, Easing, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
+import {showGuideAlert} from "../lib/guide-alert";
 import {Ionicons} from "@expo/vector-icons";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
@@ -211,7 +212,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                 const conversationId = await dm.openConversationWith(startTarget.author.id);
                 if (!cancelled) setSelectedConversationId(conversationId);
             } catch (error) {
-                Alert.alert("Message failed", error instanceof Error ? error.message : "This message could not be opened.");
+                void showGuideAlert({title: "Message failed", message: error instanceof Error ? error.message : "This message could not be opened."});
             }
         })();
 
@@ -240,7 +241,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
             haptics.selection();
             await dm.sendMessage(selectedConversation.id, body);
         } catch (error) {
-            Alert.alert("Message failed", error instanceof Error ? error.message : "Your message could not be sent.");
+            void showGuideAlert({title: "Message failed", message: error instanceof Error ? error.message : "Your message could not be sent."});
             setMessageText(body);
         }
     }
@@ -250,7 +251,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
             haptics.selection();
             await dm.editMessage(message.id, body);
         } catch (error) {
-            Alert.alert("Edit failed", error instanceof Error ? error.message : "Your message could not be updated.");
+            void showGuideAlert({title: "Edit failed", message: error instanceof Error ? error.message : "Your message could not be updated."});
             setEditingMessageId(message.id);
             setEditingMessageText(body);
         }
@@ -265,7 +266,7 @@ export function DirectMessagesScreen({dm, startTarget, onClose, visualMode}: Dir
                 setEditingMessageText("");
             }
         } catch (error) {
-            Alert.alert("Delete failed", error instanceof Error ? error.message : "Your message could not be deleted.");
+            void showGuideAlert({title: "Delete failed", message: error instanceof Error ? error.message : "Your message could not be deleted."});
         }
     }
 

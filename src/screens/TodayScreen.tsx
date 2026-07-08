@@ -81,6 +81,7 @@ export function TodayScreen({
     const todaysEntries = journalByDate[today] ?? [];
     const latestGratitude = [...todaysEntries].filter(e => e.category === "gratitude").slice(-1)[0];
     const latestPrompt = [...todaysEntries].filter(e => e.category === "prompt").slice(-1)[0];
+    const birthdayToday = Boolean(profile?.birthday && isToday(profile.birthday));
 
     const dueToday = useMemo(
         () =>
@@ -188,11 +189,6 @@ export function TodayScreen({
                         fontFamily: fonts.body,
                         color: georgiaMode ? "rgba(255,255,255,0.74)" : riverMode ? "rgba(17,17,17,0.62)" : badgeColor
                     }]}>Today • {today}</Text>
-                    {profile?.birthday && isToday(profile.birthday) ? (
-                        <Text style={[tw`text-xs font-semibold text-orange-200`, {fontFamily: fonts.body}]}>
-                            Happy birthday!
-                        </Text>
-                    ) : null}
                 </View>
                 <Pressable
                     accessibilityRole="button"
@@ -220,6 +216,14 @@ export function TodayScreen({
                           numberOfLines={3}>
                         {todaysQuote}
                     </Text>
+                    {birthdayToday ? (
+                        <Text style={[tw`mt-2 text-center text-xs font-semibold`, {
+                            fontFamily: fonts.body,
+                            color: quoteHeaderTextColor,
+                        }]}>
+                            Happy birthday!
+                        </Text>
+                    ) : null}
                 </Pressable>
                 <ScrollView
                     style={[tw`flex-1`, {marginTop: homeContentTopPadding}]}
@@ -234,8 +238,28 @@ export function TodayScreen({
                     {showTutorial && onDismissTutorial ? (
                         <TutorialCard
                             title="Home"
-                            body="Tap cards to jump in. Use sticky notes for quick thoughts."
+                            body="Your daily launchpad — everything you need in one glance."
                             onDismiss={onDismissTutorial}
+                            visualMode={visualMode}
+                            detailsIntro="Home surfaces your weekly goal, journal prompt, today's tasks, and a sticky note for stray thoughts."
+                            detailsSteps={[
+                                {
+                                    title: "Set a weekly goal",
+                                    body: "Tap the Weekly goal card to pick or write one focus for the week.",
+                                },
+                                {
+                                    title: "Answer the daily prompt",
+                                    body: "Tap the Prompt card to open the journal and reply in a sentence or two.",
+                                },
+                                {
+                                    title: "Capture quick thoughts",
+                                    body: "Type into the sticky note, then send it to Tasks when it's ready to act on.",
+                                },
+                                {
+                                    title: "Jump into today's tasks",
+                                    body: "Tap any task to open it, or use the Tasks card to see your full board.",
+                                },
+                            ]}
                         />
                     ) : null}
 

@@ -1,5 +1,6 @@
 import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Animated, Easing, Image, Modal, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {Animated, Easing, Image, Modal, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {showGuideAlert} from "../lib/guide-alert";
 import {Ionicons} from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import tw from "../lib/tw";
@@ -189,7 +190,7 @@ export function JournalScreen({
     const journalSectionHeaderTextColor = georgiaMode ? GEORGIA_ACCENT_COLOR : riverMode ? badgeColor : primaryTextColor;
     const quoteBodyTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#000000" : quoteHeaderTextColor;
     const quoteHeaderDateColor = georgiaMode ? "rgba(255,255,255,0.82)" : riverMode ? "rgba(0,0,0,0.79)" : badgeColor;
-    const purposeImages = journal.purposeImages.filter((image) => image.date === selectedDate);
+    const purposeImages = journal.purposeImages;
     const purposeImageRows = purposeImages.reduce<typeof purposeImages[]>((rows, image, index) => {
         if (index % 3 === 0) rows.push([]);
         rows[rows.length - 1].push(image);
@@ -255,7 +256,7 @@ export function JournalScreen({
     async function addPurposeImage() {
         try {
             if (journal.purposeImages.length >= 9) {
-                Alert.alert("Limit reached", "You can keep up to 9 My Reason photos.");
+                void showGuideAlert({title: "Limit reached", message: "You can keep up to 9 My Reason photos."});
                 return;
             }
 
@@ -274,7 +275,7 @@ export function JournalScreen({
             await journal.addPurposeImage(dataUri, selectedDate, mimeType);
             haptics.saveJournalEntry();
         } catch (error) {
-            Alert.alert("Image not added", error instanceof Error ? error.message : "That image could not be encrypted.");
+            void showGuideAlert({title: "Image not added", message: error instanceof Error ? error.message : "That image could not be encrypted."});
         }
     }
 
@@ -484,8 +485,28 @@ export function JournalScreen({
                                     <View style={tw`mb-3`}>
                                         <TutorialCard
                                             title="Journal"
-                                            body="Answer the prompt or list three good things."
+                                            body="Reflect in seconds with a daily prompt or three good things."
                                             onDismiss={onDismissTutorial}
+                                            visualMode={visualMode}
+                                            detailsIntro="Journal keeps two quick practices side by side: a fresh prompt each day, and a running gratitude list."
+                                            detailsSteps={[
+                                                {
+                                                    title: "Answer today's prompt",
+                                                    body: "Type into the Prompt card — no wrong answer, keep it as short as you like.",
+                                                },
+                                                {
+                                                    title: "List three good things",
+                                                    body: "Open the gratitude card and jot down three moments from today.",
+                                                },
+                                                {
+                                                    title: "Browse past entries",
+                                                    body: "Switch to Memory to revisit what you wrote on any past day.",
+                                                },
+                                                {
+                                                    title: "Earn badges",
+                                                    body: "Consistent journaling and completed weekly goals unlock badges.",
+                                                },
+                                            ]}
                                         />
                                     </View>
                                 ) : null}
@@ -621,7 +642,7 @@ export function JournalScreen({
                                         </Text>
                                         <Text
                                             style={[tw`mt-1 text-xs leading-5`, {fontFamily: fonts.body, color: mutedTextColor}]}>
-                                            Keep visual reminders tied to this day.
+                                            a better you for them
                                         </Text>
                                     </View>
                                     <Pressable

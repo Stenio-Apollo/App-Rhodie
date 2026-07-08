@@ -86,7 +86,7 @@ export function BackgroundMusicPlayer({trackId}: BackgroundMusicPlayerProps) {
             const {sound} = await Audio.Sound.createAsync(
                 source,
                 {
-                    isLooping: false,
+                    isLooping: true,
                     shouldPlay: true,
                     volume: 0,
                     progressUpdateIntervalMillis: LOOP_POLL_MS,
@@ -109,7 +109,21 @@ export function BackgroundMusicPlayer({trackId}: BackgroundMusicPlayerProps) {
 
             while (isCurrentTransition()) {
                 const status = await activeSound.getStatusAsync();
-                if (!status.isLoaded) return;
+                if (!status.isLoaded) {
+                    soundsRef.current.delete(activeSound);
+                    await delay(LOOP_POLL_MS);
+                    activeSound = await createSound(source);
+                    await activeSound.setVolumeAsync(BACKGROUND_MUSIC_VOLUME);
+                    continue;
+                }
+
+                if (!status.isPlaying && !status.isBuffering) {
+                    try {
+                        await activeSound.playAsync();
+                    } catch (error) {
+                        console.warn("Background music resume error", error);
+                    }
+                }
 
                 const durationMillis = status.durationMillis ?? 0;
                 const remainingMillis = durationMillis - status.positionMillis;

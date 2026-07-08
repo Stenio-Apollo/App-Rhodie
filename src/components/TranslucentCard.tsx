@@ -1,9 +1,10 @@
-import type {PropsWithChildren} from "react";
+import type {PropsWithChildren, ReactElement} from "react";
 import {type StyleProp, StyleSheet, View, type ViewStyle} from "react-native";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 import tw from "../lib/tw";
 import {useScreenVisualMode} from "./ScreenBackground";
+import {SnakeGlow} from "./SnakeGlow";
 
 type GradientColors = readonly [string, string, ...string[]];
 
@@ -12,6 +13,12 @@ interface TranslucentCardProps {
     containerStyle?: StyleProp<ViewStyle>;
     blur?: boolean;
     radius?: number;
+    glow?: boolean;
+}
+
+function withOptionalGlow(node: ReactElement, glow: boolean, radius: number): ReactElement {
+    if (!glow) return node;
+    return <SnakeGlow radius={radius}>{node}</SnakeGlow>;
 }
 
 export function TranslucentCard({
@@ -20,6 +27,7 @@ export function TranslucentCard({
                                     containerStyle,
                                     blur = true,
                                     radius = 24,
+                                    glow = false,
                                 }: PropsWithChildren<TranslucentCardProps>) {
     const visualMode = useScreenVisualMode();
     const riverMode = visualMode === "river";
@@ -56,7 +64,7 @@ export function TranslucentCard({
     } as const;
 
     if (blur) {
-        return (
+        return withOptionalGlow(
             <View style={[{borderRadius: radius}, shadowStyle, containerStyle]}>
                 <BlurView
                     intensity={frostedLight ? 42 : georgiaMode ? 38 : sonnyMode ? 42 : 34}
@@ -96,11 +104,13 @@ export function TranslucentCard({
                     />
                     {children}
                 </BlurView>
-            </View>
+            </View>,
+            glow,
+            radius,
         );
     }
 
-    return (
+    return withOptionalGlow(
         <View style={[{borderRadius: radius}, shadowStyle, containerStyle]}>
             <View
                 style={[
@@ -122,6 +132,8 @@ export function TranslucentCard({
                 />
                 {children}
             </View>
-        </View>
+        </View>,
+        glow,
+        radius,
     );
 }

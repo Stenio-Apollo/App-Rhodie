@@ -1,5 +1,6 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
+import {Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
+import {showGuideAlert} from "../lib/guide-alert";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 import {Ionicons} from "@expo/vector-icons";
@@ -273,7 +274,7 @@ export function KanbanScreen({
 
     function handleAddTask() {
         if (!title.trim()) {
-            Alert.alert("Title required", "Please enter a task title.");
+            void showGuideAlert({title: "Title required", message: "Please enter a task title."});
             return;
         }
 
@@ -299,8 +300,28 @@ export function KanbanScreen({
                             <View style={tw`mb-3`}>
                                 <TutorialCard
                                     title="Tasks"
-                                    body="Create tasks, set priority, and complete them."
+                                    body="Capture, prioritize, and knock out what matters today."
                                     onDismiss={onDismissTutorial}
+                                    visualMode={visualMode}
+                                    detailsIntro="Tasks is a simple board for the work in front of you. Add items, set how important they are, and mark them done."
+                                    detailsSteps={[
+                                        {
+                                            title: "Add a task",
+                                            body: "Tap the plus button to create a new task with a title and optional details.",
+                                        },
+                                        {
+                                            title: "Set priority",
+                                            body: "Choose priority so the most important work stays at the top.",
+                                        },
+                                        {
+                                            title: "Attach a due date",
+                                            body: "Set a due date to have the task show up on the Calendar.",
+                                        },
+                                        {
+                                            title: "Mark it complete",
+                                            body: "Tap the checkbox when it's done — completed tasks move out of the way.",
+                                        },
+                                    ]}
                                 />
                             </View>
                         ) : null}

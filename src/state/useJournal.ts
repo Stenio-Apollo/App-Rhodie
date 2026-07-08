@@ -59,6 +59,9 @@ function decryptText(key: EncryptionKey | null, encrypted: string | null | undef
             console.warn("Journal decrypt error", error);
         }
     }
+    if (looksEncrypted(fallback) || fallback.startsWith("[encrypted ")) {
+        return "";
+    }
     return fallback;
 }
 
@@ -245,7 +248,7 @@ export function useJournal(session: Session | null = null, encryption?: Encrypti
                         ),
                         category: normalizeJournalCategory(entry.category as string | undefined),
                         createdAt: entry.created_at,
-                    })) ?? [];
+                    })).filter((entry) => entry.text.trim().length > 0) ?? [];
 
                 setEntries(mapped);
                 await AsyncStorage.setItem(currentStorageKey, JSON.stringify(serializeJournalEntries(encryptionKey, mapped)));

@@ -10,7 +10,7 @@ interface ScreenBackgroundProps {
     imageStyle?: StyleProp<ImageStyle>;
 }
 
-const ScreenVisualModeContext = createContext<VisualMode>("river");
+export const ScreenVisualModeContext = createContext<VisualMode>("river");
 
 export function useScreenVisualMode() {
     return useContext(ScreenVisualModeContext);

@@ -1,6 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
 import {
-    Alert,
     Animated,
     AppState,
     Easing,
@@ -46,6 +45,8 @@ import {BottomTabBar, type Tab} from "./src/components/BottomTabBar";
 import {GoalCheckModal} from "./src/components/GoalCheckModal";
 import {GoalFeedbackModal} from "./src/components/GoalFeedbackModal";
 import {UpdateAvailableBanner} from "./src/components/UpdateAvailableBanner";
+import {GuideAlertProvider} from "./src/components/GuideAlertProvider";
+import {showGuideAlert} from "./src/lib/guide-alert";
 import {DayPlanScreen} from "./src/screens/DayPlanScreen";
 import {usePlannerEvents} from "./src/state/usePlannerEvents";
 import {OnboardingScreen} from "./src/screens/OnboardingScreen";
@@ -398,13 +399,13 @@ function AppContent() {
             });
 
             if (errorMessage) {
-                Alert.alert("Photo not saved", errorMessage);
+                void showGuideAlert({title: "Photo not saved", message: errorMessage});
             }
         } catch (error) {
-            Alert.alert(
-                "Photo not uploaded",
-                error instanceof Error ? error.message : "Your profile photo could not be uploaded.",
-            );
+            void showGuideAlert({
+                title: "Photo not uploaded",
+                message: error instanceof Error ? error.message : "Your profile photo could not be uploaded.",
+            });
         } finally {
             setAvatarBusy(false);
         }
@@ -413,7 +414,7 @@ function AppContent() {
     async function handleDeleteAccount() {
         const errorMessage = await deleteAccount();
         if (errorMessage) {
-            Alert.alert("Delete failed", errorMessage);
+            void showGuideAlert({title: "Delete failed", message: errorMessage});
             return errorMessage;
         }
 
@@ -443,7 +444,7 @@ function AppContent() {
             setGoalFeedbackVisible(true);
         } catch (error) {
             const message = error instanceof Error ? error.message : "Weekly goal could not be saved.";
-            Alert.alert("Goal sync failed", message);
+            void showGuideAlert({title: "Goal sync failed", message});
         }
     }
 
@@ -593,6 +594,7 @@ function AppContent() {
             }}
         >
             <SafeAreaProvider>
+                <GuideAlertProvider visualMode={visualModeState.mode}>
                 <GradientBackground>
                     {backgroundMusicPlayer}
                     <SafeAreaView
@@ -664,6 +666,10 @@ function AppContent() {
                                         backgroundMusic={{
                                             trackId: backgroundMusicState.trackId,
                                             setTrackId: backgroundMusicState.setTrackId,
+                                        }}
+                                        showTutorial={onboarding.visibleTutorials.account}
+                                        onDismissTutorial={() => {
+                                            void onboarding.dismissTutorial("account");
                                         }}
                                     />
                                 ) : null}
@@ -819,6 +825,7 @@ function AppContent() {
                         />
                     </SafeAreaView>
                 </GradientBackground>
+                </GuideAlertProvider>
             </SafeAreaProvider>
         </AppErrorBoundary>
     );

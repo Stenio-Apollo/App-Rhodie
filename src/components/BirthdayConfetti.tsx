@@ -8,43 +8,56 @@ interface BirthdayConfettiProps {
 
 type ConfettiPiece = {
     id: string;
-    size: number;
+    width: number;
     height: number;
-    launchOffset: number;
-    peakHeight: number;
-    spreadX: number;
-    settleX: number;
+    startXRatio: number;
+    startYRatio: number;
+    driftX: number;
+    fallDistance: number;
     rotation: number;
     delay: number;
     duration: number;
     color: string;
-    shape: "rect" | "circle";
+    shape: "dash" | "dot";
 };
 
-const CONFETTI_COLORS = ["#FFEDD5", "#FED7AA", "#FDBA74", "#FBB26B"];
-const PIECE_COUNT = 148;
+const CONFETTI_COLORS = [
+    "#FF4F9A",
+    "#36D9FF",
+    "#7357FF",
+    "#31E981",
+    "#FEE440",
+    "#FF8A3D",
+    "#F7F7FF",
+    "#B8FF5C",
+];
+const PIECE_COUNT = 210;
+const MAX_DELAY_MS = 920;
+const MIN_DURATION_MS = 2300;
+const MAX_DURATION_MS = 3400;
+const SHOWER_VISIBLE_MS = MAX_DELAY_MS + MAX_DURATION_MS + 180;
 
 function buildPieces(): ConfettiPiece[] {
     return Array.from({length: PIECE_COUNT}, (_, index) => ({
         id: `birthday-confetti-${index}`,
-        size: 2 + Math.random() * 2.2,
-        height: 4 + Math.random() * 4.5,
-        launchOffset: -8 + Math.random() * 16,
-        peakHeight: 210 + Math.random() * 240,
-        spreadX: -170 + Math.random() * 340,
-        settleX: -38 + Math.random() * 76,
-        rotation: -260 + Math.random() * 520,
-        delay: Math.random() * 220,
-        duration: 1650 + Math.random() * 550,
+        width: Math.random() > 0.84 ? 2.4 + Math.random() * 1.8 : 5 + Math.random() * 8,
+        height: Math.random() > 0.84 ? 2.4 + Math.random() * 1.8 : 1.8 + Math.random() * 2.8,
+        startXRatio: Math.random(),
+        startYRatio: -0.16 + Math.random() * 0.72,
+        driftX: -72 + Math.random() * 144,
+        fallDistance: 170 + Math.random() * 330,
+        rotation: -520 + Math.random() * 1040,
+        delay: Math.random() * MAX_DELAY_MS,
+        duration: MIN_DURATION_MS + Math.random() * (MAX_DURATION_MS - MIN_DURATION_MS),
         color: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
-        shape: Math.random() > 0.8 ? "circle" : "rect",
+        shape: Math.random() > 0.84 ? "dot" : "dash",
     }));
 }
 
 export function BirthdayConfetti({visible, triggerKey}: BirthdayConfettiProps) {
     const {width, height} = useWindowDimensions();
-    const pieces = useMemo(buildPieces, []);
-    const progressValues = useRef(pieces.map(() => new Animated.Value(0))).current;
+    const pieces = useMemo(buildPieces, [triggerKey]);
+    const progressValues = useMemo(() => pieces.map(() => new Animated.Value(0)), [pieces]);
     const [burstActive, setBurstActive] = useState(false);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,7 +84,7 @@ export function BirthdayConfetti({visible, triggerKey}: BirthdayConfettiProps) {
                 Animated.timing(progressValues[index], {
                     toValue: 1,
                     duration: piece.duration,
-                    easing: Easing.out(Easing.cubic),
+                    easing: Easing.linear,
                     useNativeDriver: true,
                 }),
             ]).start();
@@ -80,7 +93,7 @@ export function BirthdayConfetti({visible, triggerKey}: BirthdayConfettiProps) {
         timeoutRef.current = setTimeout(() => {
             setBurstActive(false);
             timeoutRef.current = null;
-        }, 1900);
+        }, SHOWER_VISIBLE_MS);
 
         return () => {
             progressValues.forEach((value) => value.stopAnimation());
@@ -93,30 +106,27 @@ export function BirthdayConfetti({visible, triggerKey}: BirthdayConfettiProps) {
 
     if (!visible || !burstActive) return null;
 
-    const centerX = width / 2;
-    const launchY = height - 76;
-
     return (
         <View pointerEvents="none" style={styles.container}>
             {pieces.map((piece, index) => {
                 const progress = progressValues[index];
-                const startX = centerX + piece.launchOffset;
+                const startX = piece.startXRatio * width;
+                const startY = piece.startYRatio * height;
                 const x = progress.interpolate({
-                    inputRange: [0, 0.22, 0.68, 1],
+                    inputRange: [0, 0.28, 0.56, 0.8, 1],
                     outputRange: [
                         startX,
-                        startX + piece.spreadX * 0.3,
-                        startX + piece.spreadX,
-                        startX + piece.spreadX + piece.settleX * 0.6,
+                        startX + piece.driftX * 0.32,
+                        startX - piece.driftX * 0.16,
+                        startX + piece.driftX * 0.76,
+                        startX + piece.driftX,
                     ],
                 });
                 const y = progress.interpolate({
-                    inputRange: [0, 0.26, 0.72, 1],
+                    inputRange: [0, 1],
                     outputRange: [
-                        launchY,
-                        launchY - piece.peakHeight * 0.76,
-                        launchY - piece.peakHeight,
-                        launchY - piece.peakHeight * 0.82,
+                        startY,
+                        startY + piece.fallDistance,
                     ],
                 });
                 const rotate = progress.interpolate({
@@ -124,8 +134,12 @@ export function BirthdayConfetti({visible, triggerKey}: BirthdayConfettiProps) {
                     outputRange: ["0deg", `${piece.rotation}deg`],
                 });
                 const opacity = progress.interpolate({
-                    inputRange: [0, 0.08, 0.58, 1],
-                    outputRange: [0, 1, 0.95, 0],
+                    inputRange: [0, 0.06, 0.78, 1],
+                    outputRange: [0, 1, 0.88, 0],
+                });
+                const scaleX = progress.interpolate({
+                    inputRange: [0, 0.2, 0.4, 0.62, 0.84, 1],
+                    outputRange: [0.58, 1, 0.42, 1, 0.5, 0.88],
                 });
 
                 return (
@@ -135,15 +149,15 @@ export function BirthdayConfetti({visible, triggerKey}: BirthdayConfettiProps) {
                             styles.pieceWrap,
                             {
                                 opacity,
-                                transform: [{translateX: x}, {translateY: y}, {rotate}],
+                                transform: [{translateX: x}, {translateY: y}, {rotate}, {scaleX}],
                             },
                         ]}
                     >
                         <View
                             style={{
-                                width: piece.size,
+                                width: piece.width,
                                 height: piece.height,
-                                borderRadius: piece.shape === "circle" ? piece.size : 1.5,
+                                borderRadius: piece.shape === "dot" ? piece.width : 1.5,
                                 backgroundColor: piece.color,
                             }}
                         />

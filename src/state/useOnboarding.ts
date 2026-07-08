@@ -1,11 +1,11 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export type TutorialKey = "home" | "plan" | "journal" | "tasks" | "calendar";
+export type TutorialKey = "home" | "plan" | "journal" | "tasks" | "calendar" | "account";
 
 const ONBOARDING_PREFIX = "rhnative.onboarding.v1";
 const TUTORIAL_PREFIX = "rhnative.tutorial.v1";
-const TUTORIAL_KEYS: TutorialKey[] = ["home", "plan", "journal", "tasks", "calendar"];
+const TUTORIAL_KEYS: TutorialKey[] = ["home", "plan", "journal", "tasks", "calendar", "account"];
 
 function scopedKey(prefix: string, userId: string | null | undefined, suffix?: string): string {
     return [prefix, userId ?? "local", suffix].filter(Boolean).join(".");

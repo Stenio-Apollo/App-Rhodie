@@ -336,8 +336,28 @@ export function CalendarScreen({
                                     <View style={tw`mt-3`}>
                                         <TutorialCard
                                             title="Calendar"
-                                            body="Set a weekly goal. Every three completed goals earns a badge."
+                                            body="See your week at a glance and steer it with weekly goals."
                                             onDismiss={onDismissTutorial}
+                                            visualMode={visualMode}
+                                            detailsIntro="Calendar filters your due tasks by day and holds the weekly goal you're pushing toward."
+                                            detailsSteps={[
+                                                {
+                                                    title: "Pick a day",
+                                                    body: "Tap a date to filter the list to tasks due that day.",
+                                                },
+                                                {
+                                                    title: "Set a weekly goal",
+                                                    body: "Open Goals and choose a preset or write your own focus for the week.",
+                                                },
+                                                {
+                                                    title: "Mark it achieved",
+                                                    body: "Check the goal off at the end of the week to log the win.",
+                                                },
+                                                {
+                                                    title: "Earn badges",
+                                                    body: "Every three completed weekly goals unlocks a new badge.",
+                                                },
+                                            ]}
                                         />
                                     </View>
                                 ) : null}

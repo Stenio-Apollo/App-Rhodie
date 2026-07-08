@@ -1,6 +1,5 @@
 import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
 import {
-    Alert,
     Animated,
     Image,
     Pressable,
@@ -11,6 +10,7 @@ import {
     TextInput,
     View
 } from "react-native";
+import {showGuideAlert} from "../lib/guide-alert";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 import {Ionicons} from "@expo/vector-icons";
@@ -749,7 +749,7 @@ export function CommunityScreen({
             haptics.selection();
             await community.createPost(formatCommunityPost(composerMode, body, todaysPrompt));
         } catch (error) {
-            Alert.alert("Post failed", error instanceof Error ? error.message : "Your post could not be shared.");
+            void showGuideAlert({title: "Post failed", message: error instanceof Error ? error.message : "Your post could not be shared."});
             setPostText(body);
         }
     }
@@ -759,7 +759,7 @@ export function CommunityScreen({
             haptics.selection();
             await community.addComment(postId, body, parentCommentId);
         } catch (error) {
-            Alert.alert("Comment failed", error instanceof Error ? error.message : "Your comment could not be shared.");
+            void showGuideAlert({title: "Comment failed", message: error instanceof Error ? error.message : "Your comment could not be shared."});
         }
     }
 
@@ -768,7 +768,7 @@ export function CommunityScreen({
             haptics.selection();
             await community.editPost(post.id, body);
         } catch (error) {
-            Alert.alert("Edit failed", error instanceof Error ? error.message : "Your post could not be updated.");
+            void showGuideAlert({title: "Edit failed", message: error instanceof Error ? error.message : "Your post could not be updated."});
         }
     }
 
@@ -777,7 +777,7 @@ export function CommunityScreen({
             haptics.selection();
             await community.deletePost(post.id);
         } catch (error) {
-            Alert.alert("Delete failed", error instanceof Error ? error.message : "Your post could not be deleted.");
+            void showGuideAlert({title: "Delete failed", message: error instanceof Error ? error.message : "Your post could not be deleted."});
         }
     }
 
@@ -786,7 +786,7 @@ export function CommunityScreen({
             haptics.selection();
             await community.toggleCommentLike(comment);
         } catch (error) {
-            Alert.alert("Like failed", error instanceof Error ? error.message : "Your like could not be saved.");
+            void showGuideAlert({title: "Like failed", message: error instanceof Error ? error.message : "Your like could not be saved."});
         }
     }
 
@@ -795,7 +795,7 @@ export function CommunityScreen({
             haptics.selection();
             await community.editComment(comment.id, body);
         } catch (error) {
-            Alert.alert("Edit failed", error instanceof Error ? error.message : "Your comment could not be updated.");
+            void showGuideAlert({title: "Edit failed", message: error instanceof Error ? error.message : "Your comment could not be updated."});
         }
     }
 
@@ -804,7 +804,7 @@ export function CommunityScreen({
             haptics.selection();
             await community.deleteComment(comment.id);
         } catch (error) {
-            Alert.alert("Delete failed", error instanceof Error ? error.message : "Your comment could not be deleted.");
+            void showGuideAlert({title: "Delete failed", message: error instanceof Error ? error.message : "Your comment could not be deleted."});
         }
     }
 
@@ -813,7 +813,7 @@ export function CommunityScreen({
             haptics.selection();
             await community.toggleLike(post);
         } catch (error) {
-            Alert.alert("Like failed", error instanceof Error ? error.message : "Your like could not be saved.");
+            void showGuideAlert({title: "Like failed", message: error instanceof Error ? error.message : "Your like could not be saved."});
         }
     }
 
@@ -823,7 +823,7 @@ export function CommunityScreen({
             await Share.share({message: `${displayName(post.author)} on Rhodie:\n\n${post.body}`});
             await community.recordShare(post.id);
         } catch (error) {
-            Alert.alert("Share failed", error instanceof Error ? error.message : "This post could not be shared.");
+            void showGuideAlert({title: "Share failed", message: error instanceof Error ? error.message : "This post could not be shared."});
         }
     }
 

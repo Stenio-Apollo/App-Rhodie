@@ -41,7 +41,17 @@ const STEPS: OnboardingStep[] = [
         body: "Answer the prompt, save gratitude, and keep private memories.",
     },
     {
-        eyebrow: "Tasks",
+        eyebrow: "Journal",
+        title: "Memory shelf",
+        body: "Review your entries here.",
+    },
+    {
+        eyebrow: "Journal",
+        title: "My reasons",
+        body: "Add up to 9 photos as a reminder to who or what you're doing it for.",
+    },
+    {
+        eyebrow: "Calendar",
         title: "Tasks",
         body: "Create tasks, set priority, complete what matters.",
     },
@@ -54,6 +64,16 @@ const STEPS: OnboardingStep[] = [
         eyebrow: "Connect",
         title: "Connect",
         body: "Share progress, message people, and see how others are showing up.",
+    },
+    {
+        eyebrow: "Connect",
+        title: "Insights",
+        body: "See how your streaks and reflections are trending over time.",
+    },
+    {
+        eyebrow: "Connect",
+        title: "DMs",
+        body: "Reach out to someone one-on-one from the community.",
     },
     {
         eyebrow: "Ready",
