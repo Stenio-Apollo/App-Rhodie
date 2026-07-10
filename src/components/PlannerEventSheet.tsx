@@ -14,6 +14,35 @@ import type {VisualMode} from "../state/useVisualMode";
 const DAY_START_HOUR = 6;
 const DAY_END_HOUR = 23;
 const SLOT_MINUTES = 30;
+const ACCENT_PANEL_COLOR = "#DAC8AE";
+
+const buttonDepthStyle = {
+    shadowColor: "#000000",
+    shadowOffset: {width: 0, height: 5},
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    elevation: 6,
+};
+
+function ButtonShine() {
+    return (
+        <>
+            <LinearGradient
+                colors={["rgba(255,255,255,0.07)", "rgba(255,255,255,0.01)", "rgba(0,0,0,0.14)"]}
+                locations={[0, 0.48, 1]}
+                pointerEvents="none"
+                style={tw`absolute inset-0`}
+            />
+            <View
+                pointerEvents="none"
+                style={[
+                    tw`absolute left-2 right-2 top-0.5 h-1 rounded-full`,
+                    {backgroundColor: "rgba(255,255,255,0.035)"},
+                ]}
+            />
+        </>
+    );
+}
 
 interface PlannerEventSheetProps {
     visible: boolean;
@@ -167,25 +196,16 @@ export function PlannerEventSheet({
     const riverMode = visualMode === "river";
     const sonnyMode = visualMode === "sonny";
     const lightMode = riverMode;
-    const badgeColor = "#ba885a";
-    const themeSurfaceColor = georgiaMode
-        ? "#111111"
-        : riverMode
-                ? "#FFFFFF"
-                : "#000000";
-    const themeTextColor = lightMode ? "#111111" : "#FFFFFF";
-    const themeMutedTextColor = lightMode ? "rgba(17,17,17,0.58)" : "rgba(255,255,255,0.68)";
-    const themeBorderColor = lightMode ? "rgba(17,17,17,0.16)" : "rgba(255,255,255,0.18)";
-    const themeInputBackgroundColor = lightMode ? "rgba(17,17,17,0.06)" : "rgba(255,255,255,0.08)";
-    const themePressedBackgroundColor = lightMode ? "rgba(17,17,17,0.08)" : "rgba(255,255,255,0.12)";
-    const sheetOverlayColor = lightMode
-        ? "rgba(255,255,255,0.86)"
-        : sonnyMode
-            ? "rgba(0,0,0,0.76)"
-            : `${themeSurfaceColor}D9`;
-    const sheetGradientTopColor = lightMode ? "rgba(17,17,17,0.06)" : "rgba(255,255,255,0.16)";
-    const sheetGradientMidColor = lightMode ? "rgba(17,17,17,0.02)" : "rgba(255,255,255,0.04)";
-    const sheetGradientBottomColor = lightMode ? "rgba(17,17,17,0.08)" : "rgba(0,0,0,0.28)";
+    const themeSurfaceColor = georgiaMode ? "rgba(0,0,0,0.12)" : riverMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
+    const themeTextColor = georgiaMode || sonnyMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
+    const themeMutedTextColor = georgiaMode || sonnyMode ? "rgba(255,255,255,0.68)" : riverMode ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.68)";
+    const themeBorderColor = georgiaMode ? "rgba(255,255,255,0.22)" : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.24)" : "#334155";
+    const themeInputBackgroundColor = georgiaMode ? "rgba(0,0,0,0.32)" : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.35)";
+    const themePressedBackgroundColor = georgiaMode ? "rgba(0,0,0,0.32)" : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.35)";
+    const sheetOverlayColor = georgiaMode ? "rgba(0,0,0,0.28)" : riverMode ? "rgba(255,255,255,0.42)" : sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.77)";
+    const sheetGradientTopColor = georgiaMode ? "rgba(255,255,255,0.14)" : riverMode ? "rgba(232,244,255,0.30)" : sonnyMode ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.04)";
+    const sheetGradientMidColor = georgiaMode ? "rgba(255,255,255,0.04)" : riverMode ? "rgba(210,232,255,0.06)" : sonnyMode ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)";
+    const sheetGradientBottomColor = georgiaMode ? "rgba(0,0,0,0.1)" : riverMode ? "rgba(223,196,170,0.16)" : "rgba(0,0,0,0.35)";
     const inputStyle = {
         borderColor: themeBorderColor,
         backgroundColor: themeInputBackgroundColor,
@@ -193,12 +213,15 @@ export function PlannerEventSheet({
     };
     const inactiveChipStyle = {
         borderColor: themeBorderColor,
-        backgroundColor: "transparent",
+        backgroundColor: themePressedBackgroundColor,
+        ...buttonDepthStyle,
     };
     const activeChipStyle = {
-        borderColor: badgeColor,
-        backgroundColor: lightMode ? "rgba(186,136,90,0.18)" : "rgba(186,136,90,0.24)",
+        borderColor: ACCENT_PANEL_COLOR,
+        backgroundColor: ACCENT_PANEL_COLOR,
+        ...buttonDepthStyle,
     };
+    const activeChipTextColor = "#0f0f0f";
 
     const endMinutesAbs = startMinutes + durationMinutes;
     const endHour = DAY_START_HOUR + Math.floor(endMinutesAbs / 60);
@@ -319,17 +342,18 @@ export function PlannerEventSheet({
                                                             setColor(preset.color);
                                                         }}
                                                         style={({pressed}) => [
-                                                            tw`rounded-full border px-3 py-1.5`,
+                                                            tw`overflow-hidden rounded-full border px-3 py-1.5`,
                                                             active ? activeChipStyle : inactiveChipStyle,
-                                                            pressed && tw`opacity-80`,
+                                                            pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                         ]}
                                                     >
+                                                        <ButtonShine/>
                                                         <Text
                                                             style={[
                                                                 tw`text-xs`,
                                                                 {
                                                                     fontFamily: fonts.body,
-                                                                    color: active ? themeTextColor : themeMutedTextColor,
+                                                                    color: active ? activeChipTextColor : themeMutedTextColor,
                                                                 },
                                                             ]}
                                                         >
@@ -380,17 +404,18 @@ export function PlannerEventSheet({
                                                     setStartMinutes(slot.minutes);
                                                 }}
                                                 style={({pressed}) => [
-                                                    tw`rounded-full border px-3 py-1.5`,
+                                                    tw`overflow-hidden rounded-full border px-3 py-1.5`,
                                                     active
                                                         ? activeChipStyle
                                                         : inactiveChipStyle,
-                                                    pressed && tw`opacity-80`,
+                                                    pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                                 ]}
                                             >
+                                                <ButtonShine/>
                                                 <Text
                                                     style={[
                                                         tw`text-xs`,
-                                                        {fontFamily: fonts.body, color: active ? themeTextColor : themeMutedTextColor},
+                                                        {fontFamily: fonts.body, color: active ? activeChipTextColor : themeMutedTextColor},
                                                     ]}
                                                 >
                                                     {slot.label}
@@ -415,17 +440,18 @@ export function PlannerEventSheet({
                                                 setDurationMinutes(opt.minutes);
                                             }}
                                             style={({pressed}) => [
-                                                tw`rounded-full border px-3 py-1.5`,
+                                                tw`overflow-hidden rounded-full border px-3 py-1.5`,
                                                 active
                                                     ? activeChipStyle
                                                     : inactiveChipStyle,
-                                                pressed && tw`opacity-80`,
+                                                pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                             ]}
                                         >
+                                            <ButtonShine/>
                                             <Text
                                                 style={[
                                                     tw`text-xs`,
-                                                    {fontFamily: fonts.body, color: active ? themeTextColor : themeMutedTextColor},
+                                                    {fontFamily: fonts.body, color: active ? activeChipTextColor : themeMutedTextColor},
                                                 ]}
                                             >
                                                 {opt.label}
@@ -449,15 +475,17 @@ export function PlannerEventSheet({
                                                 setColor(c.id);
                                             }}
                                             style={({pressed}) => [
-                                                tw`h-10 w-10 rounded-full items-center justify-center`,
+                                                tw`h-10 w-10 overflow-hidden rounded-full items-center justify-center`,
                                                 {
                                                     backgroundColor: c.hex,
                                                     borderWidth: active ? 2 : 0,
                                                     borderColor: themeTextColor,
+                                                    ...buttonDepthStyle,
                                                 },
-                                                pressed && tw`opacity-80`,
+                                                pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                             ]}
                                         >
+                                            <ButtonShine/>
                                             {active ? (
                                                 <Text
                                                     style={[tw`text-xs text-white`, {fontFamily: fonts.heading}]}>✓</Text>
@@ -477,9 +505,11 @@ export function PlannerEventSheet({
                                     variant="secondary"
                                     style={{
                                         borderColor: themeBorderColor,
-                                        backgroundColor: themePressedBackgroundColor,
+                                        backgroundColor: lightMode ? "rgba(17,17,17,0.14)" : "rgba(255,255,255,0.16)",
+                                        ...buttonDepthStyle,
                                     }}
                                     textStyle={{color: themeTextColor}}
+                                    shine
                                     onPress={() => {
                                         Keyboard.dismiss();
                                         onClose();
@@ -490,7 +520,13 @@ export function PlannerEventSheet({
                                         <Button
                                             label="Delete"
                                             variant="danger"
-                                            textStyle={{color: "#FFF6E8"}}
+                                            style={{
+                                                borderColor: "#FF3800",
+                                                backgroundColor: "#FF3800",
+                                                ...buttonDepthStyle,
+                                            }}
+                                            textStyle={{color: "#FFFFFF"}}
+                                            shine
                                             onPress={() => {
                                                 void handleDelete();
                                             }}
@@ -501,10 +537,12 @@ export function PlannerEventSheet({
                                         label={busy ? "Saving..." : "Save"}
                                         variant="outlineAccent"
                                         style={{
-                                            borderColor: badgeColor,
-                                            backgroundColor: lightMode ? "rgba(186,136,90,0.14)" : "rgba(186,136,90,0.22)",
+                                            borderColor: ACCENT_PANEL_COLOR,
+                                            backgroundColor: ACCENT_PANEL_COLOR,
+                                            ...buttonDepthStyle,
                                         }}
-                                        textStyle={{color: themeTextColor}}
+                                        textStyle={{color: activeChipTextColor}}
+                                        shine
                                         onPress={() => {
                                             void handleSubmit();
                                         }}

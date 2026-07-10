@@ -1,5 +1,6 @@
 import {useMemo, useState} from "react";
 import {Pressable, ScrollView, Text, View} from "react-native";
+import {LinearGradient} from "expo-linear-gradient";
 import tw from "../lib/tw";
 import {fonts} from "../theme/fonts";
 import {haptics} from "../lib/haptics";
@@ -19,6 +20,35 @@ const TIME_COLUMN_WIDTH = 64;
 const EVENT_RIGHT_INSET = 12;
 const EVENT_LEFT_INSET = TIME_COLUMN_WIDTH + 4;
 const EVENT_COLUMN_GAP = 4;
+const PLAN_ACTION_COLOR = "#ba885a";
+
+const buttonDepthStyle = {
+    shadowColor: "#000000",
+    shadowOffset: {width: 0, height: 5},
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    elevation: 6,
+};
+
+function ButtonShine() {
+    return (
+        <>
+            <LinearGradient
+                colors={["rgba(255,255,255,0.07)", "rgba(255,255,255,0.01)", "rgba(0,0,0,0.14)"]}
+                locations={[0, 0.48, 1]}
+                pointerEvents="none"
+                style={tw`absolute inset-0`}
+            />
+            <View
+                pointerEvents="none"
+                style={[
+                    tw`absolute left-2 right-2 top-0.5 h-1 rounded-full`,
+                    {backgroundColor: "rgba(255,255,255,0.035)"},
+                ]}
+            />
+        </>
+    );
+}
 
 interface SlotRow {
     minutes: number;
@@ -203,6 +233,8 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
     const primaryTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
     const mutedTextColor = georgiaMode ? "rgba(255,255,255,0.58)" : riverMode ? "rgba(17,17,17,0.58)" : "rgba(228,224,212,0.55)";
     const planHeaderTextColor = georgiaMode || sonnyMode || riverMode ? badgeColor : primaryTextColor;
+    const planButtonBackgroundColor = georgiaMode ? "#DAC8AE" : PLAN_ACTION_COLOR;
+    const planButtonTextColor = "#0f0f0f";
 
     const dayEvents = useMemo(
         () =>
@@ -259,7 +291,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                         onPress={goPrev}
                         style={({pressed}) => [
                             tw`h-9 w-9 items-center justify-center`,
-                            pressed && tw`opacity-70`,
+                            pressed && {opacity: 0.7, transform: [{translateY: 1}]},
                         ]}
                     >
                         <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: planHeaderTextColor}]}>‹</Text>
@@ -273,12 +305,14 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                             <Pressable
                                 onPress={goToday}
                                 style={({pressed}) => [
-                                    tw`mt-1 rounded-full border border-[#B55941]/69 px-3 py-0.5`,
-                                    pressed && tw`opacity-70`,
+                                    tw`mt-1 overflow-hidden rounded-full px-3 py-1`,
+                                    {backgroundColor: planButtonBackgroundColor, ...buttonDepthStyle},
+                                    pressed && {opacity: 0.78, transform: [{translateY: 1}]},
                                 ]}
                             >
+                                <ButtonShine/>
                                 <Text
-                                    style={[tw`text-[10px] text-[#B55941]`, {fontFamily: fonts.button}]}
+                                    style={[tw`text-[10px]`, {fontFamily: fonts.button, color: planButtonTextColor}]}
                                 >
                                     Jump to today
                                 </Text>
@@ -290,7 +324,7 @@ export function DayPlanScreen({planner, visualMode, showTutorial, onDismissTutor
                         onPress={goNext}
                         style={({pressed}) => [
                             tw`h-9 w-9 items-center justify-center`,
-                            pressed && tw`opacity-70`,
+                            pressed && {opacity: 0.7, transform: [{translateY: 1}]},
                         ]}
                     >
                         <Text style={[tw`text-base`, {fontFamily: fonts.heading, color: planHeaderTextColor}]}>›</Text>

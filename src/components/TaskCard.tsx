@@ -8,6 +8,7 @@ import {haptics} from "../lib/haptics";
 import {useScreenVisualMode} from "./ScreenBackground";
 
 const COMPLETE_BUTTON_COLOR = "#DAC8AE";
+const DELETE_BUTTON_COLOR = "#FF3800";
 const CREAM = "#DFC4AA";
 const TEXT_PRIMARY = "#E4E0D4";
 
@@ -63,7 +64,8 @@ function ActionPill({
     const lightCardMode = riverMode;
     const whiteTextMode = georgiaMode || sonnyMode;
     const actionAccentColor = COMPLETE_BUTTON_COLOR;
-    const textColor = accent ? "#0f0f0f" : whiteTextMode ? "#FFFFFF" : lightCardMode ? "#111111" : CREAM;
+    const isDelete = label === "Delete";
+    const textColor = isDelete ? "#FFFFFF" : accent ? "#0f0f0f" : whiteTextMode ? "#FFFFFF" : lightCardMode ? "#111111" : CREAM;
     const actionBorderColor = riverMode ? "rgba(17,17,17,0.14)" : georgiaMode ? "rgba(255,255,255,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "rgba(223,196,170,0.42)";
     const actionBackgroundColor = georgiaMode ? "rgba(0,0,0,0.28)" : riverMode ? "rgba(255,255,255,0.78)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(15,15,15,0.92)";
     return (
@@ -73,7 +75,9 @@ function ActionPill({
             onPress={onPress}
             style={({pressed}) => [
                 tw`overflow-hidden rounded-lg border px-3 py-1.5 flex-row items-center gap-1`,
-                accent
+                isDelete
+                    ? {borderColor: DELETE_BUTTON_COLOR, backgroundColor: DELETE_BUTTON_COLOR, ...buttonDepthStyle}
+                    : accent
                     ? {borderColor: actionAccentColor, backgroundColor: actionAccentColor, ...buttonDepthStyle}
                     : {
                         borderColor: actionBorderColor,
