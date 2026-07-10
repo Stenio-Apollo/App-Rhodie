@@ -2,9 +2,9 @@ import {useEffect, useRef} from "react";
 import {Audio, InterruptionModeAndroid, InterruptionModeIOS, type AVPlaybackSource} from "expo-av";
 import type {BackgroundMusicTrackId} from "../state/useBackgroundMusic";
 
-const BACKGROUND_MUSIC_VOLUME = 0.07;
+const BACKGROUND_MUSIC_VOLUME = 0.035;
 const BACKGROUND_MUSIC_TRACK_VOLUMES: Partial<Record<BackgroundMusicTrackId, number>> = {
-    forest: 0.045,
+    forest: 0.0225,
 };
 const FADE_IN_MS = 2600;
 const FADE_OUT_MS = 1600;

@@ -32,6 +32,24 @@ type SubscriptionAccessRow = {
     last_synced_from_client_at: string | null;
 };
 
+const STORED_ACCESS_LOAD_TIMEOUT_MS = 5000;
+
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => reject(new Error("Subscription access load timed out.")), timeoutMs);
+        promise.then(
+            (value) => {
+                clearTimeout(timeoutId);
+                resolve(value);
+            },
+            (error) => {
+                clearTimeout(timeoutId);
+                reject(error);
+            },
+        );
+    });
+}
+
 function isFutureDate(value: string | null | undefined): boolean {
     if (!value) return false;
     const parsed = new Date(value);
@@ -113,29 +131,38 @@ export function useSubscriptionAccess({
 
             setLoadingStoredAccess(true);
             setStoredAccessLoaded(false);
-            const {data, error} = await supabase
-                .from("subscription_access")
-                .select(`
-                    provider,
-                    platform,
-                    product_identifier,
-                    status,
-                    trial_started_at,
-                    trial_ends_at,
-                    current_period_ends_at,
-                    will_renew,
-                    last_verified_at,
-                    last_synced_from_client_at
-                `)
-                .eq("user_id", session.user.id)
-                .maybeSingle();
+            try {
+                const {data, error} = await withTimeout(
+                    supabase
+                        .from("subscription_access")
+                        .select(`
+                            provider,
+                            platform,
+                            product_identifier,
+                            status,
+                            trial_started_at,
+                            trial_ends_at,
+                            current_period_ends_at,
+                            will_renew,
+                            last_verified_at,
+                            last_synced_from_client_at
+                        `)
+                        .eq("user_id", session.user.id)
+                        .maybeSingle(),
+                    STORED_ACCESS_LOAD_TIMEOUT_MS,
+                );
 
-            if (!mounted) return;
-            if (!error) {
-                setBackendAccess(mapAccessRow((data ?? null) as SubscriptionAccessRow | null, trialStatus));
+                if (!mounted) return;
+                if (!error) {
+                    setBackendAccess(mapAccessRow((data ?? null) as SubscriptionAccessRow | null, trialStatus));
+                }
+            } catch (error) {
+                console.warn("Subscription access load error", error);
+            } finally {
+                if (!mounted) return;
+                setStoredAccessLoaded(true);
+                setLoadingStoredAccess(false);
             }
-            setStoredAccessLoaded(true);
-            setLoadingStoredAccess(false);
         }
 
         void loadStoredAccess();

@@ -6,6 +6,24 @@ import {
 } from "@supabase/supabase-js";
 import {supabase} from "../lib/supabase";
 
+const SESSION_LOAD_TIMEOUT_MS = 6000;
+
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => reject(new Error("Auth session load timed out.")), timeoutMs);
+        promise.then(
+            (value) => {
+                clearTimeout(timeoutId);
+                resolve(value);
+            },
+            (error) => {
+                clearTimeout(timeoutId);
+                reject(error);
+            },
+        );
+    });
+}
+
 async function getDeleteAccountErrorMessage(error: unknown): Promise<string> {
     if (error instanceof FunctionsHttpError) {
         const payload = await error.context.json().catch(() => null);
@@ -38,14 +56,21 @@ export function useSupabaseAuth() {
 
     useEffect(() => {
         let mounted = true;
-        supabase.auth.getSession().then(({data}) => {
-            if (!mounted) return;
-            setSession(data.session);
-            setLoading(false);
-        });
+        withTimeout(supabase.auth.getSession(), SESSION_LOAD_TIMEOUT_MS)
+            .then(({data}) => {
+                if (!mounted) return;
+                setSession(data.session);
+            })
+            .catch((error) => {
+                console.warn("Auth session load error", error);
+            })
+            .finally(() => {
+                if (mounted) setLoading(false);
+            });
 
         const {data: subscription} = supabase.auth.onAuthStateChange((_event, nextSession) => {
             setSession(nextSession);
+            setLoading(false);
         });
 
         return () => {

@@ -6,9 +6,26 @@ export type TutorialKey = "home" | "plan" | "journal" | "tasks" | "calendar" | "
 const ONBOARDING_PREFIX = "rhnative.onboarding.v1";
 const TUTORIAL_PREFIX = "rhnative.tutorial.v1";
 const TUTORIAL_KEYS: TutorialKey[] = ["home", "plan", "journal", "tasks", "calendar", "account"];
+const HYDRATE_TIMEOUT_MS = 2500;
 
 function scopedKey(prefix: string, userId: string | null | undefined, suffix?: string): string {
     return [prefix, userId ?? "local", suffix].filter(Boolean).join(".");
+}
+
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => reject(new Error("Onboarding storage load timed out.")), timeoutMs);
+        promise.then(
+            (value) => {
+                clearTimeout(timeoutId);
+                resolve(value);
+            },
+            (error) => {
+                clearTimeout(timeoutId);
+                reject(error);
+            },
+        );
+    });
 }
 
 export function useOnboarding(userId: string | null | undefined) {
@@ -29,10 +46,13 @@ export function useOnboarding(userId: string | null | undefined) {
                 }
 
                 setIsLoaded(false);
-                const [onboardingRaw, ...tutorialValues] = await Promise.all([
-                    AsyncStorage.getItem(scopedKey(ONBOARDING_PREFIX, userId)),
-                    ...TUTORIAL_KEYS.map((key) => AsyncStorage.getItem(scopedKey(TUTORIAL_PREFIX, userId, key))),
-                ]);
+                const [onboardingRaw, ...tutorialValues] = await withTimeout(
+                    Promise.all([
+                        AsyncStorage.getItem(scopedKey(ONBOARDING_PREFIX, userId)),
+                        ...TUTORIAL_KEYS.map((key) => AsyncStorage.getItem(scopedKey(TUTORIAL_PREFIX, userId, key))),
+                    ]),
+                    HYDRATE_TIMEOUT_MS,
+                );
 
                 if (!mounted) return;
 
@@ -63,7 +83,9 @@ export function useOnboarding(userId: string | null | undefined) {
     const completeOnboarding = useCallback(async () => {
         if (!userId) return;
         setHasCompletedOnboarding(true);
-        await AsyncStorage.setItem(scopedKey(ONBOARDING_PREFIX, userId), "complete");
+        void AsyncStorage.setItem(scopedKey(ONBOARDING_PREFIX, userId), "complete").catch((error) => {
+            console.warn("Onboarding completion persist error", error);
+        });
     }, [userId]);
 
     const dismissTutorial = useCallback(

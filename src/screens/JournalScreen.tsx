@@ -1,5 +1,5 @@
 import {type ComponentProps, useEffect, useMemo, useRef, useState} from "react";
-import {Animated, Easing, Image, Modal, Pressable, ScrollView, Text, TextInput, View} from "react-native";
+import {Animated, Easing, Image, Keyboard, Modal, Pressable, ScrollView, Text, TextInput, View} from "react-native";
 import {showGuideAlert} from "../lib/guide-alert";
 import {Ionicons} from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -21,6 +21,9 @@ import {imagePickerAssetToDataUri} from "../lib/image-picker-data-uri";
 
 const GEORGIA_SURFACE_COLOR = "#111111";
 const GEORGIA_ACCENT_COLOR = "#DAC8AE";
+const JOURNAL_QUOTE_TOP_OFFSET = 12;
+const JOURNAL_QUOTE_CONTENT_GAP = 16;
+const JOURNAL_SCROLL_FALLBACK_TOP_MARGIN = 190;
 
 function isoToday(): string {
     return toLocalISODate();
@@ -109,6 +112,7 @@ export function JournalScreen({
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingText, setEditingText] = useState("");
     const [route, setRoute] = useState<JournalRoute>("write");
+    const [quoteHeight, setQuoteHeight] = useState(0);
     const [viewingPurposeImageId, setViewingPurposeImageId] = useState<string | null>(null);
     const [deletingPurposeImageId, setDeletingPurposeImageId] = useState<string | null>(null);
     const scrollRef = useRef<ScrollView>(null);
@@ -116,6 +120,12 @@ export function JournalScreen({
     const gratitudeInputRef = useRef<TextInput>(null);
     const routeOpacity = useRef(new Animated.Value(1)).current;
     const routeTranslateY = useRef(new Animated.Value(0)).current;
+    const entrySuccessOpacity = useRef(new Animated.Value(0)).current;
+    const entrySuccessScale = useRef(new Animated.Value(0.78)).current;
+    const entrySuccessRingOpacity = useRef(new Animated.Value(0)).current;
+    const entrySuccessRingScale = useRef(new Animated.Value(0.72)).current;
+    const entrySuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [entrySuccessVisible, setEntrySuccessVisible] = useState(false);
     const bg = visualMode === "navy"
         ? require("../../public/images/navy.jpg")
         : visualMode === "evergreen"
@@ -183,6 +193,11 @@ export function JournalScreen({
     const entryPlaceholderTextColor = georgiaMode ? "rgba(255,255,255,0.55)" : "#6b7280";
     const entryActionColor = georgiaMode ? GEORGIA_ACCENT_COLOR : journalContentTextColor;
     const entryHeaderTextColor = georgiaMode ? GEORGIA_ACCENT_COLOR : riverMode ? badgeColor : journalContentTextColor;
+    const entrySuccessBackdropColor = "transparent";
+    const entrySuccessPanelColor = "transparent";
+    const entrySuccessBorderColor = "transparent";
+    const entrySuccessTextColor = georgiaMode ? "#FFFFFF" : riverMode ? "#111111" : "#E4E0D4";
+    const entrySuccessMutedColor = georgiaMode ? "rgba(255,255,255,0.72)" : riverMode ? "rgba(17,17,17,0.68)" : "rgba(228,224,212,0.72)";
 
     const todaysQuote = useMemo(() => getDailyStoicQuote(selectedDate), [selectedDate]);
     const todaysPrompt = useMemo(() => getDailyJournalPrompt(selectedDate), [selectedDate]);
@@ -206,13 +221,72 @@ export function JournalScreen({
     const purposeDialogTextColor = georgiaMode || visualMode === "sonny" ? "#FFFFFF" : "#111111";
     const purposeDialogMutedColor = georgiaMode || visualMode === "sonny" ? "rgba(255,255,255,0.68)" : "rgba(17,17,17,0.66)";
     const purposeDialogBorderColor = georgiaMode || visualMode === "sonny" ? "rgba(255,255,255,0.16)" : "rgba(17,17,17,0.14)";
+    const journalScrollTopMargin = Math.max(
+        JOURNAL_SCROLL_FALLBACK_TOP_MARGIN,
+        Math.ceil(JOURNAL_QUOTE_TOP_OFFSET + quoteHeight + JOURNAL_QUOTE_CONTENT_GAP),
+    );
 
     function openPromptEntry() {
         haptics.navigation();
+        setEntrySuccessVisible(false);
         setRoute("promptEntry");
         setTimeout(() => {
             promptInputRef.current?.focus();
         }, 280);
+    }
+
+    function clearEntrySuccessTimeout() {
+        if (!entrySuccessTimeoutRef.current) return;
+        clearTimeout(entrySuccessTimeoutRef.current);
+        entrySuccessTimeoutRef.current = null;
+    }
+
+    function showEntrySaveSuccess() {
+        Keyboard.dismiss();
+        clearEntrySuccessTimeout();
+        setEntrySuccessVisible(true);
+        entrySuccessOpacity.setValue(0);
+        entrySuccessScale.setValue(0.78);
+        entrySuccessRingOpacity.setValue(0.45);
+        entrySuccessRingScale.setValue(0.72);
+
+        Animated.parallel([
+            Animated.timing(entrySuccessOpacity, {
+                toValue: 1,
+                duration: 180,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+            Animated.spring(entrySuccessScale, {
+                toValue: 1,
+                friction: 6,
+                tension: 110,
+                useNativeDriver: true,
+            }),
+            Animated.sequence([
+                Animated.parallel([
+                    Animated.timing(entrySuccessRingScale, {
+                        toValue: 1.55,
+                        duration: 620,
+                        easing: Easing.out(Easing.cubic),
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(entrySuccessRingOpacity, {
+                        toValue: 0,
+                        duration: 620,
+                        easing: Easing.out(Easing.cubic),
+                        useNativeDriver: true,
+                    }),
+                ]),
+            ]),
+        ]).start();
+
+        entrySuccessTimeoutRef.current = setTimeout(() => {
+            entrySuccessTimeoutRef.current = null;
+            setEntrySuccessVisible(false);
+            onClearHomeAction?.();
+            setRoute("write");
+        }, 1350);
     }
 
     function savePromptEntry() {
@@ -221,12 +295,12 @@ export function JournalScreen({
         haptics.saveJournalEntry();
         addEntry(body, selectedDate, "prompt");
         setPromptText("");
-        onClearHomeAction?.();
-        setRoute("write");
+        showEntrySaveSuccess();
     }
 
     function openGratitudeEntry() {
         haptics.navigation();
+        setEntrySuccessVisible(false);
         setRoute("gratitudeEntry");
         setTimeout(() => {
             gratitudeInputRef.current?.focus();
@@ -243,12 +317,13 @@ export function JournalScreen({
         const bulletText = items.slice(0, 3).map((item) => `• ${item}`).join("\n");
         addEntry(bulletText, selectedDate, "gratitude");
         setText("");
-        onClearHomeAction?.();
-        setRoute("write");
+        showEntrySaveSuccess();
     }
 
     function closeEntryRoute() {
         haptics.navigation();
+        clearEntrySuccessTimeout();
+        setEntrySuccessVisible(false);
         onClearHomeAction?.();
         setRoute("write");
     }
@@ -299,6 +374,14 @@ export function JournalScreen({
             }),
         ]).start();
     }, [route, routeOpacity, routeTranslateY]);
+
+    useEffect(() => {
+        return () => {
+            if (entrySuccessTimeoutRef.current) {
+                clearTimeout(entrySuccessTimeoutRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         onPromptEntryOpenChange?.(route === "promptEntry" || route === "gratitudeEntry");
@@ -428,7 +511,14 @@ export function JournalScreen({
                     </Pressable>
                 ) : null}
                 {route === "write" ? (
-                    <View pointerEvents="none" style={tw`absolute left-3 right-20 top-3 z-10 items-center`}>
+                    <View
+                        pointerEvents="none"
+                        onLayout={(event) => {
+                            const nextHeight = event.nativeEvent.layout.height;
+                            setQuoteHeight((current) => Math.abs(current - nextHeight) > 0.5 ? nextHeight : current);
+                        }}
+                        style={tw`absolute left-3 right-20 top-3 z-10 items-center`}
+                    >
                         <View style={tw`flex-row items-center justify-center px-4 py-1`}>
                             <Text
                                 style={[tw`text-center text-lg font-semibold`, {
@@ -473,8 +563,13 @@ export function JournalScreen({
                 ) : null}
                 <ScrollView
                     ref={scrollRef}
-                    style={tw`flex-1`}
-                    contentContainerStyle={[tw`pl-3 pr-20 pb-28`, route === "write" ? tw`pt-[190px]` : tw`pt-3`]}
+                    style={[
+                        tw`flex-1`,
+                        route === "write" ? {marginTop: journalScrollTopMargin} : null,
+                    ]}
+                    contentContainerStyle={[
+                        tw`pl-3 pr-20 pb-28 pt-3`,
+                    ]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="interactive"
                 >
@@ -503,8 +598,8 @@ export function JournalScreen({
                                                     body: "Switch to Memory to revisit what you wrote on any past day.",
                                                 },
                                                 {
-                                                    title: "Earn badges",
-                                                    body: "Consistent journaling and completed weekly goals unlock badges.",
+                                                    title: "Use My Reasons",
+                                                    body: "Open My Reasons to keep photos of the people and moments you are showing up for.",
                                                 },
                                             ]}
                                         />
@@ -595,8 +690,6 @@ export function JournalScreen({
                         {route === "memory" ? (
                             <MemoryShelf
                                 journal={journal}
-                                selectedDate={selectedDate}
-                                setSelectedDate={setSelectedDate}
                                 editingId={editingId}
                                 setEditingId={setEditingId}
                                 editingText={editingText}
@@ -793,6 +886,12 @@ export function JournalScreen({
                                 )}
 
                                 <View style={tw`flex-1 px-4 pb-4 pt-4`}>
+                                    <Pressable
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Dismiss keyboard"
+                                        onPress={Keyboard.dismiss}
+                                        style={tw`absolute inset-0`}
+                                    />
                                     {route === "promptEntry" ? (
                                         <>
                                             {georgiaMode ? (
@@ -973,18 +1072,71 @@ export function JournalScreen({
                                         <Pressable
                                             accessibilityRole="button"
                                             accessibilityLabel={route === "promptEntry" ? "Add prompt entry" : "Add gratitude entry"}
-                                            disabled={route === "promptEntry" ? promptText.trim().length === 0 : text.trim().length === 0}
+                                            disabled={entrySuccessVisible || (route === "promptEntry" ? promptText.trim().length === 0 : text.trim().length === 0)}
                                             onPress={route === "promptEntry" ? savePromptEntry : saveGratitudeEntry}
                                             style={({pressed}) => [
                                                 tw`h-10 w-10 items-center justify-center rounded-full`,
-                                                (route === "promptEntry" ? promptText.trim().length === 0 : text.trim().length === 0) && tw`opacity-40`,
-                                                pressed && (route === "promptEntry" ? promptText.trim().length > 0 : text.trim().length > 0) && tw`opacity-75`,
+                                                (entrySuccessVisible || (route === "promptEntry" ? promptText.trim().length === 0 : text.trim().length === 0)) && tw`opacity-40`,
+                                                pressed && !entrySuccessVisible && (route === "promptEntry" ? promptText.trim().length > 0 : text.trim().length > 0) && tw`opacity-75`,
                                             ]}
                                         >
                                             <Ionicons name="send" size={17} color={entryActionColor}/>
                                         </Pressable>
                                     </View>
                                 </View>
+
+                                {entrySuccessVisible ? (
+                                    <Animated.View
+                                        pointerEvents="auto"
+                                        style={[
+                                            tw`absolute inset-0 z-50 items-center justify-center px-8`,
+                                            {
+                                                backgroundColor: entrySuccessBackdropColor,
+                                                opacity: entrySuccessOpacity,
+                                            },
+                                        ]}
+                                    >
+                                        <Animated.View
+                                            style={[
+                                                tw`items-center rounded-[28px] border px-6 py-7`,
+                                                {
+                                                    backgroundColor: entrySuccessPanelColor,
+                                                    borderColor: entrySuccessBorderColor,
+                                                    transform: [{scale: entrySuccessScale}],
+                                                },
+                                            ]}
+                                        >
+                                            <View style={tw`h-20 w-20 items-center justify-center`}>
+                                                <Animated.View
+                                                    pointerEvents="none"
+                                                    style={[
+                                                        tw`absolute h-20 w-20 rounded-full border-2`,
+                                                        {
+                                                            borderColor: "#FF3800",
+                                                            opacity: entrySuccessRingOpacity,
+                                                            transform: [{scale: entrySuccessRingScale}],
+                                                        },
+                                                    ]}
+                                                />
+                                                <View style={[tw`h-16 w-16 items-center justify-center rounded-full`, {backgroundColor: "#FF3800"}]}>
+                                                    <Ionicons name="checkmark" size={36} color="#FFFFFF"/>
+                                                </View>
+                                            </View>
+                                            <Text style={[tw`mt-4 text-center text-lg`, {
+                                                fontFamily: fonts.heading,
+                                                color: entrySuccessTextColor,
+                                            }]}>
+                                                Entry saved
+                                            </Text>
+                                            <Text style={[tw`mt-2 text-center text-sm leading-5`, {
+                                                fontFamily: fonts.body,
+                                                color: entrySuccessMutedColor,
+                                            }]}>
+                                                Your entry has been placed in your memory shelf.
+                                            </Text>
+                                        </Animated.View>
+                                    </Animated.View>
+                                ) : null}
                             </Animated.View>
                         </Animated.View>
                     </ScreenBackground>

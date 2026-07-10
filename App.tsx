@@ -6,6 +6,7 @@ import {
     ImageBackground,
     PanResponder,
     Platform,
+    Pressable,
     StyleSheet,
     Text,
     View
@@ -75,8 +76,10 @@ type HomeActionInput =
     | { target: "tasks" };
 
 const TAB_ORDER: Tab[] = ["today", "plan", "journal", "calendar", "community"];
+const APP_ROUTE_TABS: Tab[] = ["today", "plan", "journal", "board", "calendar", "community", "insights"];
 const SWIPE_DISTANCE_THRESHOLD = 70;
 const SWIPE_VERTICAL_LIMIT = 55;
+const APP_RELOAD_TIMEOUT_MS = 1500;
 
 function getVisualModeShellColor(visualMode: VisualMode): string {
     if (visualMode === "navy") return "#071426";
@@ -135,9 +138,9 @@ function AppContent() {
     const birthdayActive = Boolean(profile?.birthday && isToday(profile.birthday));
     const appLoading = !fontsLoaded ||
         authLoading ||
-        (session && subscription.loading) ||
         (session && !encryption.isReady) ||
-        (session && (!onboarding.isLoaded || !visualModeState.isLoaded));
+        (session && !onboarding.isLoaded);
+    const hasRenderableRoute = accountOpen || APP_ROUTE_TABS.includes(tab);
 
     useEffect(() => {
         if (!session) {
@@ -463,6 +466,18 @@ function AppContent() {
         haptics.createNewTask();
     }
 
+    async function reloadAppAfterTransition() {
+        if (!Updates.isEnabled) return;
+        try {
+            await Promise.race([
+                Updates.reloadAsync(),
+                new Promise<void>((resolve) => setTimeout(resolve, APP_RELOAD_TIMEOUT_MS)),
+            ]);
+        } catch {
+            // The state transition still lets the app continue if reload is unavailable.
+        }
+    }
+
     async function handleCompleteOnboarding() {
         await onboarding.completeOnboarding();
         setTab("today");
@@ -470,14 +485,7 @@ function AppContent() {
         setAccountOpen(false);
         setMessagesOpen(false);
         setMessageStartTarget(null);
-
-        if (Updates.isEnabled) {
-            try {
-                await Updates.reloadAsync();
-            } catch {
-                // If reload fails, the state update above still lets the app continue.
-            }
-        }
+        await reloadAppAfterTransition();
     }
 
     const backgroundMusicPlayer = (
@@ -562,7 +570,10 @@ function AppContent() {
             <GradientBackground>
                 {backgroundMusicPlayer}
                 <StatusBar style="light"/>
-                <PrivacyPassphraseScreen encryption={encryption} onSignOut={handleSignOut}/>
+                <PrivacyPassphraseScreen
+                    encryption={encryption}
+                    onSignOut={handleSignOut}
+                />
             </GradientBackground>
         );
     }
@@ -784,6 +795,34 @@ function AppContent() {
                                 ) : null}
                                 {!accountOpen && tab === "insights" ? (
                                     <InsightsScreen onBackToPeers={openPeersRoute} visualMode={visualModeState.mode}/>
+                                ) : null}
+                                {!hasRenderableRoute ? (
+                                    <View style={tw`flex-1 items-center justify-center bg-black px-6`}>
+                                        <Text style={[tw`text-center text-xl text-[#E4E0D4]`, {fontFamily: fonts.heading}]}>
+                                            Rhodie is ready.
+                                        </Text>
+                                        <Text style={[tw`mt-3 text-center text-sm leading-5 text-slate-300`, {fontFamily: fonts.body}]}>
+                                            Open Home to continue.
+                                        </Text>
+                                        <Pressable
+                                            onPress={() => {
+                                                setHomeAction(null);
+                                                setAccountOpen(false);
+                                                setMessagesOpen(false);
+                                                setMessageStartTarget(null);
+                                                setTab("today");
+                                            }}
+                                            style={({pressed}) => [
+                                                tw`mt-6 rounded-xl px-5 py-3`,
+                                                {backgroundColor: "#B55941"},
+                                                pressed && tw`opacity-80`,
+                                            ]}
+                                        >
+                                            <Text style={[tw`text-sm text-[#E4E0D4]`, {fontFamily: fonts.button}]}>
+                                                Home
+                                            </Text>
+                                        </Pressable>
+                                    </View>
                                 ) : null}
                             </Animated.View>
                             {showBottomTabBar ? (

@@ -1,4 +1,4 @@
-import {useMemo, useState} from "react";
+import {type ReactNode, useMemo, useState} from "react";
 import {Pressable, StyleSheet, Text, TextInput, View} from "react-native";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
@@ -52,8 +52,6 @@ function ButtonShine() {
 
 interface MemoryShelfProps {
     journal: JournalState;
-    selectedDate: string;
-    setSelectedDate: (date: string) => void;
     editingId: string | null;
     setEditingId: (id: string | null) => void;
     editingText: string;
@@ -120,6 +118,72 @@ function StatPill({label, value}: {label: string; value: string | number}) {
             <Text style={[tw`mt-1 text-lg`, {fontFamily: fonts.heading, color: georgiaThemeMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY}]}>
                 {value}
             </Text>
+        </View>
+    );
+}
+
+function CollapsiblePanel({
+                              title,
+                              summary,
+                              expanded,
+                              onToggle,
+                              children,
+                          }: {
+    title: string;
+    summary: string;
+    expanded: boolean;
+    onToggle: () => void;
+    children: React.ReactNode;
+}) {
+    const visualMode = useScreenVisualMode();
+    const georgiaMode = visualMode === "georgia";
+    const georgiaThemeMode = georgiaMode || visualMode === "evergreen" || visualMode === "navy";
+    const riverMode = visualMode === "river";
+    const sonnyMode = visualMode === "sonny";
+    const borderColor = georgiaThemeMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.18)" : "#2c2c2c";
+    const backgroundColor = georgiaThemeMode ? GEORGIA_FROST_PANEL_COLOR : riverMode ? "rgba(255,255,255,0.34)" : sonnyMode ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.4)";
+    const titleColor = georgiaThemeMode ? "#FFFFFF" : riverMode ? "#111111" : TEXT_PRIMARY;
+    const summaryColor = georgiaThemeMode ? "rgba(255,255,255,0.65)" : riverMode ? "rgba(17,17,17,0.55)" : "rgba(228,224,212,0.55)";
+
+    return (
+        <View
+            style={[
+                tw`mt-3 overflow-hidden rounded-2xl border`,
+                {borderColor, backgroundColor, ...buttonDepthStyle},
+            ]}
+        >
+            <ButtonShine/>
+            <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${expanded ? "Collapse" : "Expand"} ${title}`}
+                onPress={() => {
+                    haptics.selection();
+                    onToggle();
+                }}
+                style={({pressed}) => [
+                    tw`flex-row items-center justify-between px-3 py-3`,
+                    pressed && {opacity: 0.78},
+                ]}
+            >
+                <View style={tw`flex-1 pr-3`}>
+                    <Text style={[tw`text-sm`, {fontFamily: fonts.heading, color: titleColor}]}>
+                        {title}
+                    </Text>
+                    <Text style={[tw`mt-1 text-[11px]`, {fontFamily: fonts.body, color: summaryColor}]}>
+                        {summary}
+                    </Text>
+                </View>
+                <Ionicons
+                    name={expanded ? "chevron-up" : "chevron-down"}
+                    size={18}
+                    color={titleColor}
+                />
+            </Pressable>
+            {expanded ? (
+                <View style={tw`px-3 pb-3`}>
+                    {children}
+                </View>
+            ) : null}
         </View>
     );
 }
@@ -359,8 +423,6 @@ function ActionPill({
 
 export function MemoryShelf({
                                 journal,
-                                selectedDate,
-                                setSelectedDate,
                                 editingId,
                                 setEditingId,
                                 editingText,
@@ -369,7 +431,8 @@ export function MemoryShelf({
     const {entries, byDate, deleteEntry, editEntry} = journal;
     const [searchTerm, setSearchTerm] = useState("");
     const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-    const [scopeToDate, setScopeToDate] = useState<boolean>(() => Boolean(editingId));
+    const [rhythmExpanded, setRhythmExpanded] = useState(false);
+    const [entryTypesExpanded, setEntryTypesExpanded] = useState(false);
 
     const today = toLocalISODate();
 
@@ -410,43 +473,37 @@ export function MemoryShelf({
 
     const visibleEntries = useMemo(() => {
         let pool = entries;
-        if (scopeToDate) {
-            pool = pool.filter((entry) => entry.date === selectedDate);
-        }
         if (categoryFilter !== "all") {
             pool = pool.filter((entry) => entry.category === categoryFilter);
         }
         const term = searchTerm.trim().toLowerCase();
         if (term) {
-            pool = pool.filter((entry) => entry.text.toLowerCase().includes(term));
+            pool = pool.filter((entry) => {
+                const prompt = entry.category === "prompt" ? getDailyJournalPrompt(entry.date).toLowerCase() : "";
+                return [
+                    entry.text,
+                    entry.date,
+                    entry.category,
+                    new Date(entry.createdAt).toLocaleString(),
+                    prompt,
+                ].some((value) => value.toLowerCase().includes(term));
+            });
         }
         return [...pool].sort((a, b) => {
             if (a.date !== b.date) return a.date > b.date ? -1 : 1;
             return b.createdAt.localeCompare(a.createdAt);
         });
-    }, [categoryFilter, entries, scopeToDate, searchTerm, selectedDate]);
-
-    function handleSelectDate(date: string) {
-        haptics.selection();
-        setSelectedDate(date);
-        setScopeToDate(true);
-    }
-
-    function handleClearDateScope() {
-        haptics.navigation();
-        setScopeToDate(false);
-    }
+    }, [categoryFilter, entries, searchTerm]);
 
     function handleSurpriseMe() {
         if (entries.length === 0) return;
         haptics.selection();
         const random = entries[Math.floor(Math.random() * entries.length)];
-        setSelectedDate(random.date);
-        setScopeToDate(true);
+        setSearchTerm(random.date);
     }
 
     const hasAnyEntries = entries.length > 0;
-    const isFiltered = Boolean(searchTerm.trim()) || categoryFilter !== "all" || scopeToDate;
+    const isFiltered = Boolean(searchTerm.trim()) || categoryFilter !== "all";
     const visualMode = useScreenVisualMode();
     const georgiaMode = visualMode === "georgia";
     const georgiaThemeMode = georgiaMode || visualMode === "evergreen" || visualMode === "navy";
@@ -464,7 +521,7 @@ export function MemoryShelf({
     const blurSurfaceColor = georgiaThemeMode ? GEORGIA_FROST_SURFACE_COLOR : riverMode ? "rgba(255,255,255,0.42)" : sonnyMode ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.77)";
     const blurBorderColor = georgiaThemeMode ? GEORGIA_FROST_BORDER_COLOR : riverMode ? "rgba(17,17,17,0.14)" : sonnyMode ? "rgba(255,255,255,0.24)" : "#334155";
 
-    return (
+    const renderShelfShell = (children: ReactNode) => (
         <View
             style={[
                 tw`overflow-hidden rounded-[28px] p-1`,
@@ -496,6 +553,16 @@ export function MemoryShelf({
                 />
 
                 <View style={tw`p-3`}>
+                    {children}
+                </View>
+            </BlurView>
+        </View>
+    );
+
+    return (
+        <View>
+            {renderShelfShell(
+                <>
                     <View style={tw`flex-row items-center justify-between`}>
                         <View style={tw`flex-1`}>
                             <Text style={[tw`text-base font-bold`, {fontFamily: fonts.heading, color: headerTextColor}]}>
@@ -533,16 +600,35 @@ export function MemoryShelf({
 
                     {hasAnyEntries ? (
                         <>
-                            <View style={tw`mt-4 flex-row gap-2`}>
-                                <StatPill label="Entries" value={stats.total}/>
-                                <StatPill label="Streak" value={`${stats.streak}d`}/>
-                                <StatPill label="This month" value={`${stats.monthDays}d`}/>
-                            </View>
+                            <CollapsiblePanel
+                                title="Entries"
+                                summary={`${stats.total} total · ${stats.promptCount} ${stats.promptCount === 1 ? "prompt" : "prompts"} · ${stats.gratitudeCount} ${stats.gratitudeCount === 1 ? "gratitude" : "gratitudes"}`}
+                                expanded={entryTypesExpanded}
+                                onToggle={() => setEntryTypesExpanded((value) => !value)}
+                            >
+                                <View style={tw`flex-row gap-2`}>
+                                    <StatPill label="Prompts" value={stats.promptCount}/>
+                                    <StatPill label="Gratitudes" value={stats.gratitudeCount}/>
+                                </View>
 
-                            <View style={tw`mt-2 flex-row gap-2`}>
-                                <StatPill label="Prompts" value={stats.promptCount}/>
-                                <StatPill label="Gratitudes" value={stats.gratitudeCount}/>
-                            </View>
+                                <View style={tw`mt-3 flex-row flex-wrap gap-2`}>
+                                    <FilterChip label="All" active={categoryFilter === "all"} onPress={() => setCategoryFilter("all")}/>
+                                    <FilterChip label="Prompts" active={categoryFilter === "prompt"} onPress={() => setCategoryFilter("prompt")}/>
+                                    <FilterChip label="Gratitude" active={categoryFilter === "gratitude"} onPress={() => setCategoryFilter("gratitude")}/>
+                                </View>
+                            </CollapsiblePanel>
+
+                            <CollapsiblePanel
+                                title="Rhythm"
+                                summary={`${stats.streak} day streak · ${stats.monthDays} active ${stats.monthDays === 1 ? "day" : "days"} this month`}
+                                expanded={rhythmExpanded}
+                                onToggle={() => setRhythmExpanded((value) => !value)}
+                            >
+                                <View style={tw`flex-row gap-2`}>
+                                    <StatPill label="Streak" value={`${stats.streak}d`}/>
+                                    <StatPill label="This month" value={`${stats.monthDays}d`}/>
+                                </View>
+                            </CollapsiblePanel>
 
                             <View
                                 style={[
@@ -573,77 +659,6 @@ export function MemoryShelf({
                                 ) : null}
                             </View>
 
-                            <View style={tw`mt-3 flex-row flex-wrap gap-2`}>
-                                <FilterChip label="All" active={categoryFilter === "all"} onPress={() => setCategoryFilter("all")}/>
-                                <FilterChip label="Prompts" active={categoryFilter === "prompt"} onPress={() => setCategoryFilter("prompt")}/>
-                                <FilterChip label="Gratitude" active={categoryFilter === "gratitude"} onPress={() => setCategoryFilter("gratitude")}/>
-                            </View>
-
-                            <View
-                                style={[
-                                    tw`mt-4 overflow-hidden rounded-2xl border p-3`,
-                                    {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
-                                ]}
-                            >
-                                <ButtonShine/>
-                                <View style={tw`flex-row items-center justify-between`}>
-                                    <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
-                                        fontFamily: fonts.strong,
-                                        color: mutedTextColor,
-                                    }]}>
-                                        Recent days
-                                    </Text>
-                                    {scopeToDate ? (
-                                        <Pressable
-                                            accessibilityRole="button"
-                                            accessibilityLabel="Show all dates"
-                                            onPress={handleClearDateScope}
-                                            style={({pressed}) => [
-                                                tw`overflow-hidden rounded-full border px-3 py-1`,
-                                                {borderColor: riverMode ? "rgba(17,17,17,0.14)" : CREAM, backgroundColor: panelBackgroundColor},
-                                                pressed && {opacity: 0.78},
-                                            ]}
-                                        >
-                                            <Text style={[tw`text-[10px] font-semibold`, {
-                                                fontFamily: fonts.strong,
-                                                color: georgiaThemeMode ? "#FFFFFF" : riverMode ? "#111111" : CREAM,
-                                            }]}>
-                                                Show all dates
-                                            </Text>
-                                        </Pressable>
-                                    ) : null}
-                                </View>
-                                <View style={tw`mt-2 flex-row flex-wrap gap-2`}>
-                                    {uniqueDatesDescending.slice(0, 7).map((date) => {
-                                        const isSelected = scopeToDate && date === selectedDate;
-                                        const isToday = date === today;
-                                        return (
-                                            <Pressable
-                                                key={date}
-                                                accessibilityRole="button"
-                                                accessibilityLabel={`View entries from ${date}`}
-                                                onPress={() => handleSelectDate(date)}
-                                                style={({pressed}) => [
-                                                    tw`overflow-hidden rounded-full border px-3 py-1.5`,
-                                                    isSelected
-                                                        ? {borderColor: accentColor, backgroundColor: riverMode ? "rgba(255,56,0,0.12)" : "rgba(255,56,0,0.42)", ...buttonDepthStyle}
-                                                        : {borderColor: riverMode ? "rgba(17,17,17,0.14)" : "rgba(223,196,170,0.32)", backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
-                                                    pressed && {opacity: 0.78, transform: [{translateY: 1}]},
-                                                ]}
-                                            >
-                                                <ButtonShine/>
-                                                <Text style={[tw`text-[11px] font-semibold`, {
-                                                    fontFamily: fonts.strong,
-                                                    color: georgiaThemeMode ? (isSelected ? "#111111" : "#FFFFFF") : isSelected ? (riverMode ? accentColor : "#FFF6E8") : riverMode ? "#111111" : CREAM,
-                                                }]}>
-                                                    {isToday ? `${date} • today` : date}
-                                                </Text>
-                                            </Pressable>
-                                        );
-                                    })}
-                                </View>
-                            </View>
-
                             {lookback.length > 0 ? (
                                 <View style={tw`mt-4`}>
                                     <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
@@ -658,7 +673,10 @@ export function MemoryShelf({
                                                 key={item.date}
                                                 accessibilityRole="button"
                                                 accessibilityLabel={`View entries from ${formatLookbackLabel(item.delta)}`}
-                                                onPress={() => handleSelectDate(item.date)}
+                                                onPress={() => {
+                                                    haptics.selection();
+                                                    setSearchTerm(item.date);
+                                                }}
                                                 style={({pressed}) => [
                                                     tw`overflow-hidden rounded-2xl border px-3 py-3`,
                                                     {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor, ...buttonDepthStyle},
@@ -705,8 +723,12 @@ export function MemoryShelf({
                             ) : null}
                         </>
                     ) : null}
+                </>
+            )}
 
-                    <View style={tw`mt-4`}>
+            <View style={tw`mt-4`}>
+                {renderShelfShell(
+                    <>
                         {!hasAnyEntries ? (
                             <View
                                 style={[
@@ -777,9 +799,9 @@ export function MemoryShelf({
                                 })}
                             </View>
                         )}
-                    </View>
-                </View>
-            </BlurView>
+                    </>
+                )}
+            </View>
         </View>
     );
 }

@@ -3,6 +3,7 @@ import {useCallback, useEffect, useState} from "react";
 
 const LEGACY_STORAGE_PREFIX = "rhnative.visual-mode.v1";
 const STORAGE_PREFIX = "rhnative.visual-mode.v2";
+const HYDRATE_TIMEOUT_MS = 2000;
 
 export type VisualMode = "georgia" | "river" | "sonny" | "evergreen" | "navy";
 
@@ -22,6 +23,22 @@ function normalizeLegacyVisualMode(value: string | null): VisualMode {
     return "evergreen";
 }
 
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => reject(new Error("Visual mode storage load timed out.")), timeoutMs);
+        promise.then(
+            (value) => {
+                clearTimeout(timeoutId);
+                resolve(value);
+            },
+            (error) => {
+                clearTimeout(timeoutId);
+                reject(error);
+            },
+        );
+    });
+}
+
 export async function clearVisualModeStorage(userId?: string | null): Promise<void> {
     await Promise.all([
         AsyncStorage.removeItem(storageKey(userId ?? null)),
@@ -38,9 +55,15 @@ export function useVisualMode(userId?: string | null) {
 
         async function hydrate() {
             try {
-                const raw = await AsyncStorage.getItem(storageKey(userId ?? null));
+                const raw = await withTimeout(
+                    AsyncStorage.getItem(storageKey(userId ?? null)),
+                    HYDRATE_TIMEOUT_MS,
+                );
                 const legacyRaw = raw === null
-                    ? await AsyncStorage.getItem(storageKey(userId ?? null, LEGACY_STORAGE_PREFIX))
+                    ? await withTimeout(
+                        AsyncStorage.getItem(storageKey(userId ?? null, LEGACY_STORAGE_PREFIX)),
+                        HYDRATE_TIMEOUT_MS,
+                    )
                     : null;
                 if (!mounted) return;
                 const nextMode = raw === null ? normalizeLegacyVisualMode(legacyRaw) : normalizeVisualMode(raw);

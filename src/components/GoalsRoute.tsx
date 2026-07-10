@@ -1,4 +1,4 @@
-import {forwardRef, useEffect, useState} from "react";
+import {type ReactNode, forwardRef, useEffect, useState} from "react";
 import {Image, Pressable, StyleSheet, Text, TextInput, View} from "react-native";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
@@ -143,6 +143,44 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
     const filledForBadge = weeklyGoalProgress.points % 3;
     const pointsToNextBadge = 3 - filledForBadge;
 
+    const renderGoalsShell = (children: ReactNode) => (
+        <View
+            style={[
+                tw`overflow-hidden rounded-[28px] p-1`,
+                {backgroundColor: shellBackgroundColor},
+            ]}
+        >
+            <BlurView
+                intensity={sonnyMode ? 42 : 72}
+                tint={riverMode ? "light" : "dark"}
+                style={[
+                    tw`overflow-hidden rounded-[24px] border`,
+                    {borderColor: blurBorderColor},
+                ]}
+            >
+                <View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, {backgroundColor: blurSurfaceColor}]}
+                />
+                <LinearGradient
+                    colors={georgiaThemeMode ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"] : riverMode ? ["rgba(232,244,255,0.30)", "rgba(210,232,255,0.06)", "transparent"] : sonnyMode ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
+                    locations={[0, 0.5, 1]}
+                    pointerEvents="none"
+                    style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
+                />
+                <LinearGradient
+                    colors={georgiaThemeMode ? ["transparent", "rgba(0,0,0,0.1)"] : riverMode ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
+                    pointerEvents="none"
+                    style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
+                />
+
+                <View style={tw`p-3`}>
+                    {children}
+                </View>
+            </BlurView>
+        </View>
+    );
+
     return (
         <>
             <Text
@@ -154,37 +192,9 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                 Pick a focus for this week. Earn a point each time you hit it.
             </Text>
 
-            <View
-                style={[
-                    tw`mt-4 overflow-hidden rounded-[28px] p-1`,
-                    {backgroundColor: shellBackgroundColor},
-                ]}
-            >
-                <BlurView
-                    intensity={sonnyMode ? 42 : 72}
-                    tint={riverMode ? "light" : "dark"}
-                    style={[
-                        tw`overflow-hidden rounded-[24px] border`,
-                        {borderColor: blurBorderColor},
-                    ]}
-                >
-                    <View
-                        pointerEvents="none"
-                        style={[StyleSheet.absoluteFill, {backgroundColor: blurSurfaceColor}]}
-                    />
-                    <LinearGradient
-                        colors={georgiaThemeMode ? ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)", "transparent"] : riverMode ? ["rgba(232,244,255,0.30)", "rgba(210,232,255,0.06)", "transparent"] : sonnyMode ? ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "transparent"] : ["rgba(255,255,255,0)", "rgba(255,255,255,0.02)", "transparent"]}
-                        locations={[0, 0.5, 1]}
-                        pointerEvents="none"
-                        style={[tw`absolute left-0 right-0 top-0`, {height: "45%"}]}
-                    />
-                    <LinearGradient
-                        colors={georgiaThemeMode ? ["transparent", "rgba(0,0,0,0.1)"] : riverMode ? ["transparent", "rgba(223,196,170,0.16)"] : ["transparent", "rgba(0,0,0,0.35)"]}
-                        pointerEvents="none"
-                        style={[tw`absolute left-0 right-0 bottom-0`, {height: "28%"}]}
-                    />
-
-                    <View style={tw`p-3`}>
+            <View style={tw`mt-4`}>
+                {renderGoalsShell(
+                    <>
                         <View
                             style={[
                                 tw`rounded-2xl border p-3`,
@@ -300,7 +310,51 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                             </View>
                         ) : null}
 
-                        <Text style={[tw`mt-4 text-[10px] uppercase tracking-[1px]`, {
+                        {history.length > 0 ? (
+                            <View style={tw`mt-4`}>
+                                <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
+                                    fontFamily: fonts.strong,
+                                    color: cardSectionLabelTextColor,
+                                }]}>
+                                    Recent wins
+                                </Text>
+                                <View style={tw`mt-2 gap-2`}>
+                                    {history.map((archived) => (
+                                        <View
+                                            key={`${archived.weekStartDate}-${archived.achievedAt}`}
+                                            style={[
+                                                tw`rounded-xl border px-3 py-2`,
+                                                {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor},
+                                            ]}
+                                        >
+                                            <View style={tw`flex-row items-center justify-between`}>
+                                                <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
+                                                    fontFamily: fonts.strong,
+                                                    color: cardSectionLabelTextColor,
+                                                }]}>
+                                                    Week of {archived.weekStartDate}
+                                                </Text>
+                                                <Ionicons name="trophy-outline" size={14} color="#ba885a"/>
+                                            </View>
+                                            <Text
+                                                style={[tw`mt-1 text-sm`, {fontFamily: fonts.heading, color: cardHeaderTextColor}]}
+                                                numberOfLines={2}
+                                            >
+                                                {archived.text}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            </View>
+                        ) : null}
+                    </>
+                )}
+            </View>
+
+            <View style={tw`mt-4`}>
+                {renderGoalsShell(
+                    <>
+                        <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
                             fontFamily: fonts.strong,
                             color: cardSectionLabelTextColor,
                         }]}>
@@ -421,46 +475,8 @@ export const GoalsRoute = forwardRef<TextInput, GoalsRouteProps>(function GoalsR
                                 </Text>
                             </Pressable>
                         </View>
-
-                        {history.length > 0 ? (
-                            <View style={tw`mt-4`}>
-                                <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
-                                    fontFamily: fonts.strong,
-                                    color: cardSectionLabelTextColor,
-                                }]}>
-                                    Recent wins
-                                </Text>
-                                <View style={tw`mt-2 gap-2`}>
-                                    {history.map((archived) => (
-                                        <View
-                                            key={`${archived.weekStartDate}-${archived.achievedAt}`}
-                                            style={[
-                                                tw`rounded-xl border px-3 py-2`,
-                                                {borderColor: panelBorderColor, backgroundColor: panelBackgroundColor},
-                                            ]}
-                                        >
-                                            <View style={tw`flex-row items-center justify-between`}>
-                                                <Text style={[tw`text-[10px] uppercase tracking-[1px]`, {
-                                                    fontFamily: fonts.strong,
-                                                    color: cardSectionLabelTextColor,
-                                                }]}>
-                                                    Week of {archived.weekStartDate}
-                                                </Text>
-                                                <Ionicons name="trophy-outline" size={14} color="#ba885a"/>
-                                            </View>
-                                            <Text
-                                                style={[tw`mt-1 text-sm`, {fontFamily: fonts.heading, color: cardHeaderTextColor}]}
-                                                numberOfLines={2}
-                                            >
-                                                {archived.text}
-                                            </Text>
-                                        </View>
-                                    ))}
-                                </View>
-                            </View>
-                        ) : null}
-                    </View>
-                </BlurView>
+                    </>
+                )}
             </View>
         </>
     );

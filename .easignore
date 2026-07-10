@@ -28,3 +28,8 @@ ios/Podfile.lock
 ios/*.xcworkspace
 ios/Rhodie.xcworkspace
 ios/Rhodie/PrivacyInfo.xcprivacy
+
+# Local Android build artifacts. EAS resolves Gradle state remotely.
+android/.gradle
+android/build
+android/app/build

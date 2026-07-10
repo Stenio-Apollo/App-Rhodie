@@ -181,15 +181,21 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
         [index],
     );
 
-    function goNext() {
+    function completeGuide() {
         haptics.selection();
+        if (isCompleting) return;
+        setIsCompleting(true);
+        setTimeout(() => {
+            void onComplete();
+        }, 150);
+    }
+
+    function goNext() {
         if (isLast) {
-            setIsCompleting(true);
-            setTimeout(() => {
-                void onComplete();
-            }, 150);
+            completeGuide();
             return;
         }
+        haptics.selection();
         setIndex((current) => current + 1);
     }
 
@@ -258,8 +264,8 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
 
                         <View style={tw`mt-6 flex-row items-center justify-between gap-3`}>
                             <Pressable
-                                onPress={isLast ? onComplete : goBack}
-                                disabled={index === 0 && !isLast}
+                                onPress={isLast ? completeGuide : goBack}
+                                disabled={isCompleting || (index === 0 && !isLast)}
                                 style={({pressed}) => [
                                     tw`rounded-xl px-3 py-2`,
                                     (index === 0 && !isLast) && tw`opacity-0`,

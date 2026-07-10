@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
+import {Animated, Easing, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
 import {showGuideAlert} from "../lib/guide-alert";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
@@ -219,6 +219,12 @@ export function KanbanScreen({
     const [showCalendar, setShowCalendar] = useState(false);
     const [filterDate, setFilterDate] = useState<string | null>(null);
     const titleInputRef = useRef<TextInput>(null);
+    const taskSuccessOpacity = useRef(new Animated.Value(0)).current;
+    const taskSuccessScale = useRef(new Animated.Value(0.78)).current;
+    const taskSuccessRingOpacity = useRef(new Animated.Value(0)).current;
+    const taskSuccessRingScale = useRef(new Animated.Value(0.72)).current;
+    const taskSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [taskSuccessVisible, setTaskSuccessVisible] = useState(false);
     const {keyboardInset} = useKeyboardInset();
     const fabBottom = useMemo(() => Animated.add(keyboardInset, 47), [keyboardInset]);
     const georgiaMode = visualMode === "georgia" || visualMode === "evergreen" || visualMode === "navy";
@@ -272,6 +278,63 @@ export function KanbanScreen({
         }, 80);
     }, [focusTaskFormKey]);
 
+    useEffect(() => {
+        return () => {
+            if (taskSuccessTimeoutRef.current) {
+                clearTimeout(taskSuccessTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    function clearTaskSuccessTimeout() {
+        if (!taskSuccessTimeoutRef.current) return;
+        clearTimeout(taskSuccessTimeoutRef.current);
+        taskSuccessTimeoutRef.current = null;
+    }
+
+    function showTaskAddedSuccess() {
+        clearTaskSuccessTimeout();
+        setTaskSuccessVisible(true);
+        taskSuccessOpacity.setValue(0);
+        taskSuccessScale.setValue(0.78);
+        taskSuccessRingOpacity.setValue(0.45);
+        taskSuccessRingScale.setValue(0.72);
+
+        Animated.parallel([
+            Animated.timing(taskSuccessOpacity, {
+                toValue: 1,
+                duration: 180,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+            Animated.spring(taskSuccessScale, {
+                toValue: 1,
+                friction: 6,
+                tension: 110,
+                useNativeDriver: true,
+            }),
+            Animated.parallel([
+                Animated.timing(taskSuccessRingScale, {
+                    toValue: 1.55,
+                    duration: 620,
+                    easing: Easing.out(Easing.cubic),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(taskSuccessRingOpacity, {
+                    toValue: 0,
+                    duration: 620,
+                    easing: Easing.out(Easing.cubic),
+                    useNativeDriver: true,
+                }),
+            ]),
+        ]).start();
+
+        taskSuccessTimeoutRef.current = setTimeout(() => {
+            taskSuccessTimeoutRef.current = null;
+            setTaskSuccessVisible(false);
+        }, 1350);
+    }
+
     function handleAddTask() {
         if (!title.trim()) {
             void showGuideAlert({title: "Title required", message: "Please enter a task title."});
@@ -285,6 +348,7 @@ export function KanbanScreen({
         setDescription("");
         setDueDate(null);
         setPriority("medium");
+        showTaskAddedSuccess();
     }
 
     return (
@@ -540,6 +604,7 @@ export function KanbanScreen({
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel="Add task"
+                        disabled={taskSuccessVisible}
                         onPress={handleAddTask}
                         style={({pressed}) => [
                             tw`h-11 w-11 items-center justify-center overflow-hidden rounded-full border`,
@@ -552,6 +617,7 @@ export function KanbanScreen({
                                 shadowRadius: 12,
                                 elevation: 10,
                             },
+                            taskSuccessVisible && tw`opacity-50`,
                             pressed && {opacity: 0.82, transform: [{translateY: 1}]},
                         ]}
                     >
@@ -559,6 +625,50 @@ export function KanbanScreen({
                         <Ionicons name="add" size={22} color="#FFF6E8"/>
                     </Pressable>
                 </Animated.View>
+
+                {taskSuccessVisible ? (
+                    <Animated.View
+                        pointerEvents="auto"
+                        style={[
+                            tw`absolute inset-0 z-50 items-center justify-center px-8`,
+                            {
+                                opacity: taskSuccessOpacity,
+                            },
+                        ]}
+                    >
+                        <Animated.View
+                            style={[
+                                tw`items-center px-6 py-7`,
+                                {
+                                    transform: [{scale: taskSuccessScale}],
+                                },
+                            ]}
+                        >
+                            <View style={tw`h-20 w-20 items-center justify-center`}>
+                                <Animated.View
+                                    pointerEvents="none"
+                                    style={[
+                                        tw`absolute h-20 w-20 rounded-full border-2`,
+                                        {
+                                            borderColor: "#FF3800",
+                                            opacity: taskSuccessRingOpacity,
+                                            transform: [{scale: taskSuccessRingScale}],
+                                        },
+                                    ]}
+                                />
+                                <View style={[tw`h-16 w-16 items-center justify-center rounded-full`, {backgroundColor: "#FF3800"}]}>
+                                    <Ionicons name="checkmark" size={36} color="#FFFFFF"/>
+                                </View>
+                            </View>
+                            <Text style={[tw`mt-4 text-center text-lg`, {
+                                fontFamily: fonts.heading,
+                                color: primaryTextColor,
+                            }]}>
+                                Task added
+                            </Text>
+                        </Animated.View>
+                    </Animated.View>
+                ) : null}
             </View>
         </ScreenBackground>
     );
